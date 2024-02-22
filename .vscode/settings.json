@@ -1,0 +1,12 @@
+{
+    "testMate.cpp.test.advancedExecutables": [
+        {
+            "pattern": "test/bin/**",
+            "runTask": {
+                "before": [
+                    "make test executable"
+                ]
+            }
+        }
+    ]
+}
