@@ -1,6 +1,9 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 
+#include <any>
+#include <string>
+
 /**
  * @brief An enum to represent the different types of tokens.
  */
@@ -64,6 +67,7 @@ enum TokenType {
     TOK_TSTR,
     TOK_INT,
     TOK_FLOAT,
+    TOK_DOUBLE,
 
     // Keywords
 
@@ -105,6 +109,66 @@ enum TokenType {
     KW_DEL,
 
     KW_EXTERN,
+};
+
+/**
+ * @brief A struct to represent the location of a token in the source code.
+ *
+ */
+struct Location {
+    // The line number of the token.
+    unsigned line;
+    // The column number of the token.
+    unsigned column;
+    // The length of the token.
+    unsigned length;
+};
+
+/**
+ * @brief Returns a string representation of the given token type.
+ *
+ * @param type The token type to convert to a string.
+ * @return std::string The string representation of the token type.
+ */
+std::string token_type_to_string(TokenType type);
+
+/**
+ * @brief A class to represent a token scanned from the source code.
+ *
+ */
+class Token {
+public:
+    // The type of the token.
+    const TokenType tok_type;
+    // A string representing the lexeme of the token from the source code.
+    const std::string lexeme;
+    // The literal value of the token, if it has one.
+    const std::any literal;
+    // The location of the token in the source code.
+    const Location location;
+
+    /**
+     * @brief Construct a new Token object
+     *
+     * @param tok_type The type of the token.
+     * @param lexeme The string representing the lexeme of the token from the source code.
+     * @param literal The literal value of the token, if it has one.
+     * @param location The location of the token in the source code, including the line number, column number, and length.
+     */
+    Token(
+        TokenType tok_type,
+        const std::string& lexeme,
+        const std::any& literal,
+        Location location
+    )
+        : tok_type(tok_type), lexeme(lexeme), literal(literal), location(location) {}
+
+    /**
+     * @brief A string representation of the token specifically for printing and debugging.
+     *
+     * @return std::string A string representation of the token. E.g. "[TOK_IDENT, 'foo', 1:1:3]"
+     */
+    std::string to_string() const;
 };
 
 #endif // TOKEN_H

@@ -8,5 +8,8 @@
                 ]
             }
         }
-    ]
+    ],
+    "files.associations": {
+        "xstring": "cpp"
+    }
 }
