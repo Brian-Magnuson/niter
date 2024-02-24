@@ -6,6 +6,8 @@
 
 /**
  * @brief An enum to represent the different types of tokens.
+ *
+ * Token types all begin with TOK or KW, where TOK represents a symbol or literal token, and KW represents a keyword token.
  */
 enum TokenType {
 
@@ -58,6 +60,8 @@ enum TokenType {
     TOK_DOT,
     TOK_DOT_DOT,
     TOK_TRIPLE_DOT,
+    TOK_COLON,
+    TOK_COLON_COLON,
 
     // Literals
 
@@ -95,6 +99,7 @@ enum TokenType {
     KW_INTERFACE,
     KW_USING,
     KW_NAMESPACE,
+    KW_STATIC,
     KW_GLOBAL,
 
     KW_TRUE,
@@ -105,8 +110,8 @@ enum TokenType {
     KW_AS,
     KW_TYPEOF,
     KW_IS,
-    KW_NEW,
-    KW_DEL,
+    KW_ALLOC,
+    KW_DEALLOC,
 
     KW_EXTERN,
 };
@@ -126,6 +131,8 @@ struct Location {
 
 /**
  * @brief Returns a string representation of the given token type.
+ *
+ * E.g. token_type_to_string(TOK_IDENT) returns "TOK_IDENT"
  *
  * @param type The token type to convert to a string.
  * @return std::string The string representation of the token type.
