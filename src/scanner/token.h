@@ -2,6 +2,7 @@
 #define TOKEN_H
 
 #include <any>
+#include <memory>
 #include <string>
 
 /**
@@ -62,6 +63,9 @@ enum TokenType {
     TOK_TRIPLE_DOT,
     TOK_COLON,
     TOK_COLON_COLON,
+
+    TOK_ARROW,
+    TOK_DOUBLE_ARROW,
 
     // Literals
 
@@ -127,6 +131,8 @@ struct Location {
     unsigned column;
     // The length of the token.
     unsigned length;
+    // The file name of the source code. This is a shared pointer to avoid copying the string.
+    std::shared_ptr<std::string> file_name;
 };
 
 /**
