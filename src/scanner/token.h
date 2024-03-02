@@ -40,6 +40,13 @@ enum TokenType {
     TOK_CARET_EQ,
 
     TOK_COMMA,
+
+    TOK_SINGLE_QUOTE,
+    TOK_DOUBLE_QUOTE,
+    TOK_TRIPLE_QUOTES,
+
+    TOK_NEWLINE,
+    TOK_BACKSLASH,
     TOK_SEMICOLON,
 
     TOK_AMP,
