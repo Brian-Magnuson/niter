@@ -52,6 +52,18 @@ std::string token_type_to_string(TokenType type) {
 
     case TOK_COMMA:
         return "TOK_COMMA";
+
+    case TOK_SINGLE_QUOTE:
+        return "TOK_SINGLE_QUOTE";
+    case TOK_DOUBLE_QUOTE:
+        return "TOK_DOUBLE_QUOTE";
+    case TOK_TRIPLE_QUOTES:
+        return "TOK_TRIPLE_QUOTES";
+
+    case TOK_NEWLINE:
+        return "TOK_NEWLINE";
+    case TOK_BACKSLASH:
+        return "TOK_BACKSLASH";
     case TOK_SEMICOLON:
         return "TOK_SEMICOLON";
 
@@ -93,6 +105,15 @@ std::string token_type_to_string(TokenType type) {
         return "TOK_DOT_DOT";
     case TOK_TRIPLE_DOT:
         return "TOK_TRIPLE_DOT";
+    case TOK_COLON:
+        return "TOK_COLON";
+    case TOK_COLON_COLON:
+        return "TOK_COLON_COLON";
+
+    case TOK_ARROW:
+        return "TOK_ARROW";
+    case TOK_DOUBLE_ARROW:
+        return "TOK_DOUBLE_ARROW";
 
     case TOK_IDENT:
         return "TOK_IDENT";
@@ -156,6 +177,8 @@ std::string token_type_to_string(TokenType type) {
         return "KW_USING";
     case KW_NAMESPACE:
         return "KW_NAMESPACE";
+    case KW_STATIC:
+        return "KW_STATIC";
     case KW_GLOBAL:
         return "KW_GLOBAL";
 
@@ -174,10 +197,10 @@ std::string token_type_to_string(TokenType type) {
         return "KW_TYPEOF";
     case KW_IS:
         return "KW_IS";
-    case KW_NEW:
-        return "KW_NEW";
-    case KW_DEL:
-        return "KW_DEL";
+    case KW_ALLOC:
+        return "KW_ALLOC";
+    case KW_DEALLOC:
+        return "KW_DEALLOC";
 
     case KW_EXTERN:
         return "KW_EXTERN";
