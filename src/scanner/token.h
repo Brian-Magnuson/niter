@@ -132,14 +132,18 @@ enum TokenType {
  *
  */
 struct Location {
+    // The name of the file where the token is located.
+    std::shared_ptr<std::string> file_name;
     // The line number of the token.
     unsigned line;
     // The column number of the token.
     unsigned column;
     // The length of the token.
     unsigned length;
-    // The file name of the source code. This is a shared pointer to avoid copying the string.
-    std::shared_ptr<std::string> file_name;
+    // The index of the line in the source code string where the token is located.
+    unsigned line_index;
+    // A shared pointer to the source code string.
+    std::shared_ptr<std::string> source_code;
 };
 
 /**
