@@ -1,6 +1,6 @@
 #include "logger.h"
 #include <fstream>
-#include <iostream>
+#include <iomanip>
 
 std::string colorize(Color color) {
     switch (color) {
@@ -26,30 +26,43 @@ std::string colorize(Color color) {
 }
 
 void ErrorLogger::print_pretty_error(const Location& location, const std::string& display_text) {
-    std::cerr << *location.file_name << ":" << location.line << ":"
-              << location.column << std::endl;
+    *out << *location.file_name << ":" << location.line << ":"
+         << location.column << std::endl;
 
-    std::cerr << colorize(Color::RED) << "Error: " << colorize(Color::RESET)
-              << display_text << std::endl;
+    *out << colorize(Color::RED) << "Error "
+         << total_errors << ": "
+         << colorize(Color::RESET)
+         << display_text << std::endl;
     std::string err_line = location.source_code->substr(location.line_index, location.source_code->find('\n', location.line_index));
-    std::cerr << location.line << " | " << err_line << std::endl;
-    std::cerr << std::string(location.column, ' ') << colorize(Color::RED)
-              << "^" << std::string(location.length - 1, '~')
-              << colorize(Color::RESET)
-              << std::endl
-              << std::endl;
+
+    // Pad the line number with spaces so that the caret lines up with the error
+    // 4 spaces should be good enough for 5 digits
+    *out << std::setw(5) << location.line << " | "
+         << err_line << std::endl;
+    // 5 digits + 3 extra characters = 8
+
+    *out << std::string(location.column + 8, ' ') << colorize(Color::RED)
+         << "^";
+
+    // Just in case the length is 0, we don't want to print any extra tildes
+    if (location.length > 1)
+        *out << std::string(location.length - 1, '~');
+
+    *out << colorize(Color::RESET)
+         << std::endl
+         << std::endl;
     /*
     Example output:
     test_files/error_test.nit:1:5
-    Error: 1000 Test error message
-    1 | let x = 5
-        ^~~
+    Error 1: Test error message
+        1 | var x = 5
+            ^~~
 
     */
 }
 
 void ErrorLogger::log_error(const Token& token, ErrorCode error_code, const std::string& message) {
     auto new_message = std::to_string(static_cast<int>(error_code)) + " " + message;
-    print_pretty_error(token.location, new_message);
     total_errors++;
+    print_pretty_error(token.location, new_message);
 }

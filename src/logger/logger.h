@@ -3,6 +3,7 @@
 
 #include "../scanner/token.h"
 #include "error_code.h"
+#include <iostream>
 #include <string>
 
 /**
@@ -35,10 +36,12 @@ std::string colorize(Color color = Color::RESET);
  */
 class ErrorLogger {
 private:
+    // A reference to the output stream to log errors to.
+    std::ostream* out = &std::cerr;
     // The total number of errors logged.
     unsigned total_errors = 0;
     // The total number of warnings logged.
-    unsigned total_warnings = 0;
+    // unsigned total_warnings = 0;
 
     /**
      * @brief Prints a pretty error message to the console.
@@ -57,6 +60,10 @@ public:
      * @param message The error message.
      */
     void log_error(const Token& token, ErrorCode error_code, const std::string& message);
+
+    void set_ostream(std::ostream& new_out) {
+        out = &new_out;
+    }
 };
 
 #endif // LOGGER_H
