@@ -2,6 +2,7 @@
 #define SCANNER_H
 
 #include "token.h"
+#include <any>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -13,18 +14,20 @@
 class Scanner {
     // A map of keywords to their respective token types. To be initialized in the source file.
     static std::unordered_map<std::string, TokenType> keywords;
-    // The source code to be scanned.
-    std::string source;
-    // The name of the file where the source code is located. Used for error messages.
-    std::string filename;
+    // The source code to be scanned. A shared pointer is used to avoid copying the source code string.
+    std::shared_ptr<std::string> source;
+    // The name of the file where the source code is located. Used for error messages. A shared pointer is used to avoid copying the filename string.
+    std::shared_ptr<std::string> filename;
     // The list of tokens scanned from the source code.
     std::vector<Token> tokens;
     // The index of the first character of the current token.
-    int start = 0;
+    unsigned start = 0;
     // The index of the character from the source currently being considered.
-    int current = 0;
+    unsigned current = 0;
     // The line number of the current token.
-    int line = 1;
+    unsigned line = 1;
+    // The index of the first character of the current line.
+    unsigned line_index = 0;
 
     /**
      * @brief Advances the scanner by one character and returns the character at the previous index.
@@ -55,6 +58,23 @@ class Scanner {
      * @return false If the current index is not at the end of the source code.
      */
     bool is_at_end();
+
+    /**
+     * @brief Checks if the current character is the expected character and advances the scanner if it is.
+     *
+     * @param expected The character to check for.
+     * @return true If the current character is the expected character.
+     * @return false If the current character is not the expected character or if the scanner is at the end of the source code.
+     */
+    bool match(char expected);
+
+    /**
+     * @brief Adds a new token to the list of tokens.
+     *
+     * @param tok_type The type of the token.
+     * @param literal The literal text of the token, if applicable.
+     */
+    void add_token(TokenType tok_type, std::any literal = std::any());
 };
 
 #endif // SCANNER_H
