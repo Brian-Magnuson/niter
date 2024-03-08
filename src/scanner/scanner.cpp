@@ -80,3 +80,17 @@ void Scanner::add_token(TokenType tok_type, std::any literal) {
     };
     tokens.push_back(Token{tok_type, text, literal, location});
 }
+
+bool Scanner::is_digit(char c) {
+    return c >= '0' && c <= '9';
+}
+
+bool Scanner::is_alpha(char c) {
+    return (c >= 'a' && c <= 'z') ||
+           (c >= 'A' && c <= 'Z') ||
+           c == '_';
+}
+
+bool Scanner::is_alpha_numeric(char c) {
+    return is_alpha(c) || is_digit(c);
+}

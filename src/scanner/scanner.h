@@ -75,6 +75,33 @@ class Scanner {
      * @param literal The literal text of the token, if applicable.
      */
     void add_token(TokenType tok_type, std::any literal = std::any());
+
+    /**
+     * @brief Checks if the passed-in character is a digit.
+     *
+     * @param c The character to check.
+     * @return true If the character is a digit 0-9.
+     * @return false Otherwise.
+     */
+    bool is_digit(char c);
+
+    /**
+     * @brief Checks if the passed-in character is an alphabetic character or an underscore.
+     *
+     * @param c The character to check.
+     * @return true If the character is A-Z, a-z, or _.
+     * @return false Otherwise.
+     */
+    bool is_alpha(char c);
+
+    /**
+     * @brief Checks if the passed-in character is alphanumeric or an underscore.
+     *
+     * @param c The character to check.
+     * @return true If the character is A-Z, a-z, 0-9, or _.
+     * @return false Otherwise.
+     */
+    bool is_alpha_numeric(char c);
 };
 
 #endif // SCANNER_H
