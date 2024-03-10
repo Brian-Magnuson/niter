@@ -102,6 +102,12 @@ class Scanner {
      * @return false Otherwise.
      */
     bool is_alpha_numeric(char c);
+
+    /**
+     * @brief Scans a new token from the source code and adds it to the list of tokens.
+     *
+     */
+    void scan_token();
 };
 
 #endif // SCANNER_H

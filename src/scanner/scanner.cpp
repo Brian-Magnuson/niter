@@ -94,3 +94,38 @@ bool Scanner::is_alpha(char c) {
 bool Scanner::is_alpha_numeric(char c) {
     return is_alpha(c) || is_digit(c);
 }
+
+void Scanner::scan_token() {
+    // Get the next char
+    char c = advance();
+    switch (c) {
+    case '(':
+        add_token(TOK_LEFT_PAREN);
+        break;
+    case ')':
+        add_token(TOK_RIGHT_PAREN);
+        break;
+    case '{':
+        add_token(TOK_LEFT_BRACE);
+        break;
+    case '}':
+        add_token(TOK_RIGHT_BRACE);
+        break;
+    case '[':
+        add_token(TOK_LEFT_SQUARE);
+        break;
+    case ']':
+        add_token(TOK_RIGHT_SQUARE);
+        break;
+    case '+':
+        add_token(match('=') ? TOK_PLUS_EQ : TOK_PLUS);
+        break;
+    case '-':
+        add_token(match('=') ? TOK_MINUS_EQ : TOK_MINUS);
+        break;
+    case '*':
+        add_token(match('=') ? TOK_STAR_EQ : TOK_STAR);
+        break;
+    }
+    // TODO: Implement the rest of the scanner
+}
