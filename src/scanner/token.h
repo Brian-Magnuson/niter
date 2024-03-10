@@ -29,11 +29,11 @@ enum TokenType {
     TOK_MINUS_EQ,
     TOK_STAR,
     TOK_STAR_EQ,
+    TOK_STAR_SLASH, // Comments only
     TOK_SLASH,
     TOK_SLASH_EQ,
-    TOK_SLASH_SLASH,
-    TOK_SLASH_STAR,
-    TOK_STAR_SLASH,
+    TOK_SLASH_SLASH, // Comments only
+    TOK_SLASH_STAR,  // Comments only
     TOK_PERCENT,
     TOK_PERCENT_EQ,
     TOK_CARET,

@@ -1,4 +1,5 @@
 #include "scanner.h"
+#include "../logger/logger.h"
 
 std::unordered_map<std::string, TokenType> Scanner::keywords = {
     {"and", KW_AND},
@@ -68,7 +69,7 @@ bool Scanner::match(char expected) {
     return true;
 }
 
-void Scanner::add_token(TokenType tok_type, std::any literal) {
+Token Scanner::make_token(TokenType tok_type, const std::any& literal) const {
     std::string text = source->substr(start, current - start);
     auto location = Location{
         filename,           // The name of the file where the token is located.
@@ -78,7 +79,11 @@ void Scanner::add_token(TokenType tok_type, std::any literal) {
         line_index,         // The index of the line in the source code string where the token is located.
         source              // A shared pointer to the source code string.
     };
-    tokens.push_back(Token{tok_type, text, literal, location});
+    return Token{tok_type, text, literal, location};
+}
+
+void Scanner::add_token(TokenType tok_type, const std::any& literal) {
+    tokens.push_back(make_token(tok_type, literal));
 }
 
 bool Scanner::is_digit(char c) {
@@ -123,9 +128,39 @@ void Scanner::scan_token() {
     case '-':
         add_token(match('=') ? TOK_MINUS_EQ : TOK_MINUS);
         break;
-    case '*':
-        add_token(match('=') ? TOK_STAR_EQ : TOK_STAR);
+    case '%':
+        add_token(match('=') ? TOK_PERCENT_EQ : TOK_PERCENT);
         break;
+    case '^':
+        add_token(match('=') ? TOK_CARET_EQ : TOK_CARET);
+        break;
+    case '*':
+        // It can be any of these: '*', '*=', '*/'
+        if (match('=')) {
+            add_token(TOK_STAR_EQ);
+        } else if (match('/')) {
+            // Not valid since it's not the start of a comment
+            Token t = make_token(TOK_STAR_SLASH);
+            ErrorLogger::inst()
+                .log_error(t, E_CLOSING_UNOPENED_COMMENT, "Closing comment '*/' without opening '/*'");
+        } else {
+            add_token(TOK_STAR);
+        }
+        break;
+    case '/':
+        // It can be any of these: '/', '/=', '/*'
+        if (match('=')) {
+            add_token(TOK_SLASH_EQ);
+        } else if (match('/')) {
+            // Start single-line comment
+            single_line_comment();
+        } else if (match('*')) {
+            // Start multi-line comment
+            multi_line_comment();
+        } else {
+            add_token(TOK_SLASH);
+        }
+        break;
+
+        // TODO: Implement the rest of the scanner
     }
-    // TODO: Implement the rest of the scanner
-}

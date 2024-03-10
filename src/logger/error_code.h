@@ -17,6 +17,8 @@ enum ErrorCode {
 
     // Scanner errors
     E_SCANNER = 2000,
+    // A closing comment '*/' was found without an opening '/*'
+    E_CLOSING_UNOPENED_COMMENT,
 
     // Parser errors
     E_PARSER = 3000,
@@ -36,11 +38,11 @@ enum ErrorCode {
     // Compiler malfunction errors
     E_MALFUNCTION = 9000,
     // Statement was reached that should be unreachable
-    E_UNREACHABLE = 9001,
+    E_UNREACHABLE,
     // Statement was reached that should be impossible
-    E_IMPOSSIBLE = 9002,
+    E_IMPOSSIBLE,
     // Statement was reached that should be unimplemented
-    E_UNIMPLEMENTED = 9003,
+    E_UNIMPLEMENTED,
 };
 
 #endif // ERROR_CODE_H

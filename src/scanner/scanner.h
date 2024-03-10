@@ -69,12 +69,21 @@ class Scanner {
     bool match(char expected);
 
     /**
+     * @brief Creates a new token without adding it to the list of tokens.
+     *
+     * @param tok_type The type of the token.
+     * @param literal The literal text of the token, if applicable.
+     * @return Token The new token.
+     */
+    Token make_token(TokenType tok_type, const std::any& literal = std::any()) const;
+
+    /**
      * @brief Adds a new token to the list of tokens.
      *
      * @param tok_type The type of the token.
      * @param literal The literal text of the token, if applicable.
      */
-    void add_token(TokenType tok_type, std::any literal = std::any());
+    void add_token(TokenType tok_type, const std::any& literal = std::any());
 
     /**
      * @brief Checks if the passed-in character is a digit.
@@ -108,6 +117,18 @@ class Scanner {
      *
      */
     void scan_token();
+
+    /**
+     * @brief Starts advancing the scanner, ignoring characters until it finds a newline token.
+     *
+     */
+    void single_line_comment();
+
+    /**
+     * @brief Starts advancing the scanner, ignoring characters until it finds a star-slash token.
+     *
+     */
+    void multi_line_comment();
 };
 
 #endif // SCANNER_H

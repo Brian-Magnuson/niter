@@ -31,7 +31,7 @@ enum class Color {
 std::string colorize(Color color = Color::RESET);
 
 /**
- * @brief A class to log compiler errors and warnings.
+ * @brief A singleton class to log compiler errors and warnings.
  *
  */
 class ErrorLogger {
@@ -51,6 +51,10 @@ private:
      */
     void print_pretty_error(const Location& location, const std::string& display_text);
 
+    ErrorLogger() = default;
+    ErrorLogger(const ErrorLogger&) = delete;
+    ErrorLogger& operator=(const ErrorLogger&) = delete;
+
 public:
     /**
      * @brief Logs an error message to the console.
@@ -61,8 +65,23 @@ public:
      */
     void log_error(const Token& token, ErrorCode error_code, const std::string& message);
 
+    /**
+     * @brief Changes the output stream to log errors to.
+     *
+     * @param new_out The new output stream to log errors to.
+     */
     void set_ostream(std::ostream& new_out) {
         out = &new_out;
+    }
+
+    /**
+     * @brief Get the instance object of the ErrorLogger singleton. Will create the instance if it does not exist.
+     *
+     * @return ErrorLogger& A reference to the ErrorLogger singleton instance.
+     */
+    static ErrorLogger& inst() {
+        static ErrorLogger instance;
+        return instance;
     }
 };
 
