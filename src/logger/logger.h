@@ -5,6 +5,7 @@
 #include "error_code.h"
 #include <iostream>
 #include <string>
+#include <vector>
 
 /**
  * @brief An enum to represent the different colors that can be used to colorize text in the console.
@@ -38,10 +39,8 @@ class ErrorLogger {
 private:
     // A reference to the output stream to log errors to.
     std::ostream* out = &std::cerr;
-    // The total number of errors logged.
-    unsigned total_errors = 0;
-    // The total number of warnings logged.
-    // unsigned total_warnings = 0;
+    // A list of the errors that have been logged.
+    std::vector<ErrorCode> errors;
 
     /**
      * @brief Prints a pretty error message to the console.
@@ -82,6 +81,15 @@ public:
     static ErrorLogger& inst() {
         static ErrorLogger instance;
         return instance;
+    }
+
+    /**
+     * @brief Get the errors object.
+     *
+     * @return const std::vector<ErrorCode>& The list of errors that have been logged.
+     */
+    const std::vector<ErrorCode>& get_errors() const {
+        return errors;
     }
 };
 

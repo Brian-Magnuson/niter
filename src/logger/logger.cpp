@@ -30,7 +30,7 @@ void ErrorLogger::print_pretty_error(const Location& location, const std::string
          << location.column << std::endl;
 
     *out << colorize(Color::RED) << "Error "
-         << total_errors << ": "
+         << errors.size() << ": "
          << colorize(Color::RESET)
          << display_text << std::endl;
     std::string err_line = location.source_code->substr(location.line_index, location.source_code->find('\n', location.line_index));
@@ -63,6 +63,6 @@ void ErrorLogger::print_pretty_error(const Location& location, const std::string
 
 void ErrorLogger::log_error(const Token& token, ErrorCode error_code, const std::string& message) {
     auto new_message = std::to_string(static_cast<int>(error_code)) + " " + message;
-    total_errors++;
+    errors.push_back(error_code);
     print_pretty_error(token.location, new_message);
 }

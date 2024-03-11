@@ -8,7 +8,7 @@ TEST_CASE("Sanity check", "[sanity]") {
 }
 
 TEST_CASE("Logger", "[logger]") {
-    ErrorLogger logger;
+    ErrorLogger& logger = ErrorLogger::inst();
     std::string file_name = "test_files/error_test.nit";
     std::string source_code = "var x = 5";
     Location location = {
