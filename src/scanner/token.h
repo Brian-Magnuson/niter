@@ -46,7 +46,7 @@ enum TokenType {
     TOK_TRIPLE_QUOTES,
 
     TOK_NEWLINE,
-    TOK_BACKSLASH,
+    TOK_BACKSLASH, // Line continuation only
     TOK_SEMICOLON,
 
     TOK_AMP,
@@ -58,7 +58,7 @@ enum TokenType {
     TOK_BAR_EQ,
     TOK_BAR_BAR_EQ,
     TOK_BANG,
-    TOK_BANG_EQUAL,
+    TOK_BANG_EQ,
     TOK_EQ,
     TOK_EQ_EQ,
     TOK_GT,

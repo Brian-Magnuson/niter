@@ -45,11 +45,13 @@ class Scanner {
     char peek();
 
     /**
-     * @brief Returns the character at the next index without advancing the scanner.
+     * @brief Returns the character at the current index plus the lookahead without advancing the scanner.
      *
-     * @return char The character at the next index.
+     * @param lookahead The number of characters to look ahead. Defaults to 1. If lookahead is 0, effectively returns the character at the current index like peek().
+     * Warning: Keep this value low to avoid performance issues. Currently, the maximum value is 2.
+     * @return char The character at the current index plus the lookahead. If the current index plus lookahead is greater than the length of the source code, returns '\0'.
      */
-    char peek_next();
+    char peek_next(int lookahead = 1);
 
     /**
      * @brief Checks if the scanner has reached the end of the source code.

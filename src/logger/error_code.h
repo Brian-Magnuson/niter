@@ -19,6 +19,8 @@ enum ErrorCode {
     E_SCANNER = 2000,
     // A closing comment '*/' was found without an opening '/*'
     E_CLOSING_UNOPENED_COMMENT,
+    // A backslash was found at the end of a line without a newline character
+    E_NO_LF_AFTER_BACKSLASH,
 
     // Parser errors
     E_PARSER = 3000,

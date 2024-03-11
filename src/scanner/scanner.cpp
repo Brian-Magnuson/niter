@@ -50,10 +50,10 @@ char Scanner::peek() {
     return (*source)[current];
 }
 
-char Scanner::peek_next() {
-    if (current + 1 >= source->length())
+char Scanner::peek_next(int lookahead) {
+    if (current + lookahead >= source->length())
         return '\0';
-    return (*source)[current + 1];
+    return (*source)[current + lookahead];
 }
 
 bool Scanner::is_at_end() {
@@ -142,7 +142,7 @@ void Scanner::scan_token() {
             // Not valid since it's not the start of a comment
             Token t = make_token(TOK_STAR_SLASH);
             ErrorLogger::inst()
-                .log_error(t, E_CLOSING_UNOPENED_COMMENT, "Closing comment '*/' without opening '/*'");
+                .log_error(t, E_CLOSING_UNOPENED_COMMENT, "Closing comment '*/' without opening '/*'.");
         } else {
             add_token(TOK_STAR);
         }
@@ -161,6 +161,79 @@ void Scanner::scan_token() {
             add_token(TOK_SLASH);
         }
         break;
-
+    case ',':
+        add_token(TOK_COMMA);
+        break;
+    case '\'':
+        add_token(TOK_SINGLE_QUOTE);
+        break;
+    case '"':
+        if (peek() == '"' && peek_next() == '"') {
+            advance();
+            advance();
+            add_token(TOK_TRIPLE_QUOTES);
+        } else {
+            add_token(TOK_DOUBLE_QUOTE);
+        }
+        break;
+    case '\n':
+        add_token(TOK_NEWLINE);
+        line++;
+        line_index = current;
+        break;
+    case '\\':
+        if (!is_at_end() && !match('\n')) {
+            // Backslash is used for line continuation. Therefore, it is only valid at the end of a line.
+            Token t = make_token(TOK_BACKSLASH);
+            ErrorLogger::inst()
+                .log_error(t, E_NO_LF_AFTER_BACKSLASH, "Expected newline after backslash.");
+        }
+        break;
+    case ';':
+        add_token(TOK_SEMICOLON);
+        break;
+    case '&':
+        if (match('&')) {
+            add_token(match('=') ? TOK_AMP_AMP_EQ : TOK_AMP_AMP);
+        } else if (match('=')) {
+            add_token(TOK_AMP_EQ);
+        } else {
+            add_token(TOK_AMP);
+        }
+        break;
+    case '|':
+        if (match('|')) {
+            add_token(match('=') ? TOK_BAR_BAR_EQ : TOK_BAR_BAR);
+        } else if (match('=')) {
+            add_token(TOK_BAR_EQ);
+        } else {
+            add_token(TOK_BAR);
+        }
+        break;
+    case '!':
+        add_token(match('=') ? TOK_BANG_EQ : TOK_BANG);
+        break;
+    case '=':
+        add_token(match('=') ? TOK_EQ_EQ : TOK_EQ);
+        break;
+    case '>':
+        add_token(match('=') ? TOK_GE : TOK_GT);
+        break;
+    case '<':
+        add_token(match('=') ? TOK_LE : TOK_LT);
+        break;
+    case '.':
+        // Can be '.' or '..' or '...'
+        if (match('.')) {
+            add_token(match('.') ? TOK_TRIPLE_DOT : TOK_DOT_DOT);
+        } else {
+            add_token(TOK_DOT);
+        }
+        break;
+    case ':':
+        // Can be ':' or '::'
+        add_token(match(':') ? TOK_COLON_COLON : TOK_COLON);
+        break;
         // TODO: Implement the rest of the scanner
     }
+}
