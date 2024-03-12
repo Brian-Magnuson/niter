@@ -91,6 +91,14 @@ public:
     const std::vector<ErrorCode>& get_errors() const {
         return errors;
     }
+
+    /**
+     * @brief Clears the list of errors that have been logged.
+     *
+     */
+    void clear_errors() {
+        errors.clear();
+    }
 };
 
 #endif // LOGGER_H
