@@ -126,7 +126,13 @@ void Scanner::scan_token() {
         add_token(match('=') ? TOK_PLUS_EQ : TOK_PLUS);
         break;
     case '-':
-        add_token(match('=') ? TOK_MINUS_EQ : TOK_MINUS);
+        if (match('=')) {
+            add_token(TOK_MINUS_EQ);
+        } else if (match('>')) {
+            add_token(TOK_ARROW);
+        } else {
+            add_token(TOK_MINUS);
+        }
         break;
     case '%':
         add_token(match('=') ? TOK_PERCENT_EQ : TOK_PERCENT);
@@ -165,9 +171,11 @@ void Scanner::scan_token() {
         add_token(TOK_COMMA);
         break;
     case '\'':
+        // TODO: Implement character literals
         add_token(TOK_SINGLE_QUOTE);
         break;
     case '"':
+        // TODO: Implement string literals
         if (peek() == '"' && peek_next() == '"') {
             advance();
             advance();
@@ -214,7 +222,13 @@ void Scanner::scan_token() {
         add_token(match('=') ? TOK_BANG_EQ : TOK_BANG);
         break;
     case '=':
-        add_token(match('=') ? TOK_EQ_EQ : TOK_EQ);
+        if (match('=')) {
+            add_token(TOK_EQ_EQ);
+        } else if (match('>')) {
+            add_token(TOK_DOUBLE_ARROW);
+        } else {
+            add_token(TOK_EQ);
+        }
         break;
     case '>':
         add_token(match('=') ? TOK_GE : TOK_GT);
@@ -234,6 +248,21 @@ void Scanner::scan_token() {
         // Can be ':' or '::'
         add_token(match(':') ? TOK_COLON_COLON : TOK_COLON);
         break;
+    case ' ':
+    case '\r':
+    case '\t':
+        // Ignore this whitespace
+        break;
+    default:
+        if (is_digit(c)) {
+            number();
+        } else if (is_alpha(c)) {
+            identifier();
+        } else {
+            Token t = make_token(TOK_UNKNOWN);
+            ErrorLogger::inst()
+                .log_error(t, E_UNEXPECTED_CHAR, "Unexpected character.");
+        }
         // TODO: Implement the rest of the scanner
     }
 }

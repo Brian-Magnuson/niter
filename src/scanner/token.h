@@ -13,6 +13,7 @@
 enum TokenType {
 
     TOK_EOF,
+    TOK_UNKNOWN, // For tokens not recognized by the scanner
 
     // Symbols
 
@@ -41,7 +42,7 @@ enum TokenType {
 
     TOK_COMMA,
 
-    TOK_SINGLE_QUOTE,
+    TOK_SINGLE_QUOTE, // Character literal only
     TOK_DOUBLE_QUOTE,
     TOK_TRIPLE_QUOTES,
 

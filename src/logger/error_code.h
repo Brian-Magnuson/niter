@@ -17,12 +17,24 @@ enum ErrorCode {
 
     // Scanner errors
     E_SCANNER = 2000,
+    // An unexpected character was found in the source code
+    E_UNEXPECTED_CHAR,
+    // A backslash was found at the end of a line without a newline character
+    E_NO_LF_AFTER_BACKSLASH,
     // A multi-line comment was not closed at the end of the file
     E_UNCLOSED_COMMENT,
     // A closing comment '*/' was found without an opening '/*'
     E_CLOSING_UNOPENED_COMMENT,
-    // A backslash was found at the end of a line without a newline character
-    E_NO_LF_AFTER_BACKSLASH,
+    // A character literal was not closed after the first character
+    E_UNCLOSED_CHAR,
+    // An empty character literal was found
+    E_EMPTY_CHAR,
+    // An illegal escape sequence was found
+    E_ILLEGAL_ESC_SEQ,
+    // A single-line string literal was not closed at the end of the line
+    E_UNCLOSED_STRING,
+    // A multi-line string literal was not closed at the end of the file
+    E_UNCLOSED_MULTI_LINE_STRING,
 
     // Parser errors
     E_PARSER = 3000,

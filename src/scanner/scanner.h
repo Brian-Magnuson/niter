@@ -131,6 +131,24 @@ class Scanner {
      *
      */
     void multi_line_comment();
+
+    /**
+     * @brief Reads a string token from the source code and adds it to the list of tokens.
+     *
+     */
+    void string();
+
+    /**
+     * @brief Reads a number token from the source code and adds it to the list of tokens.
+     *
+     */
+    void number();
+
+    /**
+     * @brief Reads an identifier token from the source code and adds it to the list of tokens. If the identifier is a keyword, adds the keyword token instead.
+     *
+     */
+    void identifier();
 };
 
 #endif // SCANNER_H
