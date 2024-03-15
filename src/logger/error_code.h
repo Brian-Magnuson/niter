@@ -17,6 +17,8 @@ enum ErrorCode {
 
     // Scanner errors
     E_SCANNER = 2000,
+    // A multi-line comment was not closed at the end of the file
+    E_UNCLOSED_COMMENT,
     // A closing comment '*/' was found without an opening '/*'
     E_CLOSING_UNOPENED_COMMENT,
     // A backslash was found at the end of a line without a newline character

@@ -237,3 +237,27 @@ void Scanner::scan_token() {
         // TODO: Implement the rest of the scanner
     }
 }
+
+void Scanner::single_line_comment() {
+    while (!is_at_end() && peek() != '\n') {
+        advance();
+    }
+}
+
+void Scanner::multi_line_comment() {
+    while (!is_at_end()) {
+        if (peek() == '*' && peek_next() == '/') {
+            advance();
+            advance();
+            return;
+        }
+        if (peek() == '\n') {
+            line++;
+            line_index = current;
+        }
+        advance();
+    }
+    Token t = make_token(TOK_EOF);
+    ErrorLogger::inst()
+        .log_error(t, E_UNCLOSED_COMMENT, "Comment was not closed at the end of the file.");
+}
