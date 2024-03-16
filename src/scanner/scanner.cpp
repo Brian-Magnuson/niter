@@ -171,8 +171,7 @@ void Scanner::scan_token() {
         add_token(TOK_COMMA);
         break;
     case '\'':
-        // TODO: Implement character literals
-        add_token(TOK_SINGLE_QUOTE);
+        char_literal();
         break;
     case '"':
         // TODO: Implement string literals
@@ -289,4 +288,109 @@ void Scanner::multi_line_comment() {
     Token t = make_token(TOK_EOF);
     ErrorLogger::inst()
         .log_error(t, E_UNCLOSED_COMMENT, "Comment was not closed at the end of the file.");
+}
+
+char Scanner::read_escape_sequence() {
+    char c = advance();
+    switch (c) {
+    case 'b':
+        return '\b'; // Backspace
+    case 'f':
+        return '\f'; // Form feed
+    case 'n':
+        return '\n'; // Line feed (newline)
+    case 'r':
+        return '\r'; // Carriage return
+    case 't':
+        return '\t'; // Horizontal tab
+    case '0':
+        return '\0'; // Null character
+    case '\\':
+        return '\\'; // Backslash
+    case '\'':
+        return '\''; // Single quote
+    case '"':
+        return '"'; // Double quote
+    case '%':
+        return '%'; // Percent (just in case we need it for formatting)
+    case '{':
+        return '{'; // Left brace (just in case we need it for formatting)
+    default:
+        Token t = make_token(TOK_UNKNOWN);
+        ErrorLogger::inst()
+            .log_error(t, E_ILLEGAL_ESC_SEQ, "Illegal escape sequence.");
+        return c;
+    }
+}
+
+void Scanner::char_literal() {
+    // Ensure the next character is not a newline
+    if (is_at_end() || peek() == '\n') {
+        Token t = make_token(TOK_SINGLE_QUOTE);
+        ErrorLogger::inst()
+            .log_error(t, E_UNCLOSED_CHAR, "Character literal was not closed after the first character.");
+        return;
+    }
+    if (peek() == '\'') {
+        Token t = make_token(TOK_SINGLE_QUOTE);
+        ErrorLogger::inst()
+            .log_error(t, E_EMPTY_CHAR, "Empty character literal found.");
+        return;
+    }
+
+    // Read the character
+    if (match('\\')) {
+        char c = read_escape_sequence();
+        add_token(TOK_CHAR, c);
+    } else {
+        add_token(TOK_CHAR, advance());
+    }
+
+    // Ensure the character literal is closed
+    if (!match('\'')) {
+        Token t = make_token(TOK_SINGLE_QUOTE);
+        ErrorLogger::inst()
+            .log_error(t, E_UNCLOSED_CHAR, "Character literal was not closed after the first character.");
+    }
+}
+
+void Scanner::string_literal() {
+    bool is_multi_line = false;
+    std::string literal;
+
+    if (peek() == '"' && peek_next() == '"') {
+        advance();
+        advance();
+        is_multi_line = true;
+    }
+    while (true) {
+        if (is_multi_line && is_at_end()) {
+            Token t = make_token(TOK_EOF);
+            ErrorLogger::inst()
+                .log_error(t, E_UNCLOSED_MULTI_LINE_STRING, "Multi-line string literal was not closed at the end of the file.");
+            return;
+        }
+        if (!is_multi_line && peek() == '\n') {
+            Token t = make_token(TOK_NEWLINE);
+            ErrorLogger::inst()
+                .log_error(t, E_UNCLOSED_STRING, "Single-line string literal was not closed at the end of the line.");
+            return;
+        }
+        if (is_multi_line && peek() == '"' && peek_next() == '"' && peek_next(2) == '"') {
+            advance();
+            advance();
+            advance();
+            break;
+        }
+        if (!is_multi_line && peek() == '"') {
+            advance();
+            break;
+        }
+        if (peek() == '\\') {
+            literal += read_escape_sequence();
+        } else {
+            literal += advance();
+        }
+    }
+    add_token(TOK_STR, literal);
 }

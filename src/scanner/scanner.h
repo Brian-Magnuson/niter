@@ -133,10 +133,23 @@ class Scanner {
     void multi_line_comment();
 
     /**
-     * @brief Reads a string token from the source code and adds it to the list of tokens.
+     * @brief Reads an escape sequence from the source code and returns the corresponding character.
+     *
+     * @return char The character corresponding to the escape sequence.
+     */
+    char read_escape_sequence();
+
+    /**
+     * @brief Reads a character token from the source code and adds it to the list of tokens.
      *
      */
-    void string();
+    void char_literal();
+
+    /**
+     * @brief Reads a string token from the source code and adds it to the list of tokens.
+     * If the first two characters are double quotes, reads a multi-line string literal.
+     */
+    void string_literal();
 
     /**
      * @brief Reads a number token from the source code and adds it to the list of tokens.

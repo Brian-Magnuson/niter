@@ -78,6 +78,7 @@ enum TokenType {
     // Literals
 
     TOK_IDENT,
+    TOK_CHAR,
     TOK_STR,
     TOK_CSTR,
     TOK_TSTR,
