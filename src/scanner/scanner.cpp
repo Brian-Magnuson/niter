@@ -174,14 +174,7 @@ void Scanner::scan_token() {
         char_literal();
         break;
     case '"':
-        // TODO: Implement string literals
-        if (peek() == '"' && peek_next() == '"') {
-            advance();
-            advance();
-            add_token(TOK_TRIPLE_QUOTES);
-        } else {
-            add_token(TOK_DOUBLE_QUOTE);
-        }
+        string_literal();
         break;
     case '\n':
         add_token(TOK_NEWLINE);

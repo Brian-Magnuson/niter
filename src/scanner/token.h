@@ -42,9 +42,9 @@ enum TokenType {
 
     TOK_COMMA,
 
-    TOK_SINGLE_QUOTE, // Character literal only
-    TOK_DOUBLE_QUOTE,
-    TOK_TRIPLE_QUOTES,
+    TOK_SINGLE_QUOTE,  // Character literal only
+    TOK_DOUBLE_QUOTE,  // String literal only
+    TOK_TRIPLE_QUOTES, // Multi-line string literal only
 
     TOK_NEWLINE,
     TOK_BACKSLASH, // Line continuation only
