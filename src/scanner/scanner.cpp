@@ -101,7 +101,9 @@ bool Scanner::is_digit(char c, int base) {
                c >= 'A' && c <= 'F';
     default:
         return false;
-        // TODO: Also log an UNREACHABLE error here
+        // Also log E_UNREACHABLE
+        ErrorLogger::inst()
+            .log_error(make_token(TOK_UNKNOWN), E_UNREACHABLE, "Unreachable code reached in 'is_digit'.");
     }
 }
 

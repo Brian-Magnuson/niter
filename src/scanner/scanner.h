@@ -72,6 +72,7 @@ class Scanner {
 
     /**
      * @brief Creates a new token without adding it to the list of tokens.
+     * Useful for error logging where a token is needed but should not be added to the list of tokens.
      *
      * @param tok_type The type of the token.
      * @param literal The literal text of the token, if applicable.
