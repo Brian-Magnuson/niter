@@ -80,10 +80,12 @@ enum TokenType {
     TOK_IDENT,
     TOK_CHAR,
     TOK_STR,
-    TOK_CSTR,
-    TOK_TSTR,
+    // TOK_CSTR, // C-style string literal, currently not supported
+    // TOK_TSTR, // Template string literal, currently not supported
     TOK_INT,   // Literals stored as 64-bit integers internally
-    TOK_FLOAT, // Literals stored as double-precision floating-point numbers internally
+    TOK_FLOAT, // Literals stored as double-precision floating-point numbers internally. 'inf' and 'NaN' are also float literals.
+    TOK_BOOL,  // Either 'true' or 'false'
+    TOK_NIL,   // 'nil' only
 
     // Keywords
 
@@ -113,10 +115,6 @@ enum TokenType {
     KW_NAMESPACE,
     KW_STATIC,
     KW_GLOBAL,
-
-    KW_TRUE,
-    KW_FALSE,
-    KW_NIL,
     KW_SELF,
 
     KW_AS,

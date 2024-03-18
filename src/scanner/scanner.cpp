@@ -1,6 +1,7 @@
 #include "scanner.h"
 #include "../logger/logger.h"
 #include <cctype>
+#include <limits>
 
 std::unordered_map<std::string, TokenType> Scanner::keywords = {
     {"and", KW_AND},
@@ -28,16 +29,18 @@ std::unordered_map<std::string, TokenType> Scanner::keywords = {
     {"namespace", KW_NAMESPACE},
     {"static", KW_STATIC},
     {"global", KW_GLOBAL},
-    {"true", KW_TRUE},
-    {"false", KW_FALSE},
-    {"nil", KW_NIL},
     {"self", KW_SELF},
     {"as", KW_AS},
     {"typeof", KW_TYPEOF},
     {"is", KW_IS},
     {"alloc", KW_ALLOC},
     {"dealloc", KW_DEALLOC},
-    {"extern", KW_EXTERN}
+    {"extern", KW_EXTERN},
+    {"true", TOK_BOOL},
+    {"false", TOK_BOOL},
+    {"nil", TOK_NIL},
+    {"inf", TOK_FLOAT},
+    {"NaN", TOK_FLOAT},
 };
 
 char Scanner::advance() {
@@ -426,6 +429,7 @@ void Scanner::numeric_literal() {
     - Decimal point in non-decimal number: 0x123.456
     - Exponential notation without digits: 1.23e
     - Very large integers and floating point numbers
+    - Numbers followed by letters or digits outside the base: 123abc ('123 abc' is allowed)
     */
 
     std::string num_string;
@@ -504,6 +508,8 @@ void Scanner::numeric_literal() {
             .log_error(t, E_NON_DIGIT_IN_NUMBER, "Numbers should be followed by a space, a newline, or a non-alphanumeric character.");
         return;
     }
+    // Note: 'f' is currently not allowed as a suffix for 32-bit floats.
+    // This is because all floats are currently stored in 64-bits for simplicity.
 
     if (is_float) {
         try {
@@ -531,5 +537,32 @@ void Scanner::numeric_literal() {
             ErrorLogger::inst()
                 .log_error(t, E_INT_TOO_LARGE, "Integer is too large.");
         }
+    }
+}
+
+void Scanner::identifier() {
+    while (is_alpha_numeric(peek())) {
+        advance();
+    }
+    std::string text = source->substr(start, current - start);
+    auto it = keywords.find(text);
+    // Can be a KW_ token, TOK_BOOL, TOK_NIL, TOK_FLOAT, or TOK_IDENT
+    if (it == keywords.end()) {
+        add_token(TOK_IDENT);
+    } else if (it->second == TOK_BOOL) {
+        add_token(TOK_BOOL, text == "true");
+    } else if (it->second == TOK_NIL) {
+        add_token(TOK_NIL);
+    } else if (it->second == TOK_FLOAT) {
+        if (text == "inf") {
+            add_token(TOK_FLOAT, std::numeric_limits<double>::infinity());
+        } else if (text == "NaN") {
+            add_token(TOK_FLOAT, std::numeric_limits<double>::quiet_NaN());
+        } else {
+            ErrorLogger::inst()
+                .log_error(make_token(TOK_UNKNOWN), E_UNREACHABLE, "Unreachable code reached in 'identifier'.");
+        }
+    } else {
+        add_token(it->second);
     }
 }

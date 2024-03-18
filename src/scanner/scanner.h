@@ -160,7 +160,10 @@ class Scanner {
     void numeric_literal();
 
     /**
-     * @brief Reads an identifier token from the source code and adds it to the list of tokens. If the identifier is a keyword, adds the keyword token instead.
+     * @brief Reads an identifier token from the source code and adds it to the list of tokens.
+     * If the identifier is a keyword, adds the keyword token instead.
+     * If the identifier is a boolean or null literal, adds the corresponding token instead.
+     * If the identifier is 'inf' or 'NaN', adds the corresponding float literal token instead.
      *
      */
     void identifier();
