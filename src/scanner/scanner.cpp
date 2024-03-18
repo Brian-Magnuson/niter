@@ -1,5 +1,6 @@
 #include "scanner.h"
 #include "../logger/logger.h"
+#include <cctype>
 
 std::unordered_map<std::string, TokenType> Scanner::keywords = {
     {"and", KW_AND},
@@ -86,8 +87,22 @@ void Scanner::add_token(TokenType tok_type, const std::any& literal) {
     tokens.push_back(make_token(tok_type, literal));
 }
 
-bool Scanner::is_digit(char c) {
-    return c >= '0' && c <= '9';
+bool Scanner::is_digit(char c, int base) {
+    switch (base) {
+    case 2:
+        return c == '0' || c == '1';
+    case 8:
+        return c >= '0' && c <= '7';
+    case 10:
+        return c >= '0' && c <= '9';
+    case 16:
+        return c >= '0' && c <= '9' ||
+               c >= 'a' && c <= 'f' ||
+               c >= 'A' && c <= 'F';
+    default:
+        return false;
+        // TODO: Also log an UNREACHABLE error here
+    }
 }
 
 bool Scanner::is_alpha(char c) {
@@ -232,6 +247,8 @@ void Scanner::scan_token() {
         // Can be '.' or '..' or '...'
         if (match('.')) {
             add_token(match('.') ? TOK_TRIPLE_DOT : TOK_DOT_DOT);
+        } else if (is_digit(peek())) {
+            numeric_literal();
         } else {
             add_token(TOK_DOT);
         }
@@ -247,7 +264,7 @@ void Scanner::scan_token() {
         break;
     default:
         if (is_digit(c)) {
-            number();
+            numeric_literal();
         } else if (is_alpha(c)) {
             identifier();
         } else {
@@ -386,4 +403,131 @@ void Scanner::string_literal() {
         }
     }
     add_token(TOK_STR, literal);
+}
+
+void Scanner::numeric_literal() {
+
+    /*
+    Under the following rules, numbers of these forms are allowed:
+    - Decimal: 1234567890
+    - Binary: 0b101010
+    - Octal: 0o1234567
+    - Hexadecimal: 0x1234abcdef
+    - Floating point: 123.456
+    - Exponential notation: 1.23e4 1.23E4 1.23e+4 1.23e-4
+    - Exponent in decimal integer: 123e4 123E4 123e+4 123e-4
+    - Underscores: 1_000_000
+    - Float without leading 0: .123
+    - Float without trailing 0: 123.
+    The following forms specifically are not allowed:
+    - Multiple decimal points: 123.456.789
+    - Decimal point in non-decimal number: 0x123.456
+    - Exponential notation without digits: 1.23e
+    - Very large integers and floating point numbers
+    */
+
+    std::string num_string;
+    char first_digit = source->at(current - 1); // This is because advance() has already been called.
+    num_string += first_digit;
+    bool is_float = num_string.at(0) == '.'; // If the first digit is a decimal point, it's a float. If not, number can be changed to a float later.
+    int base = 10;
+    // If the first digit is 0 (the number is not a float (yet)), check for base
+    if (first_digit == '0') {
+        if (peek() == 'x') {
+            // Hexadecimal number
+            advance();
+            base = 16;
+        } else if (peek() == 'b') {
+            // Binary number
+            advance();
+            base = 2;
+        } else if (peek() == 'o') {
+            // Octal number
+            advance();
+            base = 8;
+        }
+    }
+
+    // Read the number
+    while (is_digit(peek(), base) || peek() == '_' || peek() == '.') {
+        if (peek() != '_') {
+            num_string += advance();
+        } else if (peek() == '.') {
+            if (is_float) {
+                Token t = make_token(TOK_UNKNOWN);
+                ErrorLogger::inst()
+                    .log_error(t, E_MULTIPLE_DECIMAL_POINTS, "Multiple decimal points in a number.");
+                return;
+            } else if (base != 10) {
+                Token t = make_token(TOK_UNKNOWN);
+                ErrorLogger::inst()
+                    .log_error(t, E_NON_DECIMAL_FLOAT, "Floating point numbers must be in base 10.");
+                return;
+            } else {
+                is_float = true;
+                num_string += advance();
+            }
+        } else {
+            advance();
+        }
+    }
+    // Check for exponential notation
+    if (base == 10 && (peek() == 'e' || peek() == 'E')) {
+        is_float = true; // Exponential notation always makes the number a float
+        num_string += advance();
+        if (peek() == '+' || peek() == '-') {
+            num_string += advance();
+        }
+        if (!is_digit(peek())) {
+            Token t = make_token(TOK_UNKNOWN);
+            ErrorLogger::inst()
+                .log_error(t, E_NO_DIGITS_IN_EXPONENT, "Exponential notation must have at least one digit in the exponent.");
+            return;
+        }
+        while (is_digit(peek()) || peek() == '_') {
+            if (peek() != '_') {
+                num_string += advance();
+            } else {
+                advance();
+            }
+        }
+    }
+
+    // The next character should not be a letter or a digit outside the base
+    // This would otherwise make numbers confusing to read.
+    // Numbers should be followed by a space, a newline, or a non-alphanumeric character.
+    if (is_alpha_numeric(peek())) {
+        Token t = make_token(TOK_UNKNOWN);
+        ErrorLogger::inst()
+            .log_error(t, E_NON_DIGIT_IN_NUMBER, "Numbers should be followed by a space, a newline, or a non-alphanumeric character.");
+        return;
+    }
+
+    if (is_float) {
+        try {
+            double num = std::stod(num_string);
+            add_token(TOK_FLOAT, num);
+        } catch (const std::invalid_argument& e) {
+            Token t = make_token(TOK_UNKNOWN);
+            ErrorLogger::inst()
+                .log_error(t, E_CONVERSION, "An unknown error occurred while parsing a floating point number.");
+        } catch (const std::out_of_range& e) {
+            Token t = make_token(TOK_UNKNOWN);
+            ErrorLogger::inst()
+                .log_error(t, E_FLOAT_TOO_LARGE, "Floating point number is too large.");
+        }
+    } else {
+        try {
+            long long num = std::stoll(num_string, nullptr, base);
+            add_token(TOK_INT, num);
+        } catch (const std::invalid_argument& e) {
+            Token t = make_token(TOK_UNKNOWN);
+            ErrorLogger::inst()
+                .log_error(t, E_CONVERSION, "An unknown error occurred while parsing an integer.");
+        } catch (const std::out_of_range& e) {
+            Token t = make_token(TOK_UNKNOWN);
+            ErrorLogger::inst()
+                .log_error(t, E_INT_TOO_LARGE, "Integer is too large.");
+        }
+    }
 }

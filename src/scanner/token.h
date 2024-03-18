@@ -82,9 +82,8 @@ enum TokenType {
     TOK_STR,
     TOK_CSTR,
     TOK_TSTR,
-    TOK_INT,
-    TOK_FLOAT,
-    TOK_DOUBLE,
+    TOK_INT,   // Literals stored as 64-bit integers internally
+    TOK_FLOAT, // Literals stored as double-precision floating-point numbers internally
 
     // Keywords
 

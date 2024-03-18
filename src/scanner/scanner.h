@@ -88,13 +88,14 @@ class Scanner {
     void add_token(TokenType tok_type, const std::any& literal = std::any());
 
     /**
-     * @brief Checks if the passed-in character is a digit.
+     * @brief Checks if the current character is a digit and advances the scanner if it is.
      *
      * @param c The character to check.
-     * @return true If the character is a digit 0-9.
+     * @param base The base of the number. Defaults to 10.
+     * @return true If the character is a digit within the bounds for the base.
      * @return false Otherwise.
      */
-    bool is_digit(char c);
+    bool is_digit(char c, int base = 10);
 
     /**
      * @brief Checks if the passed-in character is an alphabetic character or an underscore.
@@ -155,7 +156,7 @@ class Scanner {
      * @brief Reads a number token from the source code and adds it to the list of tokens.
      *
      */
-    void number();
+    void numeric_literal();
 
     /**
      * @brief Reads an identifier token from the source code and adds it to the list of tokens. If the identifier is a keyword, adds the keyword token instead.

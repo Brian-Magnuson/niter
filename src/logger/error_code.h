@@ -35,6 +35,18 @@ enum ErrorCode {
     E_UNCLOSED_STRING,
     // A multi-line string literal was not closed at the end of the file
     E_UNCLOSED_MULTI_LINE_STRING,
+    // A numeric literal was found with multiple decimal points
+    E_MULTIPLE_DECIMAL_POINTS,
+    // A decimal point was found in a number with its base set to non-decimal
+    E_NON_DECIMAL_FLOAT,
+    // A number was interpreted as having an exponent, but no digits were found after the 'e' or 'E'
+    E_NO_DIGITS_IN_EXPONENT,
+    // An integer literal was too large to be stored properly
+    E_INT_TOO_LARGE,
+    // A floating-point literal was too large to be stored properly
+    E_FLOAT_TOO_LARGE,
+    // A number was found with a non-digit character in it
+    E_NON_DIGIT_IN_NUMBER,
 
     // Parser errors
     E_PARSER = 3000,
@@ -59,6 +71,8 @@ enum ErrorCode {
     E_IMPOSSIBLE,
     // Statement was reached that should be unimplemented
     E_UNIMPLEMENTED,
+    // A function was called with an invalid argument
+    E_CONVERSION,
 };
 
 #endif // ERROR_CODE_H
