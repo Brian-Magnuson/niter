@@ -99,9 +99,9 @@ bool Scanner::is_digit(char c, int base) {
     case 10:
         return c >= '0' && c <= '9';
     case 16:
-        return c >= '0' && c <= '9' ||
-               c >= 'a' && c <= 'f' ||
-               c >= 'A' && c <= 'F';
+        return (c >= '0' && c <= '9') ||
+               (c >= 'a' && c <= 'f') ||
+               (c >= 'A' && c <= 'F');
     default:
         return false;
         // Also log E_UNREACHABLE

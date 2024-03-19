@@ -73,6 +73,8 @@ enum ErrorCode {
     E_UNIMPLEMENTED,
     // A function was called with an invalid argument
     E_CONVERSION,
+    // An error for testing purposes
+    E_TEST_ERROR
 };
 
 #endif // ERROR_CODE_H

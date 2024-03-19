@@ -6,6 +6,8 @@ std::string token_type_to_string(TokenType type) {
     switch (type) {
     case TOK_EOF:
         return "TOK_EOF";
+    case TOK_UNKNOWN:
+        return "TOK_UNKNOWN";
     case TOK_LEFT_PAREN:
         return "TOK_LEFT_PAREN";
     case TOK_RIGHT_PAREN:
@@ -85,8 +87,8 @@ std::string token_type_to_string(TokenType type) {
         return "TOK_BAR_BAR_EQ";
     case TOK_BANG:
         return "TOK_BANG";
-    case TOK_BANG_EQUAL:
-        return "TOK_BANG_EQUAL";
+    case TOK_BANG_EQ:
+        return "TOK_BANG_EQ";
     case TOK_EQ:
         return "TOK_EQ";
     case TOK_EQ_EQ:
@@ -117,18 +119,22 @@ std::string token_type_to_string(TokenType type) {
 
     case TOK_IDENT:
         return "TOK_IDENT";
+    case TOK_CHAR:
+        return "TOK_CHAR";
     case TOK_STR:
         return "TOK_STR";
-    case TOK_CSTR:
-        return "TOK_CSTR";
-    case TOK_TSTR:
-        return "TOK_TSTR";
+    // case TOK_CSTR:
+    //     return "TOK_CSTR";
+    // case TOK_TSTR:
+    //     return "TOK_TSTR";
     case TOK_INT:
         return "TOK_INT";
     case TOK_FLOAT:
         return "TOK_FLOAT";
-    case TOK_DOUBLE:
-        return "TOK_DOUBLE";
+    case TOK_BOOL:
+        return "TOK_BOOL";
+    case TOK_NIL:
+        return "TOK_NIL";
 
     case KW_AND:
         return "KW_AND";
@@ -182,12 +188,6 @@ std::string token_type_to_string(TokenType type) {
     case KW_GLOBAL:
         return "KW_GLOBAL";
 
-    case KW_TRUE:
-        return "KW_TRUE";
-    case KW_FALSE:
-        return "KW_FALSE";
-    case KW_NIL:
-        return "KW_NIL";
     case KW_SELF:
         return "KW_SELF";
 
@@ -204,6 +204,9 @@ std::string token_type_to_string(TokenType type) {
 
     case KW_EXTERN:
         return "KW_EXTERN";
+
+    default:
+        return "TOK_UNKNOWN";
     }
 }
 
