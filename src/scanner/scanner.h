@@ -167,6 +167,41 @@ class Scanner {
      *
      */
     void identifier();
+
+public:
+    /**
+     * @brief Construct a new Scanner object.
+     *
+     */
+    Scanner() = default;
+
+    /**
+     * @brief Scans the source code, adding tokens to the stored vector of Tokens.
+     *
+     * @param filename A shared ptr to the name of the file. Necessary for storing location information in Tokens.
+     * @param source_code A shared ptr a string containing the entire source code in the file.
+     */
+    void scan_file(std::shared_ptr<std::string> filename, std::shared_ptr<std::string> source_code);
+
+    /**
+     * @brief Get the tokens object
+     *
+     * @return const std::vector<Token>& The vector of tokens accumulated.
+     */
+    const std::vector<Token>& get_tokens() const;
+
+    /**
+     * @brief Prints out all the tokens from the tokens vector, each on a new line.
+     *
+     * @param out The output stream. Default is `std::cout`.
+     */
+    void print_all_tokens(std::ostream& out = std::cout) const;
+
+    /**
+     * @brief Clears the tokens stored in the tokens vector.
+     *
+     */
+    void reset_tokens();
 };
 
 #endif // SCANNER_H

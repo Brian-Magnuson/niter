@@ -277,7 +277,6 @@ void Scanner::scan_token() {
             ErrorLogger::inst()
                 .log_error(t, E_UNEXPECTED_CHAR, "Unexpected character.");
         }
-        // TODO: Implement the rest of the scanner
     }
 }
 
