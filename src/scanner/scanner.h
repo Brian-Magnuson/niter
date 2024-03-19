@@ -191,17 +191,17 @@ public:
     const std::vector<Token>& get_tokens() const;
 
     /**
+     * @brief Clears the tokens stored in the tokens vector.
+     *
+     */
+    void clear_tokens();
+
+    /**
      * @brief Prints out all the tokens from the tokens vector, each on a new line.
      *
      * @param out The output stream. Default is `std::cout`.
      */
     void print_all_tokens(std::ostream& out = std::cout) const;
-
-    /**
-     * @brief Clears the tokens stored in the tokens vector.
-     *
-     */
-    void reset_tokens();
 };
 
 #endif // SCANNER_H

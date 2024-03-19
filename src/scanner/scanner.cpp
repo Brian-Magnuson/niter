@@ -565,3 +565,31 @@ void Scanner::identifier() {
         add_token(it->second);
     }
 }
+
+void Scanner::scan_file(std::shared_ptr<std::string> filename, std::shared_ptr<std::string> source_code) {
+    this->filename = filename;
+    this->source = source_code;
+    // Add a null terminator to the end of the source code
+    source->push_back('\0');
+
+    while (!is_at_end()) {
+        start = current;
+        scan_token();
+    }
+
+    add_token(TOK_EOF);
+}
+
+const std::vector<Token>& Scanner::get_tokens() const {
+    return tokens;
+}
+
+void Scanner::clear_tokens() {
+    tokens.clear();
+}
+
+void Scanner::print_all_tokens(std::ostream& out) const {
+    for (const Token& t : tokens) {
+        out << t.to_string() << std::endl;
+    }
+}
