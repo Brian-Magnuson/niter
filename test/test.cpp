@@ -215,3 +215,103 @@ TEST_CASE("Scanner operators 2", "[scanner]") {
     CHECK(tokens.at(22).tok_type == TOK_DOUBLE_ARROW);
     CHECK(tokens.at(23).tok_type == TOK_EOF);
 }
+
+TEST_CASE("Scanner bool and nil", "[scanner]") {
+    std::string source_code = "true false nil";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/bool_nil_test.nit");
+    std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, source);
+    auto tokens = scanner.get_tokens();
+
+    REQUIRE(tokens.size() == 4);
+    CHECK(tokens.at(0).tok_type == TOK_BOOL);
+    REQUIRE(tokens.at(0).literal.has_value());
+    REQUIRE(std::any_cast<bool>(tokens.at(0).literal) == true);
+    CHECK(tokens.at(1).tok_type == TOK_BOOL);
+    REQUIRE(tokens.at(1).literal.has_value());
+    REQUIRE(std::any_cast<bool>(tokens.at(1).literal) == false);
+    CHECK(tokens.at(2).tok_type == TOK_NIL);
+    CHECK(tokens.at(3).tok_type == TOK_EOF);
+}
+
+TEST_CASE("Scanner integers", "[scanner]") {
+    std::string source_code = "5 0xab 0xAB 0o42 0b11001110 100_000_000 042";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/integers_test.nit");
+    std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, source);
+    auto tokens = scanner.get_tokens();
+
+    REQUIRE(tokens.size() == 8);
+    CHECK(tokens.at(0).tok_type == TOK_INT);
+    REQUIRE(tokens.at(0).literal.has_value());
+    REQUIRE(std::any_cast<long long>(tokens.at(0).literal) == 5);
+    CHECK(tokens.at(1).tok_type == TOK_INT);
+    REQUIRE(tokens.at(1).literal.has_value());
+    REQUIRE(std::any_cast<long long>(tokens.at(1).literal) == 0xab);
+    CHECK(tokens.at(2).tok_type == TOK_INT);
+    REQUIRE(tokens.at(2).literal.has_value());
+    REQUIRE(std::any_cast<long long>(tokens.at(2).literal) == 0xAB);
+    CHECK(tokens.at(3).tok_type == TOK_INT);
+    REQUIRE(tokens.at(3).literal.has_value());
+    REQUIRE(std::any_cast<long long>(tokens.at(3).literal) == 042);
+    CHECK(tokens.at(4).tok_type == TOK_INT);
+    REQUIRE(tokens.at(4).literal.has_value());
+    REQUIRE(std::any_cast<long long>(tokens.at(4).literal) == 0b11001110);
+    CHECK(tokens.at(5).tok_type == TOK_INT);
+    REQUIRE(tokens.at(5).literal.has_value());
+    REQUIRE(std::any_cast<long long>(tokens.at(5).literal) == 100000000);
+    CHECK(tokens.at(6).tok_type == TOK_INT);
+    REQUIRE(tokens.at(6).literal.has_value());
+    REQUIRE(std::any_cast<long long>(tokens.at(6).literal) == 42);
+    CHECK(tokens.at(7).tok_type == TOK_EOF);
+}
+
+TEST_CASE("Scanner floating point numbers", "[scanner]") {
+    std::string source_code = "5.0 5. 0.5 .5 5e5 5e+5 5e-5 5.0e5 5.0e+5 5.0e-5 5E5";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/floating_point_test.nit");
+    std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, source);
+    auto tokens = scanner.get_tokens();
+
+    REQUIRE(tokens.size() == 12);
+    CHECK(tokens.at(0).tok_type == TOK_FLOAT);
+    REQUIRE(tokens.at(0).literal.has_value());
+    REQUIRE(std::any_cast<double>(tokens.at(0).literal) == 5.0);
+    CHECK(tokens.at(1).tok_type == TOK_FLOAT);
+    REQUIRE(tokens.at(1).literal.has_value());
+    REQUIRE(std::any_cast<double>(tokens.at(1).literal) == 5.0);
+    CHECK(tokens.at(2).tok_type == TOK_FLOAT);
+    REQUIRE(tokens.at(2).literal.has_value());
+    REQUIRE(std::any_cast<double>(tokens.at(2).literal) == 0.5);
+    CHECK(tokens.at(3).tok_type == TOK_FLOAT);
+    REQUIRE(tokens.at(3).literal.has_value());
+    REQUIRE(std::any_cast<double>(tokens.at(3).literal) == 0.5);
+    CHECK(tokens.at(4).tok_type == TOK_FLOAT);
+    REQUIRE(tokens.at(4).literal.has_value());
+    REQUIRE(std::any_cast<double>(tokens.at(4).literal) == 5e5);
+    CHECK(tokens.at(5).tok_type == TOK_FLOAT);
+    REQUIRE(tokens.at(5).literal.has_value());
+    REQUIRE(std::any_cast<double>(tokens.at(5).literal) == 5e5);
+    CHECK(tokens.at(6).tok_type == TOK_FLOAT);
+    REQUIRE(tokens.at(6).literal.has_value());
+    REQUIRE(std::any_cast<double>(tokens.at(6).literal) == 5e-5);
+    CHECK(tokens.at(7).tok_type == TOK_FLOAT);
+    REQUIRE(tokens.at(7).literal.has_value());
+    REQUIRE(std::any_cast<double>(tokens.at(7).literal) == 5.0e5);
+    CHECK(tokens.at(8).tok_type == TOK_FLOAT);
+    REQUIRE(tokens.at(8).literal.has_value());
+    REQUIRE(std::any_cast<double>(tokens.at(8).literal) == 5.0e5);
+    CHECK(tokens.at(9).tok_type == TOK_FLOAT);
+    REQUIRE(tokens.at(9).literal.has_value());
+    REQUIRE(std::any_cast<double>(tokens.at(9).literal) == 5.0e-5);
+    CHECK(tokens.at(10).tok_type == TOK_FLOAT);
+    REQUIRE(tokens.at(10).literal.has_value());
+    REQUIRE(std::any_cast<double>(tokens.at(10).literal) == 5e5);
+    CHECK(tokens.at(11).tok_type == TOK_EOF);
+}
