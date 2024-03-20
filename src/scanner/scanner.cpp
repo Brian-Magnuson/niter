@@ -455,8 +455,8 @@ void Scanner::numeric_literal() {
 
     // Read the number
     while (is_digit(peek(), base) || peek() == '_' || peek() == '.') {
-        if (peek() != '_') {
-            num_string += advance();
+        if (peek() == '_') {
+            advance();
         } else if (peek() == '.') {
             if (is_float) {
                 Token t = make_token(TOK_UNKNOWN);
@@ -473,7 +473,7 @@ void Scanner::numeric_literal() {
                 num_string += advance();
             }
         } else {
-            advance();
+            num_string += advance();
         }
     }
     // Check for exponential notation
