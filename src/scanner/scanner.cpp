@@ -569,8 +569,6 @@ void Scanner::identifier() {
 void Scanner::scan_file(std::shared_ptr<std::string> filename, std::shared_ptr<std::string> source_code) {
     this->filename = filename;
     this->source = source_code;
-    // Add a null terminator to the end of the source code
-    source->push_back('\0');
 
     while (!is_at_end()) {
         start = current;

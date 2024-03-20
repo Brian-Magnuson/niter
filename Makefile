@@ -13,7 +13,7 @@ bin/niterc: src/*.cpp src/*/*.cpp
 
 test/bin/test: src/*/*.cpp test/*.cpp test/bin/catch_amalgamated.o
 	mkdir -p test/bin
-	clang++ -std=c++17 -O3 -Wall -Wextra -g -o test/bin/test src/*/*.cpp test/*.cpp test/bin/catch_amalgamated.o
+	clang++ -std=c++17 -O0 -Wall -Wextra -g -o test/bin/test src/*/*.cpp test/*.cpp test/bin/catch_amalgamated.o
 
 test/bin/catch_amalgamated.o: test/catch/catch_amalgamated.cpp test/catch/catch_amalgamated.hpp
 	mkdir -p test/bin

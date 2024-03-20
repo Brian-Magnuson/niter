@@ -9,6 +9,27 @@
             }
         }
     ],
+    "testMate.cpp.debug.configTemplate": {
+        "name": "Debug Tests",
+        "type": "cppdbg",
+        "request": "launch",
+        "program": "${workspaceFolder}/test/bin/test",
+        "args": [
+            "${label}"
+        ],
+        "cwd": "${cwd}",
+        "env": "${envObj}",
+        "environment": "${envObjArray}",
+        "MIMode": "gdb",
+        "setupCommands": [
+            {
+                "description": "Enable pretty-printing for gdb",
+                "text": "-enable-pretty-printing",
+                "ignoreFailures": true
+            }
+        ],
+        "preLaunchTask": "make test executable",
+    },
     "files.associations": {
         "xstring": "cpp",
         "algorithm": "cpp",

@@ -40,8 +40,8 @@ TEST_CASE("Logger", "[logger]") {
     // */
 
     // REQUIRE(ss.str() == expected);
-    logger.set_ostream(std::cerr);
-    logger.log_error(token, E_CONFIG, "Test error message");
+    // logger.set_ostream(std::cerr);
+    // logger.log_error(token, E_CONFIG, "Test error message");
 
     ErrorLogger::inst().clear_errors();
 }
@@ -82,7 +82,6 @@ TEST_CASE("Log in order", "[logger]") {
 }
 
 TEST_CASE("Scanner", "[scanner]") {
-    // FIXME: This last test resulted in a segmentation fault.
     std::string source_code = "var x = 5";
     std::string file_name = "test_files/scanner_test.nit";
     std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
@@ -91,11 +90,12 @@ TEST_CASE("Scanner", "[scanner]") {
     scanner.scan_file(filename, source);
     auto tokens = scanner.get_tokens();
 
-    REQUIRE(tokens.size() == 4);
+    REQUIRE(tokens.size() == 5);
     REQUIRE(tokens.at(0).tok_type == KW_VAR);
     REQUIRE(tokens.at(1).tok_type == TOK_IDENT);
     REQUIRE(tokens.at(2).tok_type == TOK_EQ);
     REQUIRE(tokens.at(3).tok_type == TOK_INT);
     REQUIRE(tokens.at(3).literal.has_value());
     REQUIRE(std::any_cast<long long>(tokens.at(3).literal) == 5);
+    REQUIRE(tokens.at(4).tok_type == TOK_EOF);
 }
