@@ -424,3 +424,36 @@ TEST_CASE("Scanner multi line comments", "[scanner]") {
     REQUIRE(std::any_cast<long long>(tokens.at(7).literal) == 10);
     CHECK(tokens.at(8).tok_type == TOK_EOF);
 }
+
+TEST_CASE("Scanner identifiers", "[scanner]") {
+    std::string source_code = "var var1 var_1 _var _var1 _var_1 _ _1 1 v";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/identifiers_test.nit");
+    std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, source);
+    auto tokens = scanner.get_tokens();
+
+    REQUIRE(tokens.size() == 11);
+    CHECK(tokens.at(0).tok_type == KW_VAR);
+    CHECK(tokens.at(1).tok_type == TOK_IDENT);
+    CHECK(tokens.at(1).lexeme == "var1");
+    CHECK(tokens.at(2).tok_type == TOK_IDENT);
+    CHECK(tokens.at(2).lexeme == "var_1");
+    CHECK(tokens.at(3).tok_type == TOK_IDENT);
+    CHECK(tokens.at(3).lexeme == "_var");
+    CHECK(tokens.at(4).tok_type == TOK_IDENT);
+    CHECK(tokens.at(4).lexeme == "_var1");
+    CHECK(tokens.at(5).tok_type == TOK_IDENT);
+    CHECK(tokens.at(5).lexeme == "_var_1");
+    CHECK(tokens.at(6).tok_type == TOK_IDENT);
+    CHECK(tokens.at(6).lexeme == "_");
+    CHECK(tokens.at(7).tok_type == TOK_IDENT);
+    CHECK(tokens.at(7).lexeme == "_1");
+    CHECK(tokens.at(8).tok_type == TOK_INT);
+    REQUIRE(tokens.at(8).literal.has_value());
+    REQUIRE(std::any_cast<long long>(tokens.at(8).literal) == 1);
+    CHECK(tokens.at(9).tok_type == TOK_IDENT);
+    CHECK(tokens.at(9).lexeme == "v");
+    CHECK(tokens.at(10).tok_type == TOK_EOF);
+}
