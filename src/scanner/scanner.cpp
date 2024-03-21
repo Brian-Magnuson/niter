@@ -305,6 +305,7 @@ void Scanner::multi_line_comment() {
 }
 
 char Scanner::read_escape_sequence() {
+    advance(); // Consume the backslash
     char c = advance();
     switch (c) {
     case 'b':
@@ -384,7 +385,7 @@ void Scanner::string_literal() {
                 .log_error(t, E_UNCLOSED_MULTI_LINE_STRING, "Multi-line string literal was not closed at the end of the file.");
             return;
         }
-        if (!is_multi_line && peek() == '\n') {
+        if (!is_multi_line && (is_at_end() || peek() == '\n')) {
             Token t = make_token(TOK_NEWLINE);
             ErrorLogger::inst()
                 .log_error(t, E_UNCLOSED_STRING, "Single-line string literal was not closed at the end of the line.");

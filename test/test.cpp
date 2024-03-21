@@ -315,3 +315,112 @@ TEST_CASE("Scanner floating point numbers", "[scanner]") {
     REQUIRE(std::any_cast<double>(tokens.at(10).literal) == 5e5);
     CHECK(tokens.at(11).tok_type == TOK_EOF);
 }
+
+TEST_CASE("Scanner strings", "[scanner]") {
+    std::string source_code = "\"Hello, world!\" \"\" \"\\\"\"";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/strings_test.nit");
+    std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, source);
+    auto tokens = scanner.get_tokens();
+
+    REQUIRE(tokens.size() == 4);
+    CHECK(tokens.at(0).tok_type == TOK_STR);
+    REQUIRE(tokens.at(0).literal.has_value());
+    REQUIRE(std::any_cast<std::string>(tokens.at(0).literal) == "Hello, world!");
+    CHECK(tokens.at(1).tok_type == TOK_STR);
+    REQUIRE(tokens.at(1).literal.has_value());
+    REQUIRE(std::any_cast<std::string>(tokens.at(1).literal) == "");
+    CHECK(tokens.at(2).tok_type == TOK_STR);
+    REQUIRE(tokens.at(2).literal.has_value());
+    REQUIRE(std::any_cast<std::string>(tokens.at(2).literal) == "\"");
+    CHECK(tokens.at(3).tok_type == TOK_EOF);
+}
+
+TEST_CASE("Scanner escape sequences", "[scanner]") {
+    std::string source_code = "\"\\n\\t\\r\\b\\f\\\"\\\\\"";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/escape_sequences_test.nit");
+    std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, source);
+    auto tokens = scanner.get_tokens();
+
+    REQUIRE(tokens.size() == 2);
+    CHECK(tokens.at(0).tok_type == TOK_STR);
+    REQUIRE(tokens.at(0).literal.has_value());
+    REQUIRE(std::any_cast<std::string>(tokens.at(0).literal) == "\n\t\r\b\f\"\\");
+    CHECK(tokens.at(1).tok_type == TOK_EOF);
+}
+
+TEST_CASE("Scanner multi line strings", "[scanner]") {
+    std::string source_code = "\"\"\"Hello, world!\nThis is a multi-line string!\"\"\"";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/multi_line_strings_test.nit");
+    std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, source);
+    auto tokens = scanner.get_tokens();
+
+    REQUIRE(tokens.size() == 2);
+    CHECK(tokens.at(0).tok_type == TOK_STR);
+    REQUIRE(tokens.at(0).literal.has_value());
+    REQUIRE(std::any_cast<std::string>(tokens.at(0).literal) == "Hello, world!\nThis is a multi-line string!");
+    CHECK(tokens.at(1).tok_type == TOK_EOF);
+}
+
+TEST_CASE("Scanner comments", "[scanner]") {
+    std::string source_code = "var x = 5 // This is a comment\nvar y = 10";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/comments_test.nit");
+    std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, source);
+    auto tokens = scanner.get_tokens();
+
+    REQUIRE(tokens.size() == 10);
+    CHECK(tokens.at(0).tok_type == KW_VAR);
+    CHECK(tokens.at(1).tok_type == TOK_IDENT);
+    CHECK(tokens.at(1).lexeme == "x");
+    CHECK(tokens.at(2).tok_type == TOK_EQ);
+    CHECK(tokens.at(3).tok_type == TOK_INT);
+    REQUIRE(tokens.at(3).literal.has_value());
+    REQUIRE(std::any_cast<long long>(tokens.at(3).literal) == 5);
+    CHECK(tokens.at(4).tok_type == TOK_NEWLINE);
+    CHECK(tokens.at(5).tok_type == KW_VAR);
+    CHECK(tokens.at(6).tok_type == TOK_IDENT);
+    CHECK(tokens.at(6).lexeme == "y");
+    CHECK(tokens.at(7).tok_type == TOK_EQ);
+    CHECK(tokens.at(8).tok_type == TOK_INT);
+    REQUIRE(tokens.at(8).literal.has_value());
+    REQUIRE(std::any_cast<long long>(tokens.at(8).literal) == 10);
+    CHECK(tokens.at(9).tok_type == TOK_EOF);
+}
+
+TEST_CASE("Scanner multi line comments", "[scanner]") {
+    std::string source_code = "var x = 5 /* This is a multi-line comment\nIt spans multiple lines */ var y = 10";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/multi_line_comments_test.nit");
+    std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, source);
+    auto tokens = scanner.get_tokens();
+
+    REQUIRE(tokens.size() == 9);
+    CHECK(tokens.at(0).tok_type == KW_VAR);
+    CHECK(tokens.at(1).tok_type == TOK_IDENT);
+    CHECK(tokens.at(1).lexeme == "x");
+    CHECK(tokens.at(2).tok_type == TOK_EQ);
+    CHECK(tokens.at(3).tok_type == TOK_INT);
+    REQUIRE(tokens.at(3).literal.has_value());
+    REQUIRE(std::any_cast<long long>(tokens.at(3).literal) == 5);
+    CHECK(tokens.at(4).tok_type == KW_VAR);
+    CHECK(tokens.at(5).tok_type == TOK_IDENT);
+    CHECK(tokens.at(5).lexeme == "y");
+    CHECK(tokens.at(6).tok_type == TOK_EQ);
+    CHECK(tokens.at(7).tok_type == TOK_INT);
+    REQUIRE(tokens.at(7).literal.has_value());
+    REQUIRE(std::any_cast<long long>(tokens.at(7).literal) == 10);
+    CHECK(tokens.at(8).tok_type == TOK_EOF);
+}
