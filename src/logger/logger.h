@@ -41,6 +41,8 @@ private:
     std::ostream* out = &std::cerr;
     // A list of the errors that have been logged.
     std::vector<ErrorCode> errors;
+    // A boolean to determine if the error logger should print to the ostream.
+    bool printing_enabled = true;
 
     /**
      * @brief Prints a pretty error message to the console.
@@ -71,6 +73,15 @@ public:
      */
     void set_ostream(std::ostream& new_out) {
         out = &new_out;
+    }
+
+    /**
+     * @brief Sets whether the error logger should print to the ostream.
+     *
+     * @param enabled If true, the error logger will print to the ostream. If false, it will not.
+     */
+    void set_enabled(bool enabled) {
+        printing_enabled = enabled;
     }
 
     /**
