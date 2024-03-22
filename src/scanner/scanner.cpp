@@ -44,6 +44,8 @@ std::unordered_map<std::string, TokenType> Scanner::keywords = {
 };
 
 char Scanner::advance() {
+    if (is_at_end())
+        return '\0';
     current++;
     return (*source)[current - 1];
 }
