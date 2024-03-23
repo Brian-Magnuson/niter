@@ -470,10 +470,38 @@ TEST_CASE("Logger no LF after backslash", "[logger]") {
 
     Scanner scanner;
     scanner.scan_file(file_name, source);
-    auto tokens = scanner.get_tokens();
 
     REQUIRE(logger.get_errors().size() >= 1);
     CHECK(logger.get_errors().at(0) == E_NO_LF_AFTER_BACKSLASH);
+
+    logger.reset();
+}
+
+TEST_CASE("Logger comment errors", "[logger]") {
+    std::string source_code = "var /* unclosed comment";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/unclosed_comment_test.nit");
+    std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, source);
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_UNCLOSED_COMMENT);
+
+    logger.reset();
+    logger.set_printing_enabled(false);
+
+    source_code = "var */ closing unopened comment";
+    file_name = std::make_shared<std::string>("test_files/closing_unopened_comment_test.nit");
+    source = std::make_shared<std::string>(source_code);
+
+    scanner.scan_file(file_name, source);
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_CLOSING_UNOPENED_COMMENT);
 
     logger.reset();
 }

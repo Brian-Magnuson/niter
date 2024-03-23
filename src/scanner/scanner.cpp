@@ -573,6 +573,11 @@ void Scanner::scan_file(std::shared_ptr<std::string> filename, std::shared_ptr<s
     this->filename = filename;
     this->source = source_code;
 
+    line = 1;
+    line_index = 0;
+    start = 0;
+    current = 0;
+
     while (!is_at_end()) {
         start = current;
         scan_token();
