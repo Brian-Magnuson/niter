@@ -80,7 +80,7 @@ public:
      *
      * @param enabled If true, the error logger will print to the ostream. If false, it will not.
      */
-    void set_enabled(bool enabled) {
+    void set_printing_enabled(bool enabled) {
         printing_enabled = enabled;
     }
 
@@ -110,6 +110,14 @@ public:
     void clear_errors() {
         errors.clear();
     }
+
+    /**
+     * @brief Resets the error logger to its default state.
+     * Errors are cleared, printing is enabled, and the ostream is set to std::cerr.
+     * Useful for testing.
+     *
+     */
+    void reset();
 };
 
 #endif // LOGGER_H

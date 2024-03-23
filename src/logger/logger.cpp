@@ -67,3 +67,9 @@ void ErrorLogger::log_error(const Token& token, ErrorCode error_code, const std:
     if (printing_enabled)
         print_pretty_error(token.location, new_message);
 }
+
+void ErrorLogger::reset() {
+    out = &std::cerr;
+    errors.clear();
+    printing_enabled = true;
+}

@@ -22,8 +22,9 @@ TEST_CASE("Logger", "[logger]") {
     };
     Token token(TOK_IDENT, "x", 5, location);
 
-    std::stringstream ss;
-    logger.set_ostream(ss);
+    // std::stringstream ss;
+    // logger.set_ostream(ss);
+    logger.set_printing_enabled(false);
     logger.log_error(token, E_CONFIG, "Test error message");
 
     REQUIRE(logger.get_errors().size() == 1);
@@ -43,7 +44,7 @@ TEST_CASE("Logger", "[logger]") {
     // logger.set_ostream(std::cerr);
     // logger.log_error(token, E_CONFIG, "Test error message");
 
-    ErrorLogger::inst().clear_errors();
+    logger.reset();
 }
 
 TEST_CASE("Log in order", "[logger]") {
@@ -69,8 +70,9 @@ TEST_CASE("Log in order", "[logger]") {
     };
     Token token2(TOK_IDENT, "x", 5, location2);
 
-    std::stringstream ss;
-    logger.set_ostream(ss);
+    // std::stringstream ss;
+    // logger.set_ostream(ss);
+    logger.set_printing_enabled(false);
     logger.log_error(token, E_CONFIG, "Test error message");
     logger.log_error(token2, E_TEST_ERROR, "Test error message 2");
 
@@ -78,7 +80,7 @@ TEST_CASE("Log in order", "[logger]") {
     CHECK(logger.get_errors().at(0) == E_CONFIG);
     CHECK(logger.get_errors().at(1) == E_TEST_ERROR);
 
-    ErrorLogger::inst().clear_errors();
+    logger.reset();
 }
 
 TEST_CASE("Scanner", "[scanner]") {
@@ -456,4 +458,22 @@ TEST_CASE("Scanner identifiers", "[scanner]") {
     CHECK(tokens.at(9).tok_type == TOK_IDENT);
     CHECK(tokens.at(9).lexeme == "v");
     CHECK(tokens.at(10).tok_type == TOK_EOF);
+}
+
+TEST_CASE("Logger no LF after backslash", "[logger]") {
+    std::string source_code = "var \\ var";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/no_lf_after_backslash_test.nit");
+    std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, source);
+    auto tokens = scanner.get_tokens();
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_NO_LF_AFTER_BACKSLASH);
+
+    logger.reset();
 }
