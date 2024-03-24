@@ -356,7 +356,7 @@ void Scanner::char_literal() {
     }
 
     // Read the character
-    if (match('\\')) {
+    if (peek() == '\\') {
         char c = read_escape_sequence();
         add_token(TOK_CHAR, c);
     } else {
