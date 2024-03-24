@@ -2,6 +2,11 @@
 #include "../src/scanner/scanner.h"
 #include "../src/scanner/token.h"
 #include "catch/catch_amalgamated.hpp"
+#include <any>
+#include <cmath>
+#include <iostream>
+#include <memory>
+#include <sstream>
 #include <string>
 
 TEST_CASE("Sanity check", "[sanity]") {
@@ -318,6 +323,25 @@ TEST_CASE("Scanner floating point numbers", "[scanner]") {
     CHECK(tokens.at(11).tok_type == TOK_EOF);
 }
 
+TEST_CASE("Scanner float inf and NaN", "[scanner]") {
+    std::string source_code = "inf NaN";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/inf_nan_test.nit");
+    std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, source);
+    auto tokens = scanner.get_tokens();
+
+    REQUIRE(tokens.size() == 3);
+    CHECK(tokens.at(0).tok_type == TOK_FLOAT);
+    REQUIRE(tokens.at(0).literal.has_value());
+    REQUIRE(std::any_cast<double>(tokens.at(0).literal) == INFINITY);
+    CHECK(tokens.at(1).tok_type == TOK_FLOAT);
+    REQUIRE(tokens.at(1).literal.has_value());
+    REQUIRE(std::isnan(std::any_cast<double>(tokens.at(1).literal)));
+    CHECK(tokens.at(2).tok_type == TOK_EOF);
+}
+
 TEST_CASE("Scanner characters", "[scanner]") {
     std::string source_code = "'a' 'b' '\\\\' '\\n' ' ' '\\''";
     std::shared_ptr file_name = std::make_shared<std::string>("test_files/characters_test.nit");
@@ -574,4 +598,100 @@ TEST_CASE("Logger character errors", "[logger]") {
 
     REQUIRE(logger.get_errors().size() >= 1);
     CHECK(logger.get_errors().at(0) == E_ILLEGAL_ESC_SEQ);
+
+    logger.reset();
+}
+
+TEST_CASE("Logger string errors", "[logger]") {
+    std::string source_code = "var \"unclosed string";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/unclosed_string_test.nit");
+    std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, source);
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_UNCLOSED_STRING);
+
+    logger.reset();
+    logger.set_printing_enabled(false);
+
+    source_code = "var \"\"\" unclosed\nmulti-line\nstring\n";
+    file_name = std::make_shared<std::string>("test_files/unclosed_multi_line_string_test.nit");
+    source = std::make_shared<std::string>(source_code);
+
+    scanner.scan_file(file_name, source);
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_UNCLOSED_MULTI_LINE_STRING);
+
+    logger.reset();
+}
+
+TEST_CASE("Logger number errors", "[logger]") {
+    std::string source_code = "var 5.5.5";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/multiple_decimal_points_test.nit");
+    std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, source);
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_MULTIPLE_DECIMAL_POINTS);
+
+    logger.reset();
+    logger.set_printing_enabled(false);
+
+    source_code = "var 0x5.5";
+    file_name = std::make_shared<std::string>("test_files/non_decimal_float_test.nit");
+    source = std::make_shared<std::string>(source_code);
+
+    scanner.scan_file(file_name, source);
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_NON_DECIMAL_FLOAT);
+
+    logger.reset();
+    logger.set_printing_enabled(false);
+
+    source_code = "var 5e";
+    file_name = std::make_shared<std::string>("test_files/no_digits_in_exponent_test.nit");
+    source = std::make_shared<std::string>(source_code);
+
+    scanner.scan_file(file_name, source);
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_NO_DIGITS_IN_EXPONENT);
+
+    logger.reset();
+    logger.set_printing_enabled(false);
+
+    source_code = "var 12345678901234567890";
+    file_name = std::make_shared<std::string>("test_files/int_too_large_test.nit");
+    source = std::make_shared<std::string>(source_code);
+
+    scanner.scan_file(file_name, source);
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_INT_TOO_LARGE);
+
+    logger.reset();
+    logger.set_printing_enabled(false);
+
+    source_code = "var 1E1000";
+    file_name = std::make_shared<std::string>("test_files/float_too_large_test.nit");
+    source = std::make_shared<std::string>(source_code);
+
+    scanner.scan_file(file_name, source);
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_FLOAT_TOO_LARGE);
+
+    logger.reset();
 }
