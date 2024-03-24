@@ -318,6 +318,37 @@ TEST_CASE("Scanner floating point numbers", "[scanner]") {
     CHECK(tokens.at(11).tok_type == TOK_EOF);
 }
 
+TEST_CASE("Scanner characters", "[scanner]") {
+    std::string source_code = "'a' 'b' '\\\\' '\\n' ' ' '\\''";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/characters_test.nit");
+    std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, source);
+    auto tokens = scanner.get_tokens();
+
+    REQUIRE(tokens.size() == 7);
+    CHECK(tokens.at(0).tok_type == TOK_CHAR);
+    REQUIRE(tokens.at(0).literal.has_value());
+    REQUIRE(std::any_cast<char>(tokens.at(0).literal) == 'a');
+    CHECK(tokens.at(1).tok_type == TOK_CHAR);
+    REQUIRE(tokens.at(1).literal.has_value());
+    REQUIRE(std::any_cast<char>(tokens.at(1).literal) == 'b');
+    CHECK(tokens.at(2).tok_type == TOK_CHAR);
+    REQUIRE(tokens.at(2).literal.has_value());
+    REQUIRE(std::any_cast<char>(tokens.at(2).literal) == '\\');
+    CHECK(tokens.at(3).tok_type == TOK_CHAR);
+    REQUIRE(tokens.at(3).literal.has_value());
+    REQUIRE(std::any_cast<char>(tokens.at(3).literal) == '\n');
+    CHECK(tokens.at(4).tok_type == TOK_CHAR);
+    REQUIRE(tokens.at(4).literal.has_value());
+    REQUIRE(std::any_cast<char>(tokens.at(4).literal) == ' ');
+    CHECK(tokens.at(5).tok_type == TOK_CHAR);
+    REQUIRE(tokens.at(5).literal.has_value());
+    REQUIRE(std::any_cast<char>(tokens.at(5).literal) == '\'');
+    CHECK(tokens.at(6).tok_type == TOK_EOF);
+}
+
 TEST_CASE("Scanner strings", "[scanner]") {
     std::string source_code = "\"Hello, world!\" \"\" \"\\\"\"";
     std::shared_ptr file_name = std::make_shared<std::string>("test_files/strings_test.nit");
@@ -504,4 +535,43 @@ TEST_CASE("Logger comment errors", "[logger]") {
     CHECK(logger.get_errors().at(0) == E_CLOSING_UNOPENED_COMMENT);
 
     logger.reset();
+}
+
+TEST_CASE("Logger character errors", "[logger]") {
+    std::string source_code = "var 'a";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/unclosed_char_test.nit");
+    std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, source);
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_UNCLOSED_CHAR);
+
+    logger.reset();
+    logger.set_printing_enabled(false);
+
+    source_code = "var '' empty char";
+    file_name = std::make_shared<std::string>("test_files/empty_char_test.nit");
+    source = std::make_shared<std::string>(source_code);
+
+    scanner.scan_file(file_name, source);
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_EMPTY_CHAR);
+
+    logger.reset();
+    logger.set_printing_enabled(false);
+
+    source_code = "var '\\z' illegal escape sequence";
+    file_name = std::make_shared<std::string>("test_files/illegal_esc_seq_test.nit");
+    source = std::make_shared<std::string>(source_code);
+
+    scanner.scan_file(file_name, source);
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_ILLEGAL_ESC_SEQ);
 }
