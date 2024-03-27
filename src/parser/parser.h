@@ -16,6 +16,45 @@ class Parser {
     int current = 0;
 
     /**
+     * @brief Returns the current token.
+     *
+     * @return Token& The token at the current index.
+     */
+    Token& peek();
+
+    /**
+     * @brief Returns the previous token.
+     *
+     * @return Token& The token at the previous index.
+     */
+    Token& previous();
+
+    /**
+     * @brief Checks if the current token is of the given type.
+     *
+     * @param tok_type The type to check.
+     * @return true If the current token is of the given type.
+     * @return false Otherwise.
+     */
+    bool check(TokenType tok_type);
+
+    /**
+     * @brief Checks if an EOF token was reached.
+     *
+     * @return true If the current token has TokenType TOK_EOF.
+     * @return false Otherwise.
+     */
+    bool is_at_end();
+
+    /**
+     * @brief Advances the parser and returns the previous token.
+     * E.g., if the current token is the first token, it will return the first token and then advance to the second token.
+     *
+     * @return Token& The previous token.
+     */
+    Token& advance();
+
+    /**
      * @brief Check if the current token is any of the given types and advances the parser if it is.
      *
      * @param types The types to check.
@@ -33,45 +72,6 @@ class Parser {
      * @return Token The token that was consumed.
      */
     Token consume(TokenType tok_type, ErrorCode error_code, const std::string& message);
-
-    /**
-     * @brief Checks if the current token is of the given type.
-     *
-     * @param tok_type The type to check.
-     * @return true If the current token is of the given type.
-     * @return false Otherwise.
-     */
-    bool check(TokenType tok_type);
-
-    /**
-     * @brief Advances the parser and returns the previous token.
-     * E.g., if the current token is the first token, it will return the first token and then advance to the second token.
-     *
-     * @return Token The previous token.
-     */
-    Token advance();
-
-    /**
-     * @brief Checks if an EOF token was reached.
-     *
-     * @return true If the current token has TokenType TOK_EOF.
-     * @return false Otherwise.
-     */
-    bool is_at_end();
-
-    /**
-     * @brief Returns the current token.
-     *
-     * @return Token The token at the current index.
-     */
-    Token peek();
-
-    /**
-     * @brief Returns the previous token.
-     *
-     * @return Token The token at the previous index.
-     */
-    Token previous();
 
     /**
      * @brief Consumes tokens until a safe token is reached. Used to recover from errors.
