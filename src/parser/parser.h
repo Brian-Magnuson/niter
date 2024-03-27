@@ -69,9 +69,9 @@ class Parser {
      * @param tok_type The type to check.
      * @param error_code The error code to log.
      * @param message The message to be logged with the error.
-     * @return Token The token that was consumed.
+     * @return Token& The token that was consumed.
      */
-    Token consume(TokenType tok_type, ErrorCode error_code, const std::string& message);
+    Token& consume(TokenType tok_type, ErrorCode error_code, const std::string& message);
 
     /**
      * @brief Consumes tokens until a safe token is reached. Used to recover from errors.
