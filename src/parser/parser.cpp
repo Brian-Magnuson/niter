@@ -70,3 +70,49 @@ void Parser::synchronize() {
         advance();
     }
 }
+
+std::shared_ptr<Stmt> Parser::statement() {
+    // if (match({KW_VAR})) {
+    //     return var_declaration();
+    // }
+    // if (match({KW_FUN})) {
+    //     return fun_declaration();
+    // }
+    // if (match({KW_IF})) {
+    //     return if_statement();
+    // }
+    // if (match({KW_WHILE})) {
+    //     return while_statement();
+    // }
+    // if (match({KW_LOOP})) {
+    //     return loop_statement();
+    // }
+    // if (match({KW_RETURN})) {
+    //     return return_statement();
+    // }
+    if (match({KW_PUTS})) {
+        return print_statement();
+    }
+
+    return expression_statement();
+}
+
+std::shared_ptr<Stmt> Parser::print_statement() {
+    // TODO: Implement print statement
+    return nullptr;
+}
+
+std::shared_ptr<Stmt> Parser::expression_statement() {
+    // TODO: Implement expression statement
+    return nullptr;
+}
+
+std::vector<std::shared_ptr<Stmt>> Parser::parse() {
+    std::vector<std::shared_ptr<Stmt>> statements;
+
+    while (!is_at_end()) {
+        statements.push_back(statement());
+    }
+
+    return statements;
+}

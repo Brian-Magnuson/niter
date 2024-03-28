@@ -3,6 +3,10 @@
 
 #include "../logger/error_code.h"
 #include "../scanner/token.h"
+#include "decl.h"
+#include "expr.h"
+#include "stmt.h"
+#include <memory>
 #include <vector>
 
 /**
@@ -78,6 +82,44 @@ class Parser {
      *
      */
     void synchronize();
+
+    /**
+     * @brief Parses a generic statement.
+     *
+     * @return std::shared_ptr<Stmt> A pointer to the parsed statement.
+     */
+    std::shared_ptr<Stmt> statement();
+
+    /**
+     * @brief Parses a print statement.
+     * Print statements begin with the keyword "puts" followed by an expression.
+     *
+     * @return std::shared_ptr<Stmt> A pointer to the parsed print statement.
+     */
+    std::shared_ptr<Stmt> print_statement();
+
+    /**
+     * @brief Parses an expression statement, i.e. an expression by itself.
+     * Expression statements are expressions followed by either a semicolon or a newline.
+     *
+     * @return std::shared_ptr<Stmt>
+     */
+    std::shared_ptr<Stmt> expression_statement();
+
+public:
+    /**
+     * @brief Construct a new Parser object.
+     *
+     * @param tokens The vector of tokens to parse.
+     */
+    Parser(const std::vector<Token>& tokens) : tokens(tokens) {}
+
+    /**
+     * @brief Parses the vector of tokens into an abstract syntax tree.
+     *
+     * @return std::vector<std::shared_ptr<Stmt>> A vector of AST statements.
+     */
+    std::vector<std::shared_ptr<Stmt>> parse();
 };
 
 #endif // PARSER_H
