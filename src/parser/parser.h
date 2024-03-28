@@ -83,6 +83,8 @@ class Parser {
      */
     void synchronize();
 
+    /* ==== STATEMENTS ==== */
+
     /**
      * @brief Parses a generic statement.
      *
@@ -105,6 +107,103 @@ class Parser {
      * @return std::shared_ptr<Stmt>
      */
     std::shared_ptr<Stmt> expression_statement();
+
+    /* ==== EXPRESSIONS ==== */
+
+    /**
+     * @brief Parses a generic expression.
+     *
+     * @return std::shared_ptr<Expr> A pointer to the parsed expression.
+     */
+    std::shared_ptr<Expr> expression();
+
+    /**
+     * @brief Parses an assignment expression.
+     * Assignment expressions are expressions followed by an equal sign and another expression.
+     *
+     * @return std::shared_ptr<Expr> A pointer to the parsed assignment expression.
+     */
+    std::shared_ptr<Expr> assignment_expr();
+
+    /**
+     * @brief Parses a logical OR expression.
+     * Logical OR expressions are expressions separated by the "or" keyword.
+     *
+     * @return std::shared_ptr<Expr> A pointer to the parsed logical OR expression.
+     */
+    std::shared_ptr<Expr> or_expr();
+
+    /**
+     * @brief Parses a logical AND expression.
+     * Logical AND expressions are expressions separated by the "and" keyword.
+     *
+     * @return std::shared_ptr<Expr> A pointer to the parsed logical AND expression.
+     */
+    std::shared_ptr<Expr> and_expr();
+
+    /**
+     * @brief Parses an equality expression.
+     * Equality expressions are expressions separated by the "==" or "!=" operators.
+     *
+     * @return std::shared_ptr<Expr> A pointer to the parsed equality expression.
+     */
+    std::shared_ptr<Expr> equality_expr();
+
+    /**
+     * @brief Parses a comparison expression.
+     * Comparison expressions are expressions separated by the "<", "<=", ">", or ">=" operators.
+     *
+     * @return std::shared_ptr<Expr> A pointer to the parsed comparison expression.
+     */
+    std::shared_ptr<Expr> comparison_expr();
+
+    /**
+     * @brief Parses a term expression.
+     * Term expressions are expressions separated by the "+" or "-" operators.
+     *
+     * @return std::shared_ptr<Expr> A pointer to the parsed term expression.
+     */
+    std::shared_ptr<Expr> term_expr();
+
+    /**
+     * @brief Parses a factor expression.
+     * Factor expressions are expressions separated by the "*", "/" or "%" operators.
+     *
+     * @return std::shared_ptr<Expr> A pointer to the parsed factor expression.
+     */
+    std::shared_ptr<Expr> factor_expr();
+
+    /**
+     * @brief Parses a power expression.
+     * Power expressions are expressions separated by the "^" operator.
+     *
+     * @return std::shared_ptr<Expr> A pointer to the parsed power expression.
+     */
+    std::shared_ptr<Expr> power_expr();
+
+    /**
+     * @brief Parses a unary expression.
+     * Unary expressions are expressions preceded by the "-" or "!" operators.
+     *
+     * @return std::shared_ptr<Expr> A pointer to the parsed unary expression.
+     */
+    std::shared_ptr<Expr> unary_expr();
+
+    /**
+     * @brief Parses a call expression.
+     * Call expressions are expressions followed by a pair of parentheses containing zero or more arguments.
+     *
+     * @return std::shared_ptr<Expr> A pointer to the parsed call expression.
+     */
+    std::shared_ptr<Expr> call_expr();
+
+    /**
+     * @brief Parses a primary expression.
+     * Primary expressions are the most basic expressions and can be literals, identifiers, or grouped expressions.
+     *
+     * @return std::shared_ptr<Expr> A pointer to the parsed primary expression.
+     */
+    std::shared_ptr<Expr> primary_expr();
 
 public:
     /**
