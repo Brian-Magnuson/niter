@@ -211,6 +211,7 @@ void Scanner::scan_token() {
             ErrorLogger::inst()
                 .log_error(t, E_NO_LF_AFTER_BACKSLASH, "Expected newline after backslash.");
         }
+        // If there was a newline, it was consumed in the match() function.
         break;
     case ';':
         add_token(TOK_SEMICOLON);

@@ -515,6 +515,26 @@ TEST_CASE("Scanner identifiers", "[scanner]") {
     CHECK(tokens.at(10).tok_type == TOK_EOF);
 }
 
+TEST_CASE("Escaping newlines", "[scanner]") {
+    std::string source_code = "var a\\\n= 1";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/escaping_newlines_test.nit");
+    std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, source);
+    auto tokens = scanner.get_tokens();
+
+    REQUIRE(tokens.size() == 5);
+    CHECK(tokens.at(0).tok_type == KW_VAR);
+    CHECK(tokens.at(1).tok_type == TOK_IDENT);
+    CHECK(tokens.at(1).lexeme == "a");
+    CHECK(tokens.at(2).tok_type == TOK_EQ);
+    CHECK(tokens.at(3).tok_type == TOK_INT);
+    REQUIRE(tokens.at(3).literal.has_value());
+    REQUIRE(std::any_cast<long long>(tokens.at(3).literal) == 1);
+    CHECK(tokens.at(4).tok_type == TOK_EOF);
+}
+
 TEST_CASE("Logger no LF after backslash", "[logger]") {
     std::string source_code = "var \\ var";
     std::shared_ptr file_name = std::make_shared<std::string>("test_files/no_lf_after_backslash_test.nit");
