@@ -123,7 +123,7 @@ class Parser {
      *
      * @return std::shared_ptr<Expr> A pointer to the parsed assignment expression.
      */
-    std::shared_ptr<Expr> assignment_expr();
+    std::shared_ptr<Expr> assign_expr();
 
     /**
      * @brief Parses a logical OR expression.

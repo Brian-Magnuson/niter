@@ -107,6 +107,100 @@ std::shared_ptr<Stmt> Parser::expression_statement() {
     return nullptr;
 }
 
+std::shared_ptr<Expr> Parser::expression() {
+    return assign_expr();
+}
+
+std::shared_ptr<Expr> Parser::assign_expr() {
+    std::shared_ptr<Expr> expr = or_expr();
+
+    if (match({TOK_EQ})) {
+        Token equals = previous();
+        std::shared_ptr<Expr> value = expression();
+        // TODO: Implement assignment expression
+        ErrorLogger::inst().log_error(equals, E_UNIMPLEMENTED, "Assignment expressions are not yet implemented.");
+    }
+}
+
+std::shared_ptr<Expr> Parser::or_expr() {
+    std::shared_ptr<Expr> expr = and_expr();
+
+    while (match({KW_OR})) {
+        Token op = previous();
+        std::shared_ptr<Expr> right = and_expr();
+        expr = std::make_shared<Expr::Logical>(expr, op, right);
+    }
+    return expr;
+}
+
+std::shared_ptr<Expr> Parser::and_expr() {
+    std::shared_ptr<Expr> expr = equality_expr();
+
+    while (match({KW_AND})) {
+        Token op = previous();
+        std::shared_ptr<Expr> right = equality_expr();
+        expr = std::make_shared<Expr::Logical>(expr, op, right);
+    }
+    return expr;
+}
+
+std::shared_ptr<Expr> Parser::equality_expr() {
+    std::shared_ptr<Expr> expr = comparison_expr();
+
+    while (match({TOK_EQ_EQ, TOK_BANG_EQ})) {
+        Token op = previous();
+        std::shared_ptr<Expr> right = comparison_expr();
+        expr = std::make_shared<Expr::Binary>(expr, op, right);
+    }
+    return expr;
+}
+
+std::shared_ptr<Expr> Parser::comparison_expr() {
+    std::shared_ptr<Expr> expr = term_expr();
+
+    while (match({TOK_LT, TOK_LE, TOK_GT, TOK_GE})) {
+        Token op = previous();
+        std::shared_ptr<Expr> right = term_expr();
+        expr = std::make_shared<Expr::Binary>(expr, op, right);
+    }
+    return expr;
+}
+
+std::shared_ptr<Expr> Parser::term_expr() {
+    std::shared_ptr<Expr> expr = factor_expr();
+
+    while (match({TOK_PLUS, TOK_MINUS})) {
+        Token op = previous();
+        std::shared_ptr<Expr> right = factor_expr();
+        expr = std::make_shared<Expr::Binary>(expr, op, right);
+    }
+    return expr;
+}
+
+std::shared_ptr<Expr> Parser::factor_expr() {
+    std::shared_ptr<Expr> expr = unary_expr();
+
+    while (match({TOK_STAR, TOK_SLASH, TOK_PERCENT})) {
+        Token op = previous();
+        std::shared_ptr<Expr> right = unary_expr();
+        expr = std::make_shared<Expr::Binary>(expr, op, right);
+    }
+    return expr;
+}
+
+std::shared_ptr<Expr> Parser::power_expr() {
+    std::shared_ptr<Expr> expr = unary_expr();
+
+    while (match({TOK_CARET})) {
+        Token op = previous();
+        std::shared_ptr<Expr> right = unary_expr();
+        expr = std::make_shared<Expr::Binary>(expr, op, right);
+    }
+    return expr;
+}
+
+// TODO: Implement unary_expr
+
 std::vector<std::shared_ptr<Stmt>> Parser::parse() {
     std::vector<std::shared_ptr<Stmt>> statements;
 
