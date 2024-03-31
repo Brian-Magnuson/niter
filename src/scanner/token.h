@@ -158,6 +158,7 @@ std::string token_type_to_string(TokenType type);
 
 /**
  * @brief A class to represent a token scanned from the source code.
+ * If the token represents a literal value such as an int, float, string, or boolean, the literal field will contain the value.
  *
  */
 class Token {
