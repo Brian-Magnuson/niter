@@ -199,7 +199,14 @@ std::shared_ptr<Expr> Parser::power_expr() {
     return expr;
 }
 
-// TODO: Implement unary_expr
+std::shared_ptr<Expr> Parser::unary_expr() {
+    if (match({TOK_BANG, TOK_MINUS})) {
+        Token op = previous();
+        std::shared_ptr<Expr> right = unary_expr();
+        return std::make_shared<Expr::Unary>(op, right);
+    }
+    return primary_expr();
+}
 
 std::vector<std::shared_ptr<Stmt>> Parser::parse() {
     std::vector<std::shared_ptr<Stmt>> statements;

@@ -49,7 +49,7 @@ public:
 };
 
 /**
- * @brief An expression representing a logical expression.
+ * @brief A class representing a logical expression.
  * E.g. a AND b, a OR b.
  *
  */
@@ -71,7 +71,7 @@ public:
 };
 
 /**
- * @brief An expression representing a binary expression.
+ * @brief A class representing a binary expression.
  * Includes arithmetic and comparison expressions, i.e. +, -, *, /, <, >, ==, !=, etc.
  *
  */
@@ -86,6 +86,24 @@ public:
 
     // The expression on the left side.
     std::shared_ptr<Expr> left;
+    // The token representing the operator.
+    Token op;
+    // The expression on the right side.
+    std::shared_ptr<Expr> right;
+};
+
+/**
+ * @brief A class representing a unary expression. Includes unary minus and logical negation.
+ *
+ */
+class Expr::Unary : public Expr {
+public:
+    Unary(Token op, std::shared_ptr<Expr> right) : op(op), right(right) {}
+
+    std::any accept(Visitor* visitor) override {
+        return visitor->visit_unary_expr(this);
+    }
+
     // The token representing the operator.
     Token op;
     // The expression on the right side.
