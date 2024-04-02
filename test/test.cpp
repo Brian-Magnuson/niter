@@ -343,7 +343,7 @@ TEST_CASE("Scanner float inf and NaN", "[scanner]") {
 }
 
 TEST_CASE("Scanner characters", "[scanner]") {
-    std::string source_code = "'a' 'b' '\\\\' '\\n' ' ' '\\''";
+    std::string source_code = R"('a' 'b' '\\' '\n' ' ' '\'')";
     std::shared_ptr file_name = std::make_shared<std::string>("test_files/characters_test.nit");
     std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
 
@@ -374,7 +374,8 @@ TEST_CASE("Scanner characters", "[scanner]") {
 }
 
 TEST_CASE("Scanner strings", "[scanner]") {
-    std::string source_code = "\"Hello, world!\" \"\" \"\\\"\"";
+    // std::string source_code = "\"Hello, world!\" \"\" \"\\\"\"";
+    std::string source_code = R"("Hello, world!" "" "\"")";
     std::shared_ptr file_name = std::make_shared<std::string>("test_files/strings_test.nit");
     std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
 
@@ -396,7 +397,8 @@ TEST_CASE("Scanner strings", "[scanner]") {
 }
 
 TEST_CASE("Scanner escape sequences", "[scanner]") {
-    std::string source_code = "\"\\n\\t\\r\\b\\f\\\"\\\\\"";
+    // std::string source_code = "\"\\n\\t\\r\\b\\f\\\"\\\\\"";
+    std::string source_code = R"("\n\t\r\b\f\"\\")";
     std::shared_ptr file_name = std::make_shared<std::string>("test_files/escape_sequences_test.nit");
     std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
 
@@ -536,7 +538,8 @@ TEST_CASE("Escaping newlines", "[scanner]") {
 }
 
 TEST_CASE("Logger no LF after backslash", "[logger]") {
-    std::string source_code = "var \\ var";
+    // std::string source_code = "var \\ var";
+    std::string source_code = R"(var \ var)";
     std::shared_ptr file_name = std::make_shared<std::string>("test_files/no_lf_after_backslash_test.nit");
     std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
 
@@ -610,7 +613,8 @@ TEST_CASE("Logger character errors", "[logger]") {
     logger.reset();
     logger.set_printing_enabled(false);
 
-    source_code = "var '\\z' illegal escape sequence";
+    // source_code = "var '\\z' illegal escape sequence";
+    source_code = R"(var '\z' illegal escape sequence)";
     file_name = std::make_shared<std::string>("test_files/illegal_esc_seq_test.nit");
     source = std::make_shared<std::string>(source_code);
 
@@ -623,7 +627,8 @@ TEST_CASE("Logger character errors", "[logger]") {
 }
 
 TEST_CASE("Logger string errors", "[logger]") {
-    std::string source_code = "var \"unclosed string";
+    // std::string source_code = "var \"unclosed string";
+    std::string source_code = R"(var "unclosed string)";
     std::shared_ptr file_name = std::make_shared<std::string>("test_files/unclosed_string_test.nit");
     std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
 
