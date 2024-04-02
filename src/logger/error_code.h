@@ -50,6 +50,10 @@ enum ErrorCode {
 
     // Parser errors
     E_PARSER = 3000,
+    // A statement was found where an expression was expected
+    E_NOT_AN_EXPRESSION,
+    // A left parenthesis was found without a matching right parenthesis
+    E_UNMATCHED_LEFT_PAREN,
 
     // Type definition errors
     E_TYPE_DEF = 4000,

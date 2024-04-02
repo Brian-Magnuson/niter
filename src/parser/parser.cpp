@@ -208,6 +208,31 @@ std::shared_ptr<Expr> Parser::unary_expr() {
     return primary_expr();
 }
 
+std::shared_ptr<Expr> Parser::primary_expr() {
+    // These are in separate cases in case we want to add extra information to the expression
+    if (match({TOK_BOOL})) {
+        return std::make_shared<Expr::Literal>(previous());
+    }
+    if (match({TOK_INT})) {
+        return std::make_shared<Expr::Literal>(previous());
+    }
+    if (match({TOK_FLOAT})) {
+        return std::make_shared<Expr::Literal>(previous());
+    }
+    if (match({TOK_STR})) {
+        return std::make_shared<Expr::Literal>(previous());
+    }
+    if (match({TOK_IDENT})) {
+        return std::make_shared<Expr::Variable>(previous());
+    }
+    if (match({TOK_LEFT_PAREN})) {
+        std::shared_ptr<Expr> expr = expression();
+        consume(TOK_RIGHT_PAREN, E_UNMATCHED_LEFT_PAREN, "Expected ')' after expression.");
+        return std::make_shared<Expr::Grouping>(expr);
+    }
+    ErrorLogger::inst().log_error(peek(), E_NOT_AN_EXPRESSION, "Expected expression.");
+}
+
 std::vector<std::shared_ptr<Stmt>> Parser::parse() {
     std::vector<std::shared_ptr<Stmt>> statements;
 

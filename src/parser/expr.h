@@ -49,6 +49,21 @@ public:
 };
 
 /**
+ * @brief A class representing a variable.
+ *
+ */
+class Expr::Variable : public Expr {
+public:
+    Variable(Token token) : token(token) {}
+
+    std::any accept(Visitor* visitor) override {
+        return visitor->visit_variable_expr(this);
+    }
+
+    Token token;
+};
+
+/**
  * @brief A class representing a logical expression.
  * E.g. a AND b, a OR b.
  *
@@ -108,6 +123,40 @@ public:
     Token op;
     // The expression on the right side.
     std::shared_ptr<Expr> right;
+};
+
+/**
+ * @brief A class representing a grouping expression.
+ * E.g. (a + b) * c
+ *
+ */
+class Expr::Grouping : public Expr {
+public:
+    Grouping(std::shared_ptr<Expr> expression) : expression(expression) {}
+
+    std::any accept(Visitor* visitor) override {
+        return visitor->visit_grouping_expr(this);
+    }
+
+    // The expression inside the grouping.
+    std::shared_ptr<Expr> expression;
+};
+
+/**
+ * @brief A class representing a literal expression.
+ * E.g. a number, string, or boolean.
+ *
+ */
+class Expr::Literal : public Expr {
+public:
+    Literal(Token token) : token(token) {}
+
+    std::any accept(Visitor* visitor) override {
+        return visitor->visit_literal_expr(this);
+    }
+
+    // The token representing the literal value.
+    Token token;
 };
 
 #endif // EXPR_H
