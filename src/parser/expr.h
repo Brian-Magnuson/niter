@@ -11,14 +11,15 @@
  */
 class Expr {
 public:
-    class Variable;
-    class Call;
     class Assign;
-    class Binary;
-    class Grouping;
-    class Literal;
     class Logical;
+    class Binary;
     class Unary;
+    class Call;
+    class Access;
+    class Grouping;
+    class Variable;
+    class Literal;
 
     virtual ~Expr() {}
 
@@ -28,13 +29,14 @@ public:
      */
     class Visitor {
     public:
-        virtual std::any visit_variable_expr(Variable* expr) = 0;
-        virtual std::any visit_call_expr(Call* expr) = 0;
         virtual std::any visit_assign_expr(Assign* expr) = 0;
         virtual std::any visit_logical_expr(Logical* expr) = 0;
         virtual std::any visit_binary_expr(Binary* expr) = 0;
         virtual std::any visit_unary_expr(Unary* expr) = 0;
+        virtual std::any visit_access_expr(Access* expr) = 0;
+        virtual std::any visit_call_expr(Call* expr) = 0;
         virtual std::any visit_grouping_expr(Grouping* expr) = 0;
+        virtual std::any visit_variable_expr(Variable* expr) = 0;
         virtual std::any visit_literal_expr(Literal* expr) = 0;
     };
 
@@ -46,21 +48,6 @@ public:
      * @return std::any The return value from the visitor class.
      */
     virtual std::any accept(Visitor* visitor) = 0;
-};
-
-/**
- * @brief A class representing a variable.
- *
- */
-class Expr::Variable : public Expr {
-public:
-    Variable(Token token) : token(token) {}
-
-    std::any accept(Visitor* visitor) override {
-        return visitor->visit_variable_expr(this);
-    }
-
-    Token token;
 };
 
 /**
@@ -148,6 +135,53 @@ public:
 };
 
 /**
+ * @brief A class representing an access expression.
+ * An access expression is an expression where a member of an object is accessed.
+ * This could be using the dot, single arrow, or subscript operators.
+ * (. or -> or [])
+ *
+ */
+class Expr::Access : public Expr {
+public:
+    Access(std::shared_ptr<Expr> left, Token op, std::shared_ptr<Expr> right)
+        : left(left), op(op), right(right) {}
+
+    std::any accept(Visitor* visitor) override {
+        return visitor->visit_access_expr(this);
+    }
+
+    // The expression on the left side.
+    std::shared_ptr<Expr> left;
+    // The token representing the operator.
+    Token op;
+    // The expression on the right side.
+    std::shared_ptr<Expr> right;
+};
+
+/**
+ * @brief A class representing a call expression.
+ * Usually, this means a function call, indicated by parentheses.
+ * E.g. add(1, 2)
+ *
+ */
+class Expr::Call : public Expr {
+public:
+    Call(std::shared_ptr<Expr> callee, Token paren, std::vector<std::shared_ptr<Expr>> arguments)
+        : callee(callee), paren(paren), arguments(arguments) {}
+
+    std::any accept(Visitor* visitor) override {
+        return visitor->visit_call_expr(this);
+    }
+
+    // The expression being called.
+    std::shared_ptr<Expr> callee;
+    // The token representing the opening parenthesis.
+    Token paren;
+    // The arguments to the call.
+    std::vector<std::shared_ptr<Expr>> arguments;
+};
+
+/**
  * @brief A class representing a grouping expression.
  * E.g. (a + b) * c
  *
@@ -162,6 +196,21 @@ public:
 
     // The expression inside the grouping.
     std::shared_ptr<Expr> expression;
+};
+
+/**
+ * @brief A class representing a variable.
+ *
+ */
+class Expr::Variable : public Expr {
+public:
+    Variable(Token token) : token(token) {}
+
+    std::any accept(Visitor* visitor) override {
+        return visitor->visit_variable_expr(this);
+    }
+
+    Token token;
 };
 
 /**

@@ -190,12 +190,22 @@ class Parser {
     std::shared_ptr<Expr> unary_expr();
 
     /**
+     * @brief Parses an access expression.
+     * Access expressions are expressions followed by a "." or "->" or a set of brackets.
+     * There is also another expression to specify the field or element to access.
+     * They are used to access fields or elements of an object or array.
+     *
+     * @return std::shared_ptr<Expr>
+     */
+    std::shared_ptr<Expr> access_expr();
+
+    /**
      * @brief Parses a call expression.
      * Call expressions are expressions followed by a pair of parentheses containing zero or more arguments.
      *
      * @return std::shared_ptr<Expr> A pointer to the parsed call expression.
      */
-    // std::shared_ptr<Expr> call_expr();
+    std::shared_ptr<Expr> call_expr();
 
     /**
      * @brief Parses a primary expression.
