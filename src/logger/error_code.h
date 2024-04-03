@@ -54,6 +54,8 @@ enum ErrorCode {
     E_NOT_AN_EXPRESSION,
     // A left parenthesis was found without a matching right parenthesis
     E_UNMATCHED_LEFT_PAREN,
+    // An equal sign was found without a valid left-hand side
+    E_INVALID_ASSIGNMENT,
 
     // Type definition errors
     E_TYPE_DEF = 4000,

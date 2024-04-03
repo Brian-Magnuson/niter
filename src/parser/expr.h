@@ -13,7 +13,7 @@ class Expr {
 public:
     class Variable;
     class Call;
-    class Assignment;
+    class Assign;
     class Binary;
     class Grouping;
     class Literal;
@@ -30,7 +30,7 @@ public:
     public:
         virtual std::any visit_variable_expr(Variable* expr) = 0;
         virtual std::any visit_call_expr(Call* expr) = 0;
-        virtual std::any visit_assignment_expr(Assignment* expr) = 0;
+        virtual std::any visit_assign_expr(Assign* expr) = 0;
         virtual std::any visit_logical_expr(Logical* expr) = 0;
         virtual std::any visit_binary_expr(Binary* expr) = 0;
         virtual std::any visit_unary_expr(Unary* expr) = 0;
@@ -61,6 +61,23 @@ public:
     }
 
     Token token;
+};
+
+/**
+ * @brief A class representing an assignment expression.
+ * E.g. a = b = c.
+ *
+ */
+class Expr::Assign : public Expr {
+public:
+    Assign(Token name, std::shared_ptr<Expr> value) : name(name), value(value) {}
+
+    std::any accept(Visitor* visitor) override {
+        return visitor->visit_assign_expr(this);
+    }
+
+    Token name;
+    std::shared_ptr<Expr> value;
 };
 
 /**

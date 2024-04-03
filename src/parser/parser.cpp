@@ -116,10 +116,18 @@ std::shared_ptr<Expr> Parser::assign_expr() {
 
     if (match({TOK_EQ})) {
         Token equals = previous();
-        std::shared_ptr<Expr> value = expression();
-        // TODO: Implement assignment expression
-        ErrorLogger::inst().log_error(equals, E_UNIMPLEMENTED, "Assignment expressions are not yet implemented.");
+        std::shared_ptr<Expr> value = assign_expr();
+
+        if (std::dynamic_pointer_cast<Expr::Variable>(expr)) {
+            Token name = std::dynamic_pointer_cast<Expr::Variable>(expr)->token;
+            return std::make_shared<Expr::Assign>(name, value);
+        }
+        // TODO: This should also work for get and set expressions
+
+        ErrorLogger::inst().log_error(equals, E_INVALID_ASSIGNMENT, "Invalid assignment target.");
     }
+
+    return expr;
 }
 
 std::shared_ptr<Expr> Parser::or_expr() {
