@@ -70,14 +70,19 @@ public:
  */
 class Expr::Assign : public Expr {
 public:
-    Assign(Token name, std::shared_ptr<Expr> value) : name(name), value(value) {}
+    Assign(std::shared_ptr<Expr> left, Token op, std::shared_ptr<Expr> right)
+        : left(left), op(op), right(right) {}
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_assign_expr(this);
     }
 
-    Token name;
-    std::shared_ptr<Expr> value;
+    // The expression on the left side.
+    std::shared_ptr<Expr> left;
+    // The token representing the operator.
+    Token op;
+    // The expression on the right side.
+    std::shared_ptr<Expr> right;
 };
 
 /**

@@ -195,7 +195,7 @@ class Parser {
      *
      * @return std::shared_ptr<Expr> A pointer to the parsed call expression.
      */
-    std::shared_ptr<Expr> call_expr();
+    // std::shared_ptr<Expr> call_expr();
 
     /**
      * @brief Parses a primary expression.

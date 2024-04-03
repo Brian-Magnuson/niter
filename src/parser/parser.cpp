@@ -114,17 +114,13 @@ std::shared_ptr<Expr> Parser::expression() {
 std::shared_ptr<Expr> Parser::assign_expr() {
     std::shared_ptr<Expr> expr = or_expr();
 
+    // Note: This isn't an interpreter. We can save l-value checking for
+    // the type checker.
+    // 5 = 10 is syntactically valid, but semantically invalid.
     if (match({TOK_EQ})) {
-        Token equals = previous();
-        std::shared_ptr<Expr> value = assign_expr();
-
-        if (std::dynamic_pointer_cast<Expr::Variable>(expr)) {
-            Token name = std::dynamic_pointer_cast<Expr::Variable>(expr)->token;
-            return std::make_shared<Expr::Assign>(name, value);
-        }
-        // TODO: This should also work for get and set expressions
-
-        ErrorLogger::inst().log_error(equals, E_INVALID_ASSIGNMENT, "Invalid assignment target.");
+        Token op = previous();
+        std::shared_ptr<Expr> right = or_expr();
+        expr = std::make_shared<Expr::Assign>(expr, op, right);
     }
 
     return expr;
