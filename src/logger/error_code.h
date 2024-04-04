@@ -52,8 +52,12 @@ enum ErrorCode {
     E_PARSER = 3000,
     // A statement was found where an expression was expected
     E_NOT_AN_EXPRESSION,
-    // A left parenthesis was found without a matching right parenthesis
-    E_UNMATCHED_LEFT_PAREN,
+    // A list of arguments was found without matching parentheses
+    E_UNMATCHED_PAREN_IN_ARGS,
+    // A grouping expression was found without matching parentheses
+    E_UNMATCHED_PAREN_IN_GROUPING,
+    // A tuple expression was found without matching parentheses
+    E_UNMATCHED_PAREN_IN_TUPLE,
     // A left square bracket was found without a matching right square bracket
     E_UNMATCHED_LEFT_SQUARE,
     // An equal sign was found without a valid left-hand side

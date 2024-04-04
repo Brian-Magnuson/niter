@@ -246,7 +246,7 @@ std::shared_ptr<Expr> Parser::call_expr() {
                 }
                 arguments.push_back(expression());
             }
-            consume(TOK_RIGHT_PAREN, E_UNMATCHED_LEFT_PAREN, "Expected ')' after arguments.");
+            consume(TOK_RIGHT_PAREN, E_UNMATCHED_PAREN_IN_ARGS, "Expected ')' after arguments.");
         }
         return std::make_shared<Expr::Call>(expr, arguments);
     }
@@ -272,9 +272,26 @@ std::shared_ptr<Expr> Parser::primary_expr() {
         return std::make_shared<Expr::Variable>(previous());
     }
     if (match({TOK_LEFT_PAREN})) {
-        std::shared_ptr<Expr> expr = expression();
-        consume(TOK_RIGHT_PAREN, E_UNMATCHED_LEFT_PAREN, "Expected ')' after expression.");
-        return std::make_shared<Expr::Grouping>(expr);
+        std::vector<std::shared_ptr<Expr>> expressions;
+        if (match({TOK_RIGHT_PAREN})) {
+            // Empty tuple
+            return std::make_shared<Expr::Tuple>(expressions); // expressions is empty
+        }
+        // There must be at least one expression if it's a tuple, so "(,)" is invalid
+        expressions.push_back(expression());
+        if (check(TOK_COMMA)) {
+            while (match({TOK_COMMA})) {
+                // Trailing comma is allowed, so ",)" marks the end of the tuple
+                if (check(TOK_RIGHT_PAREN)) {
+                    break;
+                }
+                expressions.push_back(expression());
+            }
+            consume(TOK_RIGHT_PAREN, E_UNMATCHED_PAREN_IN_TUPLE, "Expected ')' after tuple.");
+            return std::make_shared<Expr::Tuple>(expressions);
+        }
+        consume(TOK_RIGHT_PAREN, E_UNMATCHED_PAREN_IN_GROUPING, "Expected ')' after expression.");
+        return expressions[0];
     }
     ErrorLogger::inst().log_error(peek(), E_NOT_AN_EXPRESSION, "Expected expression.");
 }

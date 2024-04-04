@@ -20,6 +20,8 @@ public:
     class Grouping;
     class Variable;
     class Literal;
+    class Array;
+    class Tuple;
 
     virtual ~Expr() {}
 
@@ -38,6 +40,8 @@ public:
         virtual std::any visit_grouping_expr(Grouping* expr) = 0;
         virtual std::any visit_variable_expr(Variable* expr) = 0;
         virtual std::any visit_literal_expr(Literal* expr) = 0;
+        virtual std::any visit_array_expr(Array* expr) = 0;
+        virtual std::any visit_tuple_expr(Tuple* expr) = 0;
     };
 
     /**
@@ -228,6 +232,44 @@ public:
 
     // The token representing the literal value.
     Token token;
+};
+
+/**
+ * @brief A class representing an array expression.
+ * E.g. [1, 2, 3]
+ *
+ */
+class Expr::Array : public Expr {
+public:
+    Array(std::vector<std::shared_ptr<Expr>> elements) : elements(elements) {}
+
+    std::any accept(Visitor* visitor) override {
+        return visitor->visit_array_expr(this);
+    }
+
+    // The elements of the array.
+    std::vector<std::shared_ptr<Expr>> elements;
+};
+
+/**
+ * @brief A class representing a tuple expression.
+ * E.g. (1, 2, 3)
+ * Note: Parentheses are required for tuples. To prevent ambiguity:
+ * (expr) is a grouping expression.
+ * (expr,) is a tuple with one element.
+ * () is a tuple with no elements.
+ *
+ */
+class Expr::Tuple : public Expr {
+public:
+    Tuple(std::vector<std::shared_ptr<Expr>> elements) : elements(elements) {}
+
+    std::any accept(Visitor* visitor) override {
+        return visitor->visit_tuple_expr(this);
+    }
+
+    // The elements of the tuple.
+    std::vector<std::shared_ptr<Expr>> elements;
 };
 
 #endif // EXPR_H
