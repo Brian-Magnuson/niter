@@ -227,7 +227,30 @@ std::shared_ptr<Expr> Parser::access_expr() {
 
 std::shared_ptr<Expr> Parser::call_expr() {
     std::shared_ptr<Expr> expr = primary_expr();
-    // TODO: Implement call expression
+    /*
+    Valid forms:
+    FUNC()
+    FUNC(ARG1)
+    FUNC(ARG1, ARG2)
+    FUNC(ARG1,)
+    FUNC(ARG1, ARG2,)
+    */
+    if (match({TOK_LEFT_PAREN})) {
+        std::vector<std::shared_ptr<Expr>> arguments;
+        // If there are no arguments, we can just return the call expression
+        if (!check(TOK_RIGHT_PAREN)) {
+            arguments.push_back(expression());
+            while (match({TOK_COMMA})) {
+                if (check(TOK_RIGHT_PAREN)) {
+                    break;
+                }
+                arguments.push_back(expression());
+            }
+            consume(TOK_RIGHT_PAREN, E_UNMATCHED_LEFT_PAREN, "Expected ')' after arguments.");
+        }
+        return std::make_shared<Expr::Call>(expr, arguments);
+    }
+
     return expr;
 }
 
