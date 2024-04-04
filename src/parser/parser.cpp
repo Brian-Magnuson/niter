@@ -271,6 +271,18 @@ std::shared_ptr<Expr> Parser::primary_expr() {
     if (match({TOK_IDENT})) {
         return std::make_shared<Expr::Variable>(previous());
     }
+    if (match({TOK_LEFT_SQUARE})) {
+        std::vector<std::shared_ptr<Expr>> elements;
+        if (!check({TOK_RIGHT_SQUARE})) {
+            do {
+                elements.push_back(or_expr());
+            } while (match({TOK_COMMA}));
+        }
+
+        consume(TOK_RIGHT_SQUARE, E_UNMATCHED_LEFT_SQUARE, "Expected ']' after array.");
+        return std::make_shared<Expr::Array>(elements);
+    }
+
     if (match({TOK_LEFT_PAREN})) {
         std::vector<std::shared_ptr<Expr>> expressions;
         if (match({TOK_RIGHT_PAREN})) {
