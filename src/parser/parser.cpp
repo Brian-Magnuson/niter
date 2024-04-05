@@ -204,7 +204,7 @@ std::shared_ptr<Expr> Parser::power_expr() {
 }
 
 std::shared_ptr<Expr> Parser::unary_expr() {
-    if (match({TOK_BANG, TOK_MINUS})) {
+    if (match({TOK_BANG, TOK_MINUS, TOK_STAR, TOK_AMP})) {
         Token op = previous();
         std::shared_ptr<Expr> right = unary_expr();
         return std::make_shared<Expr::Unary>(op, right);
