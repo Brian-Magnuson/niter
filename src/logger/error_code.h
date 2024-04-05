@@ -64,6 +64,8 @@ enum ErrorCode {
     E_INVALID_ASSIGNMENT,
     // A call expression was found to have over the maximum number of arguments (of 255)
     E_TOO_MANY_ARGS,
+    // A statement was found without a semicolon or newline at the end
+    E_MISSING_STMT_END,
 
     // Type definition errors
     E_TYPE_DEF = 4000,

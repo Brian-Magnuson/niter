@@ -1,5 +1,6 @@
 #include "parser.h"
 #include "../logger/logger.h"
+#include <exception>
 
 Token& Parser::peek() {
     return tokens[current];
@@ -42,7 +43,7 @@ Token& Parser::consume(TokenType tok_type, ErrorCode error_code, const std::stri
         return advance();
     }
     ErrorLogger::inst().log_error(peek(), error_code, message);
-    synchronize();
+    throw ParserException();
 }
 
 void Parser::synchronize() {
@@ -72,39 +73,50 @@ void Parser::synchronize() {
 }
 
 std::shared_ptr<Stmt> Parser::statement() {
-    // if (match({KW_VAR})) {
-    //     return var_declaration();
-    // }
-    // if (match({KW_FUN})) {
-    //     return fun_declaration();
-    // }
-    // if (match({KW_IF})) {
-    //     return if_statement();
-    // }
-    // if (match({KW_WHILE})) {
-    //     return while_statement();
-    // }
-    // if (match({KW_LOOP})) {
-    //     return loop_statement();
-    // }
-    // if (match({KW_RETURN})) {
-    //     return return_statement();
-    // }
-    if (match({KW_PUTS})) {
-        return print_statement();
-    }
+    try {
+        // if (match({KW_VAR})) {
+        //     return var_declaration();
+        // }
+        // if (match({KW_FUN})) {
+        //     return fun_declaration();
+        // }
+        // if (match({KW_IF})) {
+        //     return if_statement();
+        // }
+        // if (match({KW_WHILE})) {
+        //     return while_statement();
+        // }
+        // if (match({KW_LOOP})) {
+        //     return loop_statement();
+        // }
+        // if (match({KW_RETURN})) {
+        //     return return_statement();
+        // }
+        if (match({KW_PUTS})) {
+            return print_statement();
+        }
+        return expression_statement();
 
-    return expression_statement();
+    } catch (const ParserException& e) {
+        synchronize();
+        return nullptr;
+    }
 }
 
 std::shared_ptr<Stmt> Parser::print_statement() {
-    // TODO: Implement print statement
-    return nullptr;
+    std::shared_ptr<Expr> value = expression();
+    if (!match({TOK_NEWLINE, TOK_SEMICOLON})) {
+        ErrorLogger::inst().log_error(peek(), E_MISSING_STMT_END, "Expected newline or ';' after expression.");
+    }
+    return std::make_shared<Stmt::Print>(value);
 }
 
 std::shared_ptr<Stmt> Parser::expression_statement() {
-    // TODO: Implement expression statement
-    return nullptr;
+    std::shared_ptr<Expr> expr = expression();
+    if (!match({TOK_NEWLINE, TOK_SEMICOLON})) {
+        ErrorLogger::inst().log_error(peek(), E_MISSING_STMT_END, "Expected newline or ';' after expression.");
+    }
+    return std::make_shared<Stmt::Expression>(expr);
 }
 
 std::shared_ptr<Expr> Parser::expression() {
@@ -306,6 +318,7 @@ std::shared_ptr<Expr> Parser::primary_expr() {
         return expressions[0];
     }
     ErrorLogger::inst().log_error(peek(), E_NOT_AN_EXPRESSION, "Expected expression.");
+    throw ParserException();
 }
 
 std::vector<std::shared_ptr<Stmt>> Parser::parse() {

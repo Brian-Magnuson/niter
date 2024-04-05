@@ -10,6 +10,12 @@
 #include <vector>
 
 /**
+ * @brief An exception class for parser errors.
+ *
+ */
+class ParserException : public std::exception {};
+
+/**
  * @brief A class to parse a vector of tokens into an abstract syntax tree.
  *
  */
@@ -83,10 +89,10 @@ class Parser {
      */
     void synchronize();
 
-    /* ==== STATEMENTS ==== */
+    // MARK: Declarations
 
     /**
-     * @brief Parses a generic statement.
+     * @brief Parses a generic statement. Will catch any exceptions thrown by the specific statement parsers.
      *
      * @return std::shared_ptr<Stmt> A pointer to the parsed statement.
      */
@@ -97,6 +103,7 @@ class Parser {
      * Print statements begin with the keyword "puts" followed by an expression.
      *
      * @return std::shared_ptr<Stmt> A pointer to the parsed print statement.
+     * @throw ParserException If an error occurs while parsing the statement. Will be caught by the statement() function.
      */
     std::shared_ptr<Stmt> print_statement();
 
@@ -105,15 +112,17 @@ class Parser {
      * Expression statements are expressions followed by either a semicolon or a newline.
      *
      * @return std::shared_ptr<Stmt>
+     * @throw ParserException If an error occurs while parsing the statement. Will be caught by the statement() function.
      */
     std::shared_ptr<Stmt> expression_statement();
 
-    /* ==== EXPRESSIONS ==== */
+    // MARK: Expressions
 
     /**
      * @brief Parses a generic expression.
      *
      * @return std::shared_ptr<Expr> A pointer to the parsed expression.
+     * @throw ParserException If an error occurs while parsing the expression. Will be caught by the statement() function.
      */
     std::shared_ptr<Expr> expression();
 
@@ -122,6 +131,7 @@ class Parser {
      * Assignment expressions are expressions followed by an equal sign and another expression.
      *
      * @return std::shared_ptr<Expr> A pointer to the parsed assignment expression.
+     * @throw ParserException If an error occurs while parsing the expression. Will be caught by the statement() function.
      */
     std::shared_ptr<Expr> assign_expr();
 
@@ -130,6 +140,7 @@ class Parser {
      * Logical OR expressions are expressions separated by the "or" keyword.
      *
      * @return std::shared_ptr<Expr> A pointer to the parsed logical OR expression.
+     * @throw ParserException If an error occurs while parsing the expression. Will be caught by the statement() function.
      */
     std::shared_ptr<Expr> or_expr();
 
@@ -138,6 +149,7 @@ class Parser {
      * Logical AND expressions are expressions separated by the "and" keyword.
      *
      * @return std::shared_ptr<Expr> A pointer to the parsed logical AND expression.
+     * @throw ParserException If an error occurs while parsing the expression. Will be caught by the statement() function.
      */
     std::shared_ptr<Expr> and_expr();
 
@@ -146,6 +158,7 @@ class Parser {
      * Equality expressions are expressions separated by the "==" or "!=" operators.
      *
      * @return std::shared_ptr<Expr> A pointer to the parsed equality expression.
+     * @throw ParserException If an error occurs while parsing the expression. Will be caught by the statement() function.
      */
     std::shared_ptr<Expr> equality_expr();
 
@@ -154,6 +167,7 @@ class Parser {
      * Comparison expressions are expressions separated by the "<", "<=", ">", or ">=" operators.
      *
      * @return std::shared_ptr<Expr> A pointer to the parsed comparison expression.
+     * @throw ParserException If an error occurs while parsing the expression. Will be caught by the statement() function.
      */
     std::shared_ptr<Expr> comparison_expr();
 
@@ -162,6 +176,7 @@ class Parser {
      * Term expressions are expressions separated by the "+" or "-" operators.
      *
      * @return std::shared_ptr<Expr> A pointer to the parsed term expression.
+     * @throw ParserException If an error occurs while parsing the expression. Will be caught by the statement() function.
      */
     std::shared_ptr<Expr> term_expr();
 
@@ -170,6 +185,7 @@ class Parser {
      * Factor expressions are expressions separated by the "*", "/" or "%" operators.
      *
      * @return std::shared_ptr<Expr> A pointer to the parsed factor expression.
+     * @throw ParserException If an error occurs while parsing the expression. Will be caught by the statement() function.
      */
     std::shared_ptr<Expr> factor_expr();
 
@@ -178,6 +194,7 @@ class Parser {
      * Power expressions are expressions separated by the "^" operator.
      *
      * @return std::shared_ptr<Expr> A pointer to the parsed power expression.
+     * @throw ParserException If an error occurs while parsing the expression. Will be caught by the statement() function.
      */
     std::shared_ptr<Expr> power_expr();
 
@@ -186,6 +203,7 @@ class Parser {
      * Unary expressions are expressions preceded by the "-" or "!" operators.
      *
      * @return std::shared_ptr<Expr> A pointer to the parsed unary expression.
+     * @throw ParserException If an error occurs while parsing the expression. Will be caught by the statement() function.
      */
     std::shared_ptr<Expr> unary_expr();
 
@@ -196,6 +214,7 @@ class Parser {
      * They are used to access fields or elements of an object or array.
      *
      * @return std::shared_ptr<Expr>
+     * @throw ParserException If an error occurs while parsing the expression. Will be caught by the statement() function.
      */
     std::shared_ptr<Expr> access_expr();
 
@@ -204,6 +223,7 @@ class Parser {
      * Call expressions are expressions followed by a pair of parentheses containing zero or more arguments.
      *
      * @return std::shared_ptr<Expr> A pointer to the parsed call expression.
+     * @throw ParserException If an error occurs while parsing the expression. Will be caught by the statement() function.
      */
     std::shared_ptr<Expr> call_expr();
 
@@ -212,10 +232,13 @@ class Parser {
      * Primary expressions are the most basic expressions and can be literals, identifiers, or grouped expressions.
      *
      * @return std::shared_ptr<Expr> A pointer to the parsed primary expression.
+     * @throw ParserException If an error occurs while parsing the expression. Will be caught by the statement() function.
      */
     std::shared_ptr<Expr> primary_expr();
 
 public:
+    // MARK: Public Functions
+
     /**
      * @brief Construct a new Parser object.
      *
