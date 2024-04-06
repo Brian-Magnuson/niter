@@ -72,6 +72,8 @@ void Parser::synchronize() {
     }
 }
 
+// MARK: Statements
+
 std::shared_ptr<Stmt> Parser::statement() {
     try {
         // if (match({KW_VAR})) {
@@ -118,6 +120,8 @@ std::shared_ptr<Stmt> Parser::expression_statement() {
     }
     return std::make_shared<Stmt::Expression>(expr);
 }
+
+// MARK: Expressions
 
 std::shared_ptr<Expr> Parser::expression() {
     return assign_expr();
@@ -248,6 +252,7 @@ std::shared_ptr<Expr> Parser::call_expr() {
     FUNC(ARG1, ARG2,)
     */
     if (match({TOK_LEFT_PAREN})) {
+        Token& paren = previous();
         std::vector<std::shared_ptr<Expr>> arguments;
         // If there are no arguments, we can just return the call expression
         if (!check(TOK_RIGHT_PAREN)) {
@@ -260,7 +265,7 @@ std::shared_ptr<Expr> Parser::call_expr() {
             }
             consume(TOK_RIGHT_PAREN, E_UNMATCHED_PAREN_IN_ARGS, "Expected ')' after arguments.");
         }
-        return std::make_shared<Expr::Call>(expr, arguments);
+        return std::make_shared<Expr::Call>(expr, paren, arguments);
     }
 
     return expr;
@@ -285,7 +290,7 @@ std::shared_ptr<Expr> Parser::primary_expr() {
     }
     if (match({TOK_LEFT_SQUARE})) {
         std::vector<std::shared_ptr<Expr>> elements;
-        if (!check({TOK_RIGHT_SQUARE})) {
+        if (!check(TOK_RIGHT_SQUARE)) {
             do {
                 elements.push_back(or_expr());
             } while (match({TOK_COMMA}));

@@ -4,6 +4,7 @@
 #include "../scanner/token.h"
 #include <any>
 #include <memory>
+#include <vector>
 
 /**
  * @brief An abstract base class for all expressions.
@@ -35,8 +36,8 @@ public:
         virtual std::any visit_logical_expr(Logical* expr) = 0;
         virtual std::any visit_binary_expr(Binary* expr) = 0;
         virtual std::any visit_unary_expr(Unary* expr) = 0;
-        virtual std::any visit_access_expr(Access* expr) = 0;
         virtual std::any visit_call_expr(Call* expr) = 0;
+        virtual std::any visit_access_expr(Access* expr) = 0;
         virtual std::any visit_grouping_expr(Grouping* expr) = 0;
         virtual std::any visit_variable_expr(Variable* expr) = 0;
         virtual std::any visit_literal_expr(Literal* expr) = 0;

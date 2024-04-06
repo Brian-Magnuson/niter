@@ -37,76 +37,25 @@ public:
     std::string parenthesize(const std::string& name, const std::vector<std::shared_ptr<Expr>>& exprs);
 
     /**
-     * @brief Visits a binary expression and returns a string representation of it.
+     * @brief Converts a double value to a string with a specified precision using a stringstream object.
      *
-     * @param expr The binary expression to visit.
-     * @return std::any An any object containing the string representation of the expression.
+     * @param value The double value to convert.
+     * @param precision The number of decimal places to include in the string. Defaults to 6.
+     * @return std::string The string representation of the double value.
      */
-    std::any visit_binary_expr(Expr::Binary* expr) override;
+    std::string double_to_string(double value, int precision = 6);
 
     /**
-     * @brief Visits a grouping expression and returns a string representation of it.
+     * @brief Converts an any object to a string.
+     * any values can be either longs, doubles, bools, chars, or strings.
+     * Anything else will be printed as [object].
      *
-     * @param expr The grouping expression to visit.
-     * @return std::any An any object containing the string representation of the expression.
+     * @param value The any object to convert.
+     * @return std::string The string representation of the any object.
      */
-    std::any visit_grouping_expr(Expr::Grouping* expr) override;
+    std::string any_to_string(const std::any& value);
 
-    /**
-     * @brief Visits a literal expression and returns a string representation of it.
-     *
-     * @param expr The literal expression to visit.
-     * @return std::any An any object containing the string representation of the expression.
-     */
-    std::any visit_literal_expr(Expr::Literal* expr) override;
-
-    /**
-     * @brief Visits a unary expression and returns a string representation of it.
-     *
-     * @param expr The unary expression to visit.
-     * @return std::any An any object containing the string representation of the expression.
-     */
-    std::any visit_unary_expr(Expr::Unary* expr) override;
-
-    /**
-     * @brief Visits a variable expression and returns a string representation of it.
-     *
-     * @param expr The variable expression to visit.
-     * @return std::any An any object containing the string representation of the expression.
-     */
-    std::any visit_variable_expr(Expr::Variable* expr) override;
-
-    /**
-     * @brief Visits an assign expression and returns a string representation of it.
-     *
-     * @param expr The assign expression to visit.
-     * @return std::any An any object containing the string representation of the expression.
-     */
-    std::any visit_assign_expr(Expr::Assign* expr) override;
-
-    /**
-     * @brief Visits a logical expression and returns a string representation of it.
-     *
-     * @param expr The logical expression to visit.
-     * @return std::any An any object containing the string representation of the expression.
-     */
-    std::any visit_logical_expr(Expr::Logical* expr) override;
-
-    /**
-     * @brief Visits a call expression and returns a string representation of it.
-     *
-     * @param expr The call expression to visit.
-     * @return std::any An any object containing the string representation of the expression.
-     */
-    std::any visit_call_expr(Expr::Call* expr) override;
-
-    /**
-     * @brief Visits a get expression and returns a string representation of it.
-     *
-     * @param expr The get expression to visit.
-     * @return std::any An any object containing the string representation of the expression.
-     */
-    std::any visit_expression_stmt(Stmt::Expression* stmt) override;
+    // MARK: Statements
 
     /**
      * @brief Visits a print statement and returns a string representation of it.
@@ -179,6 +128,104 @@ public:
      * @return std::any An any object containing the string representation of the statement.
      */
     // std::any visit_continue_stmt(Stmt::Continue* stmt) override;
+
+    // MARK: Expressions
+
+    /**
+     * @brief Visits a get expression and returns a string representation of it.
+     *
+     * @param expr The get expression to visit.
+     * @return std::any An any object containing the string representation of the expression.
+     */
+    std::any visit_expression_stmt(Stmt::Expression* stmt) override;
+
+    /**
+     * @brief Visits an assign expression and returns a string representation of it.
+     *
+     * @param expr The assign expression to visit.
+     * @return std::any An any object containing the string representation of the expression.
+     */
+    std::any visit_assign_expr(Expr::Assign* expr) override;
+
+    /**
+     * @brief Visits a logical expression and returns a string representation of it.
+     *
+     * @param expr The logical expression to visit.
+     * @return std::any An any object containing the string representation of the expression.
+     */
+    std::any visit_logical_expr(Expr::Logical* expr) override;
+
+    /**
+     * @brief Visits a binary expression and returns a string representation of it.
+     *
+     * @param expr The binary expression to visit.
+     * @return std::any An any object containing the string representation of the expression.
+     */
+    std::any visit_binary_expr(Expr::Binary* expr) override;
+
+    /**
+     * @brief Visits a unary expression and returns a string representation of it.
+     *
+     * @param expr The unary expression to visit.
+     * @return std::any An any object containing the string representation of the expression.
+     */
+    std::any visit_unary_expr(Expr::Unary* expr) override;
+
+    /**
+     * @brief Visits a call expression and returns a string representation of it.
+     *
+     * @param expr The call expression to visit.
+     * @return std::any An any object containing the string representation of the expression.
+     */
+    std::any visit_call_expr(Expr::Call* expr) override;
+
+    /**
+     * @brief Visits an access expression and returns a string representation of it.
+     *
+     * @param expr The access expression to visit.
+     * @return std::any An any object containing the string representation of the expression.
+     */
+    std::any visit_access_expr(Expr::Access* expr) override;
+
+    /**
+     * @brief Visits a grouping expression and returns a string representation of it.
+     *
+     * @param expr The grouping expression to visit.
+     * @return std::any An any object containing the string representation of the expression.
+     */
+    std::any visit_grouping_expr(Expr::Grouping* expr) override;
+
+    /**
+     * @brief Visits a variable expression and returns a string representation of it.
+     *
+     * @param expr The variable expression to visit.
+     * @return std::any An any object containing the string representation of the expression.
+     */
+    std::any visit_variable_expr(Expr::Variable* expr) override;
+
+    /**
+     * @brief Visits a literal expression and returns a string representation of it.
+     *
+     * @param expr The literal expression to visit.
+     * @return std::any An any object containing the string representation of the expression.
+     */
+    std::any visit_literal_expr(Expr::Literal* expr) override;
+
+    /**
+     * @brief Visits an array expression and returns a string representation of it.
+     *
+     * @param expr The array expression to visit.
+     * @return std::any An any object containing the string representation of the expression.
+     */
+    std::any visit_array_expr(Expr::Array* expr) override;
+
+    /**
+     * @brief Visits a tuple expression and returns a string representation of it.
+     *
+     * @param expr The tuple expression to visit.
+     * @return std::any An any object containing the string representation of the expression.
+     */
+    std::any visit_tuple_expr(Expr::Tuple* expr) override;
 };
 
 #endif // AST_PRINTER_H

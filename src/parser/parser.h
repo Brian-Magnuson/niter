@@ -237,7 +237,7 @@ class Parser {
     std::shared_ptr<Expr> primary_expr();
 
 public:
-    // MARK: Public Functions
+    // MARK: Interface
 
     /**
      * @brief Construct a new Parser object.
