@@ -1,4 +1,9 @@
 #include "../src/logger/logger.h"
+#include "../src/parser/ast_printer.h"
+#include "../src/parser/decl.h"
+#include "../src/parser/expr.h"
+#include "../src/parser/parser.h"
+#include "../src/parser/stmt.h"
 #include "../src/scanner/scanner.h"
 #include "../src/scanner/token.h"
 #include "catch/catch_amalgamated.hpp"
@@ -719,4 +724,23 @@ TEST_CASE("Logger number errors", "[logger]") {
     CHECK(logger.get_errors().at(0) == E_FLOAT_TOO_LARGE);
 
     logger.reset();
+}
+
+TEST_CASE("Parser", "[parser]") {
+    std::string source_code = "x = 5";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/parser_test.nit");
+    std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, source);
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    std::string expected = "(= x 5)";
+    REQUIRE(printer.print(stmts.at(0)) == expected);
 }

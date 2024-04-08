@@ -66,44 +66,28 @@ public:
     std::any visit_print_stmt(Stmt::Print* stmt) override;
 
     /**
-     * @brief Visits a var statement and returns a string representation of it.
-     *
-     * @param stmt The var statement to visit.
-     * @return std::any An any object containing the string representation of the statement.
-     */
-    // std::any visit_var_stmt(Stmt::Var* stmt) override;
-
-    /**
      * @brief Visits a block statement and returns a string representation of it.
      *
      * @param stmt The block statement to visit.
      * @return std::any An any object containing the string representation of the statement.
      */
-    // std::any visit_block_stmt(Stmt::Block* stmt) override;
+    std::any visit_block_stmt(Stmt::Block* stmt) override;
 
     /**
-     * @brief Visits an if statement and returns a string representation of it.
+     * @brief Visits a conditional statement and returns a string representation of it.
      *
-     * @param stmt The if statement to visit.
+     * @param stmt The conditional statement to visit.
      * @return std::any An any object containing the string representation of the statement.
      */
-    // std::any visit_if_stmt(Stmt::If* stmt) override;
+    std::any visit_conditional_stmt(Stmt::Conditional* stmt) override;
 
     /**
-     * @brief Visits a while statement and returns a string representation of it.
+     * @brief Visits a loop statement and returns a string representation of it.
      *
-     * @param stmt The while statement to visit.
+     * @param stmt The loop statement to visit.
      * @return std::any An any object containing the string representation of the statement.
      */
-    // std::any visit_while_stmt(Stmt::While* stmt) override;
-
-    /**
-     * @brief Visits a for statement and returns a string representation of it.
-     *
-     * @param stmt The for statement to visit.
-     * @return std::any An any object containing the string representation of the statement.
-     */
-    // std::any visit_for_stmt(Stmt::For* stmt) override;
+    std::any visit_loop_stmt(Stmt::Loop* stmt) override;
 
     /**
      * @brief Visits a return statement and returns a string representation of it.
@@ -111,7 +95,7 @@ public:
      * @param stmt The return statement to visit.
      * @return std::any An any object containing the string representation of the statement.
      */
-    // std::any visit_return_stmt(Stmt::Return* stmt) override;
+    std::any visit_return_stmt(Stmt::Return* stmt) override;
 
     /**
      * @brief Visits a break statement and returns a string representation of it.
@@ -119,7 +103,7 @@ public:
      * @param stmt The break statement to visit.
      * @return std::any An any object containing the string representation of the statement.
      */
-    // std::any visit_break_stmt(Stmt::Break* stmt) override;
+    std::any visit_break_stmt(Stmt::Break* stmt) override;
 
     /**
      * @brief Visits a continue statement and returns a string representation of it.
@@ -127,9 +111,15 @@ public:
      * @param stmt The continue statement to visit.
      * @return std::any An any object containing the string representation of the statement.
      */
-    // std::any visit_continue_stmt(Stmt::Continue* stmt) override;
+    std::any visit_continue_stmt(Stmt::Continue* stmt) override;
 
-    // MARK: Expressions
+    /**
+     * @brief Visits a declaration statement and returns a string representation of it.
+     *
+     * @param stmt The declaration statement to visit.
+     * @return std::any An any object containing the string representation of the statement.
+     */
+    std::any visit_declaration_stmt(Stmt::Declaration* stmt) override;
 
     /**
      * @brief Visits a get expression and returns a string representation of it.
@@ -138,6 +128,8 @@ public:
      * @return std::any An any object containing the string representation of the expression.
      */
     std::any visit_expression_stmt(Stmt::Expression* stmt) override;
+
+    // MARK: Expressions
 
     /**
      * @brief Visits an assign expression and returns a string representation of it.

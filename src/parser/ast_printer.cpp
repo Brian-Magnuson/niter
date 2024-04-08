@@ -14,7 +14,7 @@ std::string AstPrinter::parenthesize(const std::string& name, const std::vector<
     std::string result = "(" + name;
     for (const auto& expr : exprs) {
         result += " ";
-        result += expr->accept(this).type().name();
+        result += std::any_cast<std::string>(expr->accept(this));
     }
     result += ")";
     return result;
@@ -40,6 +40,46 @@ std::string AstPrinter::any_to_string(const std::any& value) {
     } else {
         return "[object]";
     }
+}
+
+std::any AstPrinter::visit_print_stmt(Stmt::Print* stmt) {
+    // TODO: Implement this
+    return std::any();
+}
+
+std::any AstPrinter::visit_block_stmt(Stmt::Block* stmt) {
+    // TODO: Implement this
+    return std::any();
+}
+
+std::any AstPrinter::visit_conditional_stmt(Stmt::Conditional* stmt) {
+    // TODO: Implement this
+    return std::any();
+}
+
+std::any AstPrinter::visit_loop_stmt(Stmt::Loop* stmt) {
+    // TODO: Implement this
+    return std::any();
+}
+
+std::any AstPrinter::visit_return_stmt(Stmt::Return* stmt) {
+    // TODO: Implement this
+    return std::any();
+}
+
+std::any AstPrinter::visit_break_stmt(Stmt::Break* stmt) {
+    // TODO: Implement this
+    return std::any();
+}
+
+std::any AstPrinter::visit_continue_stmt(Stmt::Continue* stmt) {
+    // TODO: Implement this
+    return std::any();
+}
+
+std::any AstPrinter::visit_declaration_stmt(Stmt::Declaration* stmt) {
+    // TODO: Implement this
+    return std::any();
 }
 
 std::any AstPrinter::visit_expression_stmt(Stmt::Expression* stmt) {
