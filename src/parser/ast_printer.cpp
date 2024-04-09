@@ -29,17 +29,20 @@ std::string AstPrinter::double_to_string(double value, int precision) {
 std::string AstPrinter::any_to_string(const std::any& value) {
     if (value.type() == typeid(long long)) {
         return std::to_string(std::any_cast<long long>(value));
-    } else if (value.type() == typeid(double)) {
-        return double_to_string(std::any_cast<double>(value));
-    } else if (value.type() == typeid(bool)) {
-        return std::any_cast<bool>(value) ? "true" : "false";
-    } else if (value.type() == typeid(char)) {
-        return std::string(1, std::any_cast<char>(value));
-    } else if (value.type() == typeid(std::string)) {
-        return std::any_cast<std::string>(value);
-    } else {
-        return "[object]";
     }
+    if (value.type() == typeid(double)) {
+        return double_to_string(std::any_cast<double>(value));
+    }
+    if (value.type() == typeid(bool)) {
+        return std::any_cast<bool>(value) ? "true" : "false";
+    }
+    if (value.type() == typeid(char)) {
+        return "'" + std::string(1, std::any_cast<char>(value)) + "'";
+    }
+    if (value.type() == typeid(std::string)) {
+        return "\"" + std::any_cast<std::string>(value) + "\"";
+    }
+    return std::string("[object]");
 }
 
 std::any AstPrinter::visit_print_stmt(Stmt::Print* stmt) {
@@ -131,7 +134,7 @@ std::any AstPrinter::visit_literal_expr(Expr::Literal* expr) {
     if (expr->token.literal.has_value()) {
         return any_to_string(expr->token.literal);
     } else {
-        return "nil";
+        return std::string("nil");
     }
 }
 

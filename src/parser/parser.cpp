@@ -115,7 +115,7 @@ std::shared_ptr<Stmt> Parser::print_statement() {
 
 std::shared_ptr<Stmt> Parser::expression_statement() {
     std::shared_ptr<Expr> expr = expression();
-    if (!match({TOK_NEWLINE, TOK_SEMICOLON})) {
+    if (!check(TOK_EOF) && !match({TOK_NEWLINE, TOK_SEMICOLON})) {
         ErrorLogger::inst().log_error(peek(), E_MISSING_STMT_END, "Expected newline or ';' after expression.");
     }
     return std::make_shared<Stmt::Expression>(expr);
@@ -273,6 +273,9 @@ std::shared_ptr<Expr> Parser::call_expr() {
 
 std::shared_ptr<Expr> Parser::primary_expr() {
     // These are in separate cases in case we want to add extra information to the expression
+    if (match({TOK_NIL})) {
+        return std::make_shared<Expr::Literal>(previous());
+    }
     if (match({TOK_BOOL})) {
         return std::make_shared<Expr::Literal>(previous());
     }
@@ -280,6 +283,9 @@ std::shared_ptr<Expr> Parser::primary_expr() {
         return std::make_shared<Expr::Literal>(previous());
     }
     if (match({TOK_FLOAT})) {
+        return std::make_shared<Expr::Literal>(previous());
+    }
+    if (match({TOK_CHAR})) {
         return std::make_shared<Expr::Literal>(previous());
     }
     if (match({TOK_STR})) {

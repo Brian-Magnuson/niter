@@ -727,12 +727,9 @@ TEST_CASE("Logger number errors", "[logger]") {
 }
 
 TEST_CASE("Parser", "[parser]") {
-    std::string source_code = "x = 5";
+    std::string source_code = "x = 5\n";
     std::shared_ptr file_name = std::make_shared<std::string>("test_files/parser_test.nit");
     std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
-
-    ErrorLogger& logger = ErrorLogger::inst();
-    logger.set_printing_enabled(false);
 
     Scanner scanner;
     scanner.scan_file(file_name, source);
@@ -743,4 +740,44 @@ TEST_CASE("Parser", "[parser]") {
     AstPrinter printer;
     std::string expected = "(= x 5)";
     REQUIRE(printer.print(stmts.at(0)) == expected);
+}
+
+TEST_CASE("Parser multiple expression stmts", "[parser]") {
+    std::string source_code = "x = 5\ny = 10; z = 15\n";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/multiple_expr_stmts_test.nit");
+    std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, source);
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 3);
+    CHECK(printer.print(stmts.at(0)) == "(= x 5)");
+    CHECK(printer.print(stmts.at(1)) == "(= y 10)");
+    CHECK(printer.print(stmts.at(2)) == "(= z 15)");
+}
+
+TEST_CASE("Parser literal exprs", "[parser]") {
+    std::string source_code = "5; 5.5; true; false; nil; 'a'; \"Hello, world!\";";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/literal_exprs_test.nit");
+    std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, source);
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 7);
+    CHECK(printer.print(stmts.at(0)) == "5");
+    CHECK(printer.print(stmts.at(1)) == "5.5000");
+    CHECK(printer.print(stmts.at(2)) == "true");
+    CHECK(printer.print(stmts.at(3)) == "false");
+    CHECK(printer.print(stmts.at(4)) == "nil");
+    CHECK(printer.print(stmts.at(5)) == "'a'");
+    CHECK(printer.print(stmts.at(6)) == "\"Hello, world!\"");
 }

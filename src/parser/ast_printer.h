@@ -40,10 +40,10 @@ public:
      * @brief Converts a double value to a string with a specified precision using a stringstream object.
      *
      * @param value The double value to convert.
-     * @param precision The number of decimal places to include in the string. Defaults to 6.
+     * @param precision The number of decimal places to include in the string. Defaults to 4.
      * @return std::string The string representation of the double value.
      */
-    std::string double_to_string(double value, int precision = 6);
+    std::string double_to_string(double value, int precision = 4);
 
     /**
      * @brief Converts an any object to a string.
