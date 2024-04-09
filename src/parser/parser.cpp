@@ -335,8 +335,12 @@ std::shared_ptr<Expr> Parser::primary_expr() {
 std::vector<std::shared_ptr<Stmt>> Parser::parse() {
     std::vector<std::shared_ptr<Stmt>> statements;
 
-    while (!is_at_end()) {
-        statements.push_back(statement());
+    while (current != tokens.size()) {
+        while (!is_at_end()) {
+            statements.push_back(statement());
+        }
+        current++;
+        statements.push_back(std::make_shared<Stmt::EndOfFile>());
     }
 
     return statements;

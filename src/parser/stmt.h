@@ -19,6 +19,7 @@ public:
     class Break;
     class Continue;
     class Print;
+    class EndOfFile;
 
     virtual ~Stmt() {}
 
@@ -75,6 +76,21 @@ public:
 
     // The expression to print
     std::shared_ptr<Expr> value;
+};
+
+/**
+ * @brief A class representing an end-of-file statement.
+ * EOF statements are used to signal the end of the file.
+ * They have no member variables.
+ *
+ */
+class Stmt::EndOfFile : public Stmt {
+public:
+    EndOfFile() {}
+
+    std::any accept(Visitor* visitor) override {
+        return std::any();
+    }
 };
 
 #endif // STMT_H
