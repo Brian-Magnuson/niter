@@ -122,6 +122,14 @@ public:
     std::any visit_declaration_stmt(Stmt::Declaration* stmt) override;
 
     /**
+     * @brief Visits an end of file statement and returns a string representation of it.
+     *
+     * @param stmt The end of file statement to visit.
+     * @return std::any An any object containing the string representation of the statement.
+     */
+    std::any visit_eof_stmt(Stmt::EndOfFile* stmt) override;
+
+    /**
      * @brief Visits a get expression and returns a string representation of it.
      *
      * @param expr The get expression to visit.

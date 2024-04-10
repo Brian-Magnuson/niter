@@ -38,6 +38,7 @@ public:
         virtual std::any visit_break_stmt(Break* stmt) = 0;
         virtual std::any visit_continue_stmt(Continue* stmt) = 0;
         virtual std::any visit_print_stmt(Print* stmt) = 0;
+        virtual std::any visit_eof_stmt(EndOfFile* stmt) = 0;
     };
 
     virtual std::any accept(Visitor* visitor) = 0;
@@ -89,7 +90,7 @@ public:
     EndOfFile() {}
 
     std::any accept(Visitor* visitor) override {
-        return std::any();
+        return visitor->visit_eof_stmt(this);
     }
 };
 

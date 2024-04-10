@@ -85,6 +85,10 @@ std::any AstPrinter::visit_declaration_stmt(Stmt::Declaration* stmt) {
     return std::any();
 }
 
+std::any AstPrinter::visit_eof_stmt(Stmt::EndOfFile* stmt) {
+    return std::string("(stmt:eof)");
+}
+
 std::any AstPrinter::visit_expression_stmt(Stmt::Expression* stmt) {
     return stmt->expression->accept(this);
 }

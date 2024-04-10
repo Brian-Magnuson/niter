@@ -754,10 +754,11 @@ TEST_CASE("Parser multiple expression stmts", "[parser]") {
     std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
 
     AstPrinter printer;
-    REQUIRE(stmts.size() == 3);
+    REQUIRE(stmts.size() == 4);
     CHECK(printer.print(stmts.at(0)) == "(= x 5)");
     CHECK(printer.print(stmts.at(1)) == "(= y 10)");
     CHECK(printer.print(stmts.at(2)) == "(= z 15)");
+    CHECK(printer.print(stmts.at(3)) == "(stmt:eof)");
 }
 
 TEST_CASE("Parser literal exprs", "[parser]") {
@@ -772,7 +773,7 @@ TEST_CASE("Parser literal exprs", "[parser]") {
     std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
 
     AstPrinter printer;
-    REQUIRE(stmts.size() == 7);
+    REQUIRE(stmts.size() == 8);
     CHECK(printer.print(stmts.at(0)) == "5");
     CHECK(printer.print(stmts.at(1)) == "5.5000");
     CHECK(printer.print(stmts.at(2)) == "true");
@@ -780,4 +781,5 @@ TEST_CASE("Parser literal exprs", "[parser]") {
     CHECK(printer.print(stmts.at(4)) == "nil");
     CHECK(printer.print(stmts.at(5)) == "'a'");
     CHECK(printer.print(stmts.at(6)) == "\"Hello, world!\"");
+    CHECK(printer.print(stmts.at(7)) == "(stmt:eof)");
 }
