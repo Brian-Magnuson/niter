@@ -251,7 +251,7 @@ std::shared_ptr<Expr> Parser::call_expr() {
     FUNC(ARG1,)
     FUNC(ARG1, ARG2,)
     */
-    if (match({TOK_LEFT_PAREN})) {
+    while (match({TOK_LEFT_PAREN})) {
         Token& paren = previous();
         std::vector<std::shared_ptr<Expr>> arguments;
         // If there are no arguments, we can just return the call expression
@@ -263,9 +263,10 @@ std::shared_ptr<Expr> Parser::call_expr() {
                 }
                 arguments.push_back(expression());
             }
-            consume(TOK_RIGHT_PAREN, E_UNMATCHED_PAREN_IN_ARGS, "Expected ')' after arguments.");
         }
-        return std::make_shared<Expr::Call>(expr, paren, arguments);
+        consume(TOK_RIGHT_PAREN, E_UNMATCHED_PAREN_IN_ARGS, "Expected ')' after arguments.");
+
+        expr = std::make_shared<Expr::Call>(expr, paren, arguments);
     }
 
     return expr;
@@ -297,9 +298,13 @@ std::shared_ptr<Expr> Parser::primary_expr() {
     if (match({TOK_LEFT_SQUARE})) {
         std::vector<std::shared_ptr<Expr>> elements;
         if (!check(TOK_RIGHT_SQUARE)) {
-            do {
-                elements.push_back(or_expr());
-            } while (match({TOK_COMMA}));
+            elements.push_back(expression());
+            while (match({TOK_COMMA})) {
+                if (check(TOK_RIGHT_SQUARE)) {
+                    break;
+                }
+                elements.push_back(expression());
+            }
         }
 
         consume(TOK_RIGHT_SQUARE, E_UNMATCHED_LEFT_SQUARE, "Expected ']' after array.");

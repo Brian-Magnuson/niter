@@ -783,3 +783,140 @@ TEST_CASE("Parser literal exprs", "[parser]") {
     CHECK(printer.print(stmts.at(6)) == "\"Hello, world!\"");
     CHECK(printer.print(stmts.at(7)) == "(stmt:eof)");
 }
+
+TEST_CASE("Parser arrays", "[parser]") {
+    std::string source_code = "[]; [1]; [1,2]; [1,2,];";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/arrays_test.nit");
+    std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, source);
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 5);
+    CHECK(printer.print(stmts.at(0)) == "(array)");
+    CHECK(printer.print(stmts.at(1)) == "(array 1)");
+    CHECK(printer.print(stmts.at(2)) == "(array 1 2)");
+    CHECK(printer.print(stmts.at(3)) == "(array 1 2)");
+    CHECK(printer.print(stmts.at(4)) == "(stmt:eof)");
+}
+
+TEST_CASE("Parser nested arrays", "[parser]") {
+    std::string source_code = "[[1],]; [[1,2],]; [[1],[2,],];";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/nested_arrays_test.nit");
+    std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, source);
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 4);
+    CHECK(printer.print(stmts.at(0)) == "(array (array 1))");
+    CHECK(printer.print(stmts.at(1)) == "(array (array 1 2))");
+    CHECK(printer.print(stmts.at(2)) == "(array (array 1) (array 2))");
+    CHECK(printer.print(stmts.at(3)) == "(stmt:eof)");
+}
+
+TEST_CASE("Parser tuples", "[parser]") {
+    std::string source_code = "(); (1); (1,); (1,2); (1,2,);";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/tuples_test.nit");
+    std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, source);
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 6);
+    CHECK(printer.print(stmts.at(0)) == "(tuple)");
+    CHECK(printer.print(stmts.at(1)) == "1");
+    CHECK(printer.print(stmts.at(2)) == "(tuple 1)");
+    CHECK(printer.print(stmts.at(3)) == "(tuple 1 2)");
+    CHECK(printer.print(stmts.at(4)) == "(tuple 1 2)");
+    CHECK(printer.print(stmts.at(5)) == "(stmt:eof)");
+}
+
+TEST_CASE("Parser nested tuples", "[parser]") {
+    std::string source_code = "((1,),); ((1,2),); ((1,),(2,));";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/nested_tuples_test.nit");
+    std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, source);
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 4);
+    CHECK(printer.print(stmts.at(0)) == "(tuple (tuple 1))");
+    CHECK(printer.print(stmts.at(1)) == "(tuple (tuple 1 2))");
+    CHECK(printer.print(stmts.at(2)) == "(tuple (tuple 1) (tuple 2))");
+    CHECK(printer.print(stmts.at(3)) == "(stmt:eof)");
+}
+
+TEST_CASE("Parser nested tuples and arrays", "[parser]") {
+    std::string source_code = "([1]); [(1)]; ([1,2],); [(1,2)]; [()];";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/nested_tuples_and_arrays_test.nit");
+    std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, source);
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 6);
+    CHECK(printer.print(stmts.at(0)) == "(array 1)");
+    CHECK(printer.print(stmts.at(1)) == "(array 1)");
+    CHECK(printer.print(stmts.at(2)) == "(tuple (array 1 2))");
+    CHECK(printer.print(stmts.at(3)) == "(array (tuple 1 2))");
+    CHECK(printer.print(stmts.at(4)) == "(array (tuple))");
+    CHECK(printer.print(stmts.at(5)) == "(stmt:eof)");
+}
+
+TEST_CASE("Parser call exprs", "[parser]") {
+    std::string source_code = "foo(); foo(1); foo(1,2); foo(1,2,);";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/call_exprs_test.nit");
+    std::shared_ptr<std::string> source = std::make_shared<std::string>(source_code);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, source);
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 5);
+    CHECK(printer.print(stmts.at(0)) == "(call foo)");
+    CHECK(printer.print(stmts.at(1)) == "(call foo 1)");
+    CHECK(printer.print(stmts.at(2)) == "(call foo 1 2)");
+    CHECK(printer.print(stmts.at(3)) == "(call foo 1 2)");
+    CHECK(printer.print(stmts.at(4)) == "(stmt:eof)");
+}
+
+TEST_CASE("Parser chained calls", "[parser]") {
+    std::string source_code = "foo()(); bar(1)(2,3);";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/chained_calls_test.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 3);
+    CHECK(printer.print(stmts.at(0)) == "(call (call foo))");
+    CHECK(printer.print(stmts.at(1)) == "(call (call bar 1) 2 3)");
+    CHECK(printer.print(stmts.at(2)) == "(stmt:eof)");
+}
