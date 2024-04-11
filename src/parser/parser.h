@@ -23,7 +23,7 @@ class Parser {
     // The vector of tokens to parse.
     std::vector<Token> tokens;
     // The current token index.
-    int current = 0;
+    unsigned current = 0;
 
     /**
      * @brief Returns the current token.
