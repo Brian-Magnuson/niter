@@ -230,13 +230,17 @@ std::shared_ptr<Expr> Parser::unary_expr() {
 
 std::shared_ptr<Expr> Parser::access_expr() {
     std::shared_ptr<Expr> expr = call_expr();
-    if (match({TOK_DOT, TOK_ARROW, TOK_LEFT_SQUARE})) {
+    while (match({TOK_DOT, TOK_ARROW, TOK_LEFT_SQUARE})) {
         Token op = previous();
-        std::shared_ptr<Expr> right = call_expr();
+        std::shared_ptr<Expr> right;
         if (op.tok_type == TOK_LEFT_SQUARE) {
+            // If we have [] access, any expression is allowed
+            right = expression();
             consume(TOK_RIGHT_SQUARE, E_UNMATCHED_LEFT_SQUARE, "Expected ']' after expression.");
+        } else {
+            right = call_expr();
         }
-        return std::make_shared<Expr::Access>(expr, op, right);
+        expr = std::make_shared<Expr::Access>(expr, op, right);
     }
     return expr;
 }

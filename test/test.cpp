@@ -920,3 +920,57 @@ TEST_CASE("Parser chained calls", "[parser]") {
     CHECK(printer.print(stmts.at(1)) == "(call (call bar 1) 2 3)");
     CHECK(printer.print(stmts.at(2)) == "(stmt:eof)");
 }
+
+TEST_CASE("Parser access exprs", "[parser]") {
+    std::string source_code = "foo.bar; foo->bar; foo[1];";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/access_exprs_test.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 4);
+    CHECK(printer.print(stmts.at(0)) == "(. foo bar)");
+    CHECK(printer.print(stmts.at(1)) == "(-> foo bar)");
+    CHECK(printer.print(stmts.at(2)) == "([] foo 1)");
+    CHECK(printer.print(stmts.at(3)) == "(stmt:eof)");
+}
+
+TEST_CASE("Parser chained access exprs", "[parser]") {
+    std::string source_code = "foo.bar.baz; foo->bar->baz; foo[1][2];";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/chained_access_exprs_test.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 4);
+    CHECK(printer.print(stmts.at(0)) == "(. (. foo bar) baz)");
+    CHECK(printer.print(stmts.at(1)) == "(-> (-> foo bar) baz)");
+    CHECK(printer.print(stmts.at(2)) == "([] ([] foo 1) 2)");
+    CHECK(printer.print(stmts.at(3)) == "(stmt:eof)");
+}
+
+TEST_CASE("Parser chained access with grouping", "[parser]") {
+    std::string source_code = "foo.(bar.baz); foo->(bar->baz); foo[foo[1]];";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/chained_access_with_grouping_test.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 4);
+    CHECK(printer.print(stmts.at(0)) == "(. foo (. bar baz))");
+    CHECK(printer.print(stmts.at(1)) == "(-> foo (-> bar baz))");
+    CHECK(printer.print(stmts.at(2)) == "([] foo ([] foo 1))");
+    CHECK(printer.print(stmts.at(3)) == "(stmt:eof)");
+}
