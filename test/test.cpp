@@ -974,3 +974,45 @@ TEST_CASE("Parser chained access with grouping", "[parser]") {
     CHECK(printer.print(stmts.at(2)) == "([] foo ([] foo 1))");
     CHECK(printer.print(stmts.at(3)) == "(stmt:eof)");
 }
+
+TEST_CASE("Parser unary exprs", "[parser]") {
+    std::string source_code = "-5; !true; *foo; &bar; -&foo; !*bar;";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/unary_exprs_test.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 7);
+    CHECK(printer.print(stmts.at(0)) == "(- 5)");
+    CHECK(printer.print(stmts.at(1)) == "(! true)");
+    CHECK(printer.print(stmts.at(2)) == "(* foo)");
+    CHECK(printer.print(stmts.at(3)) == "(& bar)");
+    CHECK(printer.print(stmts.at(4)) == "(- (& foo))");
+    CHECK(printer.print(stmts.at(5)) == "(! (* bar))");
+    CHECK(printer.print(stmts.at(6)) == "(stmt:eof)");
+}
+
+TEST_CASE("Parser binary exprs", "[parser]") {
+    std::string source_code = "1 + 2; 3 - 4; 5 * 6; 7 / 8; 9 % 10; 11 ^ 12;";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/binary_exprs_test.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 7);
+    CHECK(printer.print(stmts.at(0)) == "(+ 1 2)");
+    CHECK(printer.print(stmts.at(1)) == "(- 3 4)");
+    CHECK(printer.print(stmts.at(2)) == "(* 5 6)");
+    CHECK(printer.print(stmts.at(3)) == "(/ 7 8)");
+    CHECK(printer.print(stmts.at(4)) == "(% 9 10)");
+    CHECK(printer.print(stmts.at(5)) == "(^ 11 12)");
+    CHECK(printer.print(stmts.at(6)) == "(stmt:eof)");
+}

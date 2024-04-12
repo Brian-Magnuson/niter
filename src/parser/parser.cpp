@@ -198,11 +198,11 @@ std::shared_ptr<Expr> Parser::term_expr() {
 }
 
 std::shared_ptr<Expr> Parser::factor_expr() {
-    std::shared_ptr<Expr> expr = unary_expr();
+    std::shared_ptr<Expr> expr = power_expr();
 
     while (match({TOK_STAR, TOK_SLASH, TOK_PERCENT})) {
         Token op = previous();
-        std::shared_ptr<Expr> right = unary_expr();
+        std::shared_ptr<Expr> right = power_expr();
         expr = std::make_shared<Expr::Binary>(expr, op, right);
     }
     return expr;
