@@ -1016,3 +1016,95 @@ TEST_CASE("Parser binary exprs", "[parser]") {
     CHECK(printer.print(stmts.at(5)) == "(^ 11 12)");
     CHECK(printer.print(stmts.at(6)) == "(stmt:eof)");
 }
+
+TEST_CASE("Parser order of operations", "[parser]") {
+    std::string source_code = "1 + 2 * 3; 1 * 2 ^ 3; 1 / 2 + 3; 1 / (2 + 3);";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/order_of_operations_test.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 5);
+    CHECK(printer.print(stmts.at(0)) == "(+ 1 (* 2 3))");
+    CHECK(printer.print(stmts.at(1)) == "(* 1 (^ 2 3))");
+    CHECK(printer.print(stmts.at(2)) == "(+ (/ 1 2) 3)");
+    CHECK(printer.print(stmts.at(3)) == "(/ 1 (+ 2 3))");
+    CHECK(printer.print(stmts.at(4)) == "(stmt:eof)");
+}
+
+TEST_CASE("Parser comparison exprs", "[parser]") {
+    std::string source_code = "1 == 2; 3 != 4; 5 < 6; 7 <= 8; 9 > 10; 11 >= 12;";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/comparison_exprs_test.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 7);
+    CHECK(printer.print(stmts.at(0)) == "(== 1 2)");
+    CHECK(printer.print(stmts.at(1)) == "(!= 3 4)");
+    CHECK(printer.print(stmts.at(2)) == "(< 5 6)");
+    CHECK(printer.print(stmts.at(3)) == "(<= 7 8)");
+    CHECK(printer.print(stmts.at(4)) == "(> 9 10)");
+    CHECK(printer.print(stmts.at(5)) == "(>= 11 12)");
+    CHECK(printer.print(stmts.at(6)) == "(stmt:eof)");
+}
+
+TEST_CASE("Parser comparison order of operations", "[parser]") {
+    std::string source_code = "1 == 2 > 3; 1 < 2 == 3; 1 < 2 > 3;";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/comparison_order_of_operations_test.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 4);
+    CHECK(printer.print(stmts.at(0)) == "(== 1 (> 2 3))");
+    CHECK(printer.print(stmts.at(1)) == "(== (< 1 2) 3)");
+    CHECK(printer.print(stmts.at(2)) == "(> (< 1 2) 3)");
+    CHECK(printer.print(stmts.at(3)) == "(stmt:eof)");
+}
+
+TEST_CASE("Parser logical exprs", "[parser]") {
+    std::string source_code = "true and false; true or false;";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/logical_exprs_test.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 3);
+    CHECK(printer.print(stmts.at(0)) == "(and true false)");
+    CHECK(printer.print(stmts.at(1)) == "(or true false)");
+    CHECK(printer.print(stmts.at(2)) == "(stmt:eof)");
+}
+
+TEST_CASE("Parser logical order of operations", "[parser]") {
+    std::string source_code = "true and false or true; true or false and true;";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/logical_order_of_operations_test.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 3);
+    CHECK(printer.print(stmts.at(0)) == "(or (and true false) true)");
+    CHECK(printer.print(stmts.at(1)) == "(or true (and false true))");
+    CHECK(printer.print(stmts.at(2)) == "(stmt:eof)");
+}
