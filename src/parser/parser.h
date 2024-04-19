@@ -40,13 +40,13 @@ class Parser {
     Token& previous();
 
     /**
-     * @brief Checks if the current token is of the given type.
+     * @brief Checks if the current token is any of the given types. Returns false if the current token is an EOF token.
      *
-     * @param tok_type The type to check.
+     * @param types The types to check.
      * @return true If the current token is of the given type.
-     * @return false Otherwise.
+     * @return false If not or if the current token is an EOF token.
      */
-    bool check(TokenType tok_type);
+    bool check(const std::vector<TokenType>& types);
 
     /**
      * @brief Checks if an EOF token was reached.
@@ -89,7 +89,7 @@ class Parser {
      */
     void synchronize();
 
-    // MARK: Declarations
+    // MARK: Statements
 
     /**
      * @brief Parses a generic statement. Will catch any exceptions thrown by the specific statement parsers.
@@ -97,6 +97,13 @@ class Parser {
      * @return std::shared_ptr<Stmt> A pointer to the parsed statement.
      */
     std::shared_ptr<Stmt> statement();
+
+    /**
+     * @brief Parsers a declaration statement, i.e. a declaration by itself.
+     *
+     * @return std::shared_ptr<Stmt> A pointer to the parsed declaration statement.
+     */
+    std::shared_ptr<Stmt> declaration_statement();
 
     /**
      * @brief Parses a print statement.
@@ -111,10 +118,21 @@ class Parser {
      * @brief Parses an expression statement, i.e. an expression by itself.
      * Expression statements are expressions followed by either a semicolon or a newline.
      *
-     * @return std::shared_ptr<Stmt>
+     * @return std::shared_ptr<Stmt> A pointer to the parsed expression statement.
      * @throw ParserException If an error occurs while parsing the statement. Will be caught by the statement() function.
      */
     std::shared_ptr<Stmt> expression_statement();
+
+    // MARK: Declarations
+
+    /**
+     * @brief Parsers a variable declaration.
+     * Variable declarations begin with either "var" or "const" followed by an identifier and an optional initializer.
+     *
+     * @return std::shared_ptr<Decl> A pointer to the parsed variable declaration.
+     * @throw ParserException If an error occurs while parsing the declaration. Will be caught by the statement() function.
+     */
+    std::shared_ptr<Decl> var_decl();
 
     // MARK: Expressions
 

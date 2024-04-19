@@ -50,6 +50,8 @@ enum ErrorCode {
 
     // Parser errors
     E_PARSER = 3000,
+    // A statement was found without a semicolon or newline at the end
+    E_MISSING_STMT_END,
     // A statement was found where an expression was expected
     E_NOT_AN_EXPRESSION,
     // A list of arguments was found without matching parentheses
@@ -64,8 +66,8 @@ enum ErrorCode {
     E_INVALID_ASSIGNMENT,
     // A call expression was found to have over the maximum number of arguments (of 255)
     E_TOO_MANY_ARGS,
-    // A statement was found without a semicolon or newline at the end
-    E_MISSING_STMT_END,
+    // A variable declaration was found without an identifier
+    E_UNNAMED_VAR,
 
     // Type definition errors
     E_TYPE_DEF = 4000,

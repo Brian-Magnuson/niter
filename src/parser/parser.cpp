@@ -10,11 +10,16 @@ Token& Parser::previous() {
     return tokens[current - 1];
 }
 
-bool Parser::check(TokenType tok_type) {
+bool Parser::check(const std::vector<TokenType>& types) {
     if (is_at_end()) {
         return false;
     }
-    return peek().tok_type == tok_type;
+    for (TokenType type : types) {
+        if (peek().tok_type == type) {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool Parser::is_at_end() {
@@ -29,17 +34,15 @@ Token& Parser::advance() {
 }
 
 bool Parser::match(const std::vector<TokenType>& types) {
-    for (TokenType type : types) {
-        if (check(type)) {
-            advance();
-            return true;
-        }
+    if (check(types)) {
+        advance();
+        return true;
     }
     return false;
 }
 
 Token& Parser::consume(TokenType tok_type, ErrorCode error_code, const std::string& message) {
-    if (check(tok_type)) {
+    if (check({tok_type})) {
         return advance();
     }
     ErrorLogger::inst().log_error(peek(), error_code, message);
@@ -76,9 +79,9 @@ void Parser::synchronize() {
 
 std::shared_ptr<Stmt> Parser::statement() {
     try {
-        // if (match({KW_VAR})) {
-        //     return var_declaration();
-        // }
+        if (check({KW_VAR, KW_CONST})) {
+            return declaration_statement();
+        }
         // if (match({KW_FUN})) {
         //     return fun_declaration();
         // }
@@ -105,6 +108,19 @@ std::shared_ptr<Stmt> Parser::statement() {
     }
 }
 
+std::shared_ptr<Stmt> Parser::declaration_statement() {
+    std::shared_ptr<Decl> decl;
+    if (match({KW_VAR, KW_CONST})) {
+        decl = var_decl();
+    } else {
+        // This function is called in statement where it is verified that the current token signifies a declaration.
+        // Therefore, this should be unreachable.
+        ErrorLogger::inst().log_error(peek(), E_UNREACHABLE, "Unreachable code reached in declaration statement.");
+        throw ParserException();
+    }
+    return std::make_shared<Stmt::Declaration>(decl);
+}
+
 std::shared_ptr<Stmt> Parser::print_statement() {
     std::shared_ptr<Expr> value = expression();
     if (!match({TOK_NEWLINE, TOK_SEMICOLON})) {
@@ -115,10 +131,25 @@ std::shared_ptr<Stmt> Parser::print_statement() {
 
 std::shared_ptr<Stmt> Parser::expression_statement() {
     std::shared_ptr<Expr> expr = expression();
-    if (!check(TOK_EOF) && !match({TOK_NEWLINE, TOK_SEMICOLON})) {
+    if (!check({TOK_EOF}) && !match({TOK_NEWLINE, TOK_SEMICOLON})) {
         ErrorLogger::inst().log_error(peek(), E_MISSING_STMT_END, "Expected newline or ';' after expression.");
     }
     return std::make_shared<Stmt::Expression>(expr);
+}
+
+// MARK: Declarations
+
+std::shared_ptr<Decl> Parser::var_decl() {
+    Token declarer = previous();
+    Token name = consume(TOK_IDENT, E_UNNAMED_VAR, "Expected identifier in declaration.");
+    std::shared_ptr<Expr> initializer = nullptr;
+    if (match({TOK_EQ})) {
+        initializer = expression();
+    }
+    if (!match({TOK_NEWLINE, TOK_SEMICOLON})) {
+        ErrorLogger::inst().log_error(peek(), E_MISSING_STMT_END, "Expected newline or ';' after declaration.");
+    }
+    return std::make_shared<Decl::Var>(declarer, name, initializer);
 }
 
 // MARK: Expressions
@@ -259,10 +290,10 @@ std::shared_ptr<Expr> Parser::call_expr() {
         Token& paren = previous();
         std::vector<std::shared_ptr<Expr>> arguments;
         // If there are no arguments, we can just return the call expression
-        if (!check(TOK_RIGHT_PAREN)) {
+        if (!check({TOK_RIGHT_PAREN})) {
             arguments.push_back(expression());
             while (match({TOK_COMMA})) {
-                if (check(TOK_RIGHT_PAREN)) {
+                if (check({TOK_RIGHT_PAREN})) {
                     break;
                 }
                 arguments.push_back(expression());
@@ -301,10 +332,10 @@ std::shared_ptr<Expr> Parser::primary_expr() {
     }
     if (match({TOK_LEFT_SQUARE})) {
         std::vector<std::shared_ptr<Expr>> elements;
-        if (!check(TOK_RIGHT_SQUARE)) {
+        if (!check({TOK_RIGHT_SQUARE})) {
             elements.push_back(expression());
             while (match({TOK_COMMA})) {
-                if (check(TOK_RIGHT_SQUARE)) {
+                if (check({TOK_RIGHT_SQUARE})) {
                     break;
                 }
                 elements.push_back(expression());
@@ -323,10 +354,10 @@ std::shared_ptr<Expr> Parser::primary_expr() {
         }
         // There must be at least one expression if it's a tuple, so "(,)" is invalid
         expressions.push_back(expression());
-        if (check(TOK_COMMA)) {
+        if (check({TOK_COMMA})) {
             while (match({TOK_COMMA})) {
                 // Trailing comma is allowed, so ",)" marks the end of the tuple
-                if (check(TOK_RIGHT_PAREN)) {
+                if (check({TOK_RIGHT_PAREN})) {
                     break;
                 }
                 expressions.push_back(expression());

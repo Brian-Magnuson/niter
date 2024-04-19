@@ -1,6 +1,8 @@
 #ifndef STMT_H
 #define STMT_H
 
+#include "decl.h"
+#include "expr.h"
 #include <any>
 
 /**
@@ -10,9 +12,9 @@
  */
 class Stmt {
 public:
+    class Declaration;
     class Expression;
     class Block;
-    class Declaration;
     class Conditional;
     class Loop;
     class Return;
@@ -29,9 +31,9 @@ public:
      */
     class Visitor {
     public:
+        virtual std::any visit_declaration_stmt(Declaration* stmt) = 0;
         virtual std::any visit_expression_stmt(Expression* stmt) = 0;
         virtual std::any visit_block_stmt(Block* stmt) = 0;
-        virtual std::any visit_declaration_stmt(Declaration* stmt) = 0;
         virtual std::any visit_conditional_stmt(Conditional* stmt) = 0;
         virtual std::any visit_loop_stmt(Loop* stmt) = 0;
         virtual std::any visit_return_stmt(Return* stmt) = 0;
@@ -42,6 +44,23 @@ public:
     };
 
     virtual std::any accept(Visitor* visitor) = 0;
+};
+
+/**
+ * @brief A class representing a declaration statement.
+ * Declaration statements are statements that consist of a declaration.
+ *
+ */
+class Stmt::Declaration : public Stmt {
+public:
+    Declaration(std::shared_ptr<Decl> declaration) : declaration(declaration) {}
+
+    std::any accept(Visitor* visitor) override {
+        return visitor->visit_declaration_stmt(this);
+    }
+
+    // The declaration in the statement
+    std::shared_ptr<Decl> declaration;
 };
 
 /**
