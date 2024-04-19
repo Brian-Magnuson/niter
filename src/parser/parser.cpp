@@ -30,7 +30,11 @@ Token& Parser::advance() {
     if (!is_at_end()) {
         current++;
     }
-    return previous();
+    Token& prev = previous();
+    if (grouping_tokens.size() > 0 && peek().tok_type == TOK_NEWLINE) {
+        current++;
+    }
+    return prev;
 }
 
 bool Parser::match(const std::vector<TokenType>& types) {
@@ -50,6 +54,7 @@ Token& Parser::consume(TokenType tok_type, ErrorCode error_code, const std::stri
 }
 
 void Parser::synchronize() {
+    grouping_tokens = std::stack<TokenType>();
     advance();
 
     while (!is_at_end()) {
@@ -265,9 +270,11 @@ std::shared_ptr<Expr> Parser::access_expr() {
         Token op = previous();
         std::shared_ptr<Expr> right;
         if (op.tok_type == TOK_LEFT_SQUARE) {
+            grouping_tokens.push(TOK_RIGHT_SQUARE);
             // If we have [] access, any expression is allowed
             right = expression();
             consume(TOK_RIGHT_SQUARE, E_UNMATCHED_LEFT_SQUARE, "Expected ']' after expression.");
+            grouping_tokens.pop();
         } else {
             right = call_expr();
         }
@@ -287,6 +294,7 @@ std::shared_ptr<Expr> Parser::call_expr() {
     FUNC(ARG1, ARG2,)
     */
     while (match({TOK_LEFT_PAREN})) {
+        grouping_tokens.push(TOK_RIGHT_PAREN);
         Token& paren = previous();
         std::vector<std::shared_ptr<Expr>> arguments;
         // If there are no arguments, we can just return the call expression
@@ -300,6 +308,7 @@ std::shared_ptr<Expr> Parser::call_expr() {
             }
         }
         consume(TOK_RIGHT_PAREN, E_UNMATCHED_PAREN_IN_ARGS, "Expected ')' after arguments.");
+        grouping_tokens.pop();
 
         expr = std::make_shared<Expr::Call>(expr, paren, arguments);
     }
@@ -331,6 +340,7 @@ std::shared_ptr<Expr> Parser::primary_expr() {
         return std::make_shared<Expr::Variable>(previous());
     }
     if (match({TOK_LEFT_SQUARE})) {
+        grouping_tokens.push(TOK_RIGHT_SQUARE);
         std::vector<std::shared_ptr<Expr>> elements;
         if (!check({TOK_RIGHT_SQUARE})) {
             elements.push_back(expression());
@@ -343,10 +353,12 @@ std::shared_ptr<Expr> Parser::primary_expr() {
         }
 
         consume(TOK_RIGHT_SQUARE, E_UNMATCHED_LEFT_SQUARE, "Expected ']' after array.");
+        grouping_tokens.pop();
         return std::make_shared<Expr::Array>(elements);
     }
 
     if (match({TOK_LEFT_PAREN})) {
+        grouping_tokens.push(TOK_RIGHT_PAREN);
         std::vector<std::shared_ptr<Expr>> expressions;
         if (match({TOK_RIGHT_PAREN})) {
             // Empty tuple
@@ -363,9 +375,11 @@ std::shared_ptr<Expr> Parser::primary_expr() {
                 expressions.push_back(expression());
             }
             consume(TOK_RIGHT_PAREN, E_UNMATCHED_PAREN_IN_TUPLE, "Expected ')' after tuple.");
+            grouping_tokens.pop();
             return std::make_shared<Expr::Tuple>(expressions);
         }
         consume(TOK_RIGHT_PAREN, E_UNMATCHED_PAREN_IN_GROUPING, "Expected ')' after expression.");
+        grouping_tokens.pop();
         return expressions[0];
     }
     ErrorLogger::inst().log_error(peek(), E_NOT_AN_EXPRESSION, "Expected expression.");

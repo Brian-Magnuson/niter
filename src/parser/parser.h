@@ -7,6 +7,7 @@
 #include "expr.h"
 #include "stmt.h"
 #include <memory>
+#include <stack>
 #include <vector>
 
 /**
@@ -24,6 +25,8 @@ class Parser {
     std::vector<Token> tokens;
     // The current token index.
     unsigned current = 0;
+    // A stack to keep track of grouping tokens. If the stack is empty, newlines are significant.
+    std::stack<TokenType> grouping_tokens;
 
     /**
      * @brief Returns the current token.
@@ -59,6 +62,8 @@ class Parser {
     /**
      * @brief Advances the parser and returns the previous token.
      * E.g., if the current token is the first token, it will return the first token and then advance to the second token.
+     *
+     * If newlines are currently insignificant, it will skip over any newline tokens.
      *
      * @return Token& The previous token.
      */
