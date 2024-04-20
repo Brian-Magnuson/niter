@@ -131,7 +131,14 @@ std::any AstPrinter::visit_grouping_expr(Expr::Grouping* expr) {
 }
 
 std::any AstPrinter::visit_identifier_expr(Expr::Identifier* expr) {
-    return expr->token.lexeme;
+    auto current = expr;
+    std::string name = current->token.lexeme;
+    current = current->contained.get();
+    while (current != nullptr) {
+        name += "::" + current->token.lexeme;
+        current = current->contained.get();
+    }
+    return name;
 }
 
 std::any AstPrinter::visit_literal_expr(Expr::Literal* expr) {

@@ -1125,3 +1125,38 @@ TEST_CASE("Parser assign exprs", "[parser]") {
     CHECK(printer.print(stmts.at(1)) == "(= 1 2)");
     CHECK(printer.print(stmts.at(2)) == "(stmt:eof)");
 }
+
+TEST_CASE("Parser idents", "[parser]") {
+    std::string source_code = "l1; l1::l2; l1::l2::l3;";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/idents_test.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 4);
+    CHECK(printer.print(stmts.at(0)) == "l1");
+    CHECK(printer.print(stmts.at(1)) == "l1::l2");
+    CHECK(printer.print(stmts.at(2)) == "l1::l2::l3");
+    CHECK(printer.print(stmts.at(3)) == "(stmt:eof)");
+}
+
+TEST_CASE("Parser idents 2", "[parser]") {
+    std::string source_code = "l1 + l2; l1::l2 + l3::l4;";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/idents_test_2.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 3);
+    CHECK(printer.print(stmts.at(0)) == "(+ l1 l2)");
+    CHECK(printer.print(stmts.at(1)) == "(+ l1::l2 l3::l4)");
+    CHECK(printer.print(stmts.at(2)) == "(stmt:eof)");
+}
