@@ -3,10 +3,10 @@
 A fast, statically-typed, programming language with a simple compiler built on LLVM.
 
 ```
-using std:Console
+using std::Console
 
 fun main() {
-    Console:println("Hello, World")
+    Console::println("Hello, World")
     return 0
 }
 ```

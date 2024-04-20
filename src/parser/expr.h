@@ -210,7 +210,7 @@ public:
  */
 class Expr::Identifier : public Expr {
 public:
-    Identifier(Token token, std::shared_ptr<Expr> contained = nullptr) : token(token), contained(contained) {}
+    Identifier(Token token, std::shared_ptr<Expr::Identifier> contained = nullptr) : token(token), contained(contained) {}
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_identifier_expr(this);
@@ -219,7 +219,7 @@ public:
     // The token representing the identifier.
     Token token;
     // The identifier contained within *this* namespace, if it exists.
-    std::shared_ptr<Expr> contained;
+    std::shared_ptr<Expr::Identifier> contained;
 };
 
 /**

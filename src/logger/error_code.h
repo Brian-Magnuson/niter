@@ -68,6 +68,8 @@ enum ErrorCode {
     E_TOO_MANY_ARGS,
     // A variable declaration was found without an identifier
     E_UNNAMED_VAR,
+    // A scope resolution operator was found without a valid right-hand side
+    E_NOT_AN_IDENTIFIER,
 
     // Type definition errors
     E_TYPE_DEF = 4000,
