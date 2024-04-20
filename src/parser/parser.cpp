@@ -337,7 +337,7 @@ std::shared_ptr<Expr> Parser::primary_expr() {
         return std::make_shared<Expr::Literal>(previous());
     }
     if (match({TOK_IDENT})) {
-        return std::make_shared<Expr::Variable>(previous());
+        return std::make_shared<Expr::Identifier>(previous());
     }
     if (match({TOK_LEFT_SQUARE})) {
         grouping_tokens.push(TOK_RIGHT_SQUARE);

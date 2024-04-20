@@ -130,7 +130,7 @@ std::any AstPrinter::visit_grouping_expr(Expr::Grouping* expr) {
     return parenthesize("group", {expr->expression});
 }
 
-std::any AstPrinter::visit_variable_expr(Expr::Variable* expr) {
+std::any AstPrinter::visit_identifier_expr(Expr::Identifier* expr) {
     return expr->token.lexeme;
 }
 

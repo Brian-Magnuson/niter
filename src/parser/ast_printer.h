@@ -201,7 +201,7 @@ public:
      * @param expr The variable expression to visit.
      * @return std::any An any object containing the string representation of the expression.
      */
-    std::any visit_variable_expr(Expr::Variable* expr) override;
+    std::any visit_identifier_expr(Expr::Identifier* expr) override;
 
     /**
      * @brief Visits a literal expression and returns a string representation of it.

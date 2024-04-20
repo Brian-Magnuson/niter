@@ -19,7 +19,7 @@ public:
     class Call;
     class Access;
     class Grouping;
-    class Variable;
+    class Identifier;
     class Literal;
     class Array;
     class Tuple;
@@ -39,7 +39,7 @@ public:
         virtual std::any visit_call_expr(Call* expr) = 0;
         virtual std::any visit_access_expr(Access* expr) = 0;
         virtual std::any visit_grouping_expr(Grouping* expr) = 0;
-        virtual std::any visit_variable_expr(Variable* expr) = 0;
+        virtual std::any visit_identifier_expr(Identifier* expr) = 0;
         virtual std::any visit_literal_expr(Literal* expr) = 0;
         virtual std::any visit_array_expr(Array* expr) = 0;
         virtual std::any visit_tuple_expr(Tuple* expr) = 0;
@@ -207,12 +207,12 @@ public:
  * @brief A class representing a variable.
  *
  */
-class Expr::Variable : public Expr {
+class Expr::Identifier : public Expr {
 public:
-    Variable(Token token) : token(token) {}
+    Identifier(Token token) : token(token) {}
 
     std::any accept(Visitor* visitor) override {
-        return visitor->visit_variable_expr(this);
+        return visitor->visit_identifier_expr(this);
     }
 
     Token token;
