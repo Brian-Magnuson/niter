@@ -305,6 +305,10 @@ std::shared_ptr<Expr> Parser::call_expr() {
                     break;
                 }
                 arguments.push_back(expression());
+                if (arguments.size() > 255) {
+                    ErrorLogger::inst().log_error(peek(), E_TOO_MANY_ARGS, "Cannot have more than 255 arguments.");
+                    throw ParserException();
+                }
             }
         }
         consume(TOK_RIGHT_PAREN, E_UNMATCHED_PAREN_IN_ARGS, "Expected ')' after arguments.");
