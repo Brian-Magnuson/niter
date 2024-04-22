@@ -1160,3 +1160,79 @@ TEST_CASE("Parser idents 2", "[parser]") {
     CHECK(printer.print(stmts.at(1)) == "(+ l1::l2 l3::l4)");
     CHECK(printer.print(stmts.at(2)) == "(stmt:eof)");
 }
+
+TEST_CASE("Logger unmatched paren in grouping", "[logger]") {
+    std::string source_code = "(1 + 2";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/unmatched_paren_in_grouping_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    parser.parse();
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_UNMATCHED_PAREN_IN_GROUPING);
+
+    logger.reset();
+}
+
+TEST_CASE("Logger unmatched paren in call", "[logger]") {
+    std::string source_code = "foo(1 + 2";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/unmatched_paren_in_call_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    parser.parse();
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_UNMATCHED_PAREN_IN_ARGS);
+
+    logger.reset();
+}
+
+TEST_CASE("Logger unmatched bracket in array", "[logger]") {
+    std::string source_code = "[1 + 2";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/unmatched_bracket_in_array_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    parser.parse();
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_UNMATCHED_LEFT_SQUARE);
+
+    logger.reset();
+}
+
+TEST_CASE("Logger unmatched paren in tuple", "[logger]") {
+    std::string source_code = "(1, 2";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/unmatched_brace_in_tuple_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    parser.parse();
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_UNMATCHED_PAREN_IN_TUPLE);
+
+    logger.reset();
+}
