@@ -1236,3 +1236,60 @@ TEST_CASE("Logger unmatched paren in tuple", "[logger]") {
 
     logger.reset();
 }
+
+TEST_CASE("Logger missing stmt end", "[logger]") {
+    std::string source_code = "1 + 2 3 + 4";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/missing_stmt_end_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    parser.parse();
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_MISSING_STMT_END);
+
+    logger.reset();
+}
+
+TEST_CASE("Logger not an ident", "[logger]") {
+    std::string source_code = "my_var::1;";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/not_an_ident_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    parser.parse();
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_NOT_AN_IDENTIFIER);
+
+    logger.reset();
+}
+
+TEST_CASE("Logger not an expression", "[logger]") {
+    std::string source_code = "1 +;";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/not_an_expression_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    parser.parse();
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_NOT_AN_EXPRESSION);
+
+    logger.reset();
+}
