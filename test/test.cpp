@@ -1293,3 +1293,67 @@ TEST_CASE("Logger not an expression", "[logger]") {
 
     logger.reset();
 }
+
+TEST_CASE("Logger insignificant newlines", "[logger]") {
+    // A case where the logger *shouldn't* report an error
+    std::string source_code = "arr = [1,\n2];";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/insignificant_newlines_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(logger.get_errors().size() == 0);
+    REQUIRE(stmts.size() == 2);
+    CHECK(printer.print(stmts.at(0)) == "(= arr (array 1 2))");
+    CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
+
+    logger.reset();
+}
+
+TEST_CASE("Logger insignificant newlines 2", "[logger]") {
+    std::string source_code = "tuple = (1,\n2);";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/insignificant_newlines_test_2.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(logger.get_errors().size() == 0);
+    REQUIRE(stmts.size() == 2);
+    CHECK(printer.print(stmts.at(0)) == "(= tuple (tuple 1 2))");
+    CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
+
+    logger.reset();
+}
+
+TEST_CASE("Logger insignificant newlines 3", "[logger]") {
+    std::string source_code = "arr = [1,\n (2, \n3)]\n";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/insignificant_newlines_test_3.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(logger.get_errors().size() == 0);
+    REQUIRE(stmts.size() == 2);
+    CHECK(printer.print(stmts.at(0)) == "(= arr (array 1 (tuple 2 3)))");
+    CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
+
+    logger.reset();
+}
