@@ -93,6 +93,8 @@ TEST_CASE("Log in order", "[logger]") {
     logger.reset();
 }
 
+// MARK: Scanner tests
+
 TEST_CASE("Scanner", "[scanner]") {
     std::string source_code = "var x = 5";
     std::string file_name = "test_files/scanner_test.nit";
@@ -542,6 +544,8 @@ TEST_CASE("Escaping newlines", "[scanner]") {
     CHECK(tokens.at(4).tok_type == TOK_EOF);
 }
 
+// MARK: Scanner error tests
+
 TEST_CASE("Logger no LF after backslash", "[logger]") {
     // std::string source_code = "var \\ var";
     std::string source_code = R"(var \ var)";
@@ -725,6 +729,8 @@ TEST_CASE("Logger number errors", "[logger]") {
 
     logger.reset();
 }
+
+// MARK: Parser tests
 
 TEST_CASE("Parser", "[parser]") {
     std::string source_code = "x = 5\n";
@@ -1160,6 +1166,8 @@ TEST_CASE("Parser idents 2", "[parser]") {
     CHECK(printer.print(stmts.at(1)) == "(+ l1::l2 l3::l4)");
     CHECK(printer.print(stmts.at(2)) == "(stmt:eof)");
 }
+
+// MARK: Parser error tests
 
 TEST_CASE("Logger unmatched paren in grouping", "[logger]") {
     std::string source_code = "(1 + 2";
