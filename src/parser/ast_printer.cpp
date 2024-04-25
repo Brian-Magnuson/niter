@@ -93,6 +93,29 @@ std::any AstPrinter::visit_expression_stmt(Stmt::Expression* stmt) {
     return stmt->expression->accept(this);
 }
 
+std::any AstPrinter::visit_var_decl(Decl::Var* decl) {
+    std::string result = "(decl:var ";
+    result += decl->name.lexeme;
+    if (decl->type_annotation != nullptr) {
+        result += " " + decl->type_annotation->token.lexeme;
+    }
+    if (decl->initializer != nullptr) {
+        result += " " + std::any_cast<std::string>(decl->initializer->accept(this));
+    }
+    result += ")";
+    return result;
+}
+
+std::any AstPrinter::visit_fun_decl(Decl::Fun* /*decl*/) {
+    // TODO: Implement this
+    return std::any();
+}
+
+std::any AstPrinter::visit_struct_decl(Decl::Struct* /*decl*/) {
+    // TODO: Implement this
+    return std::any();
+}
+
 std::any AstPrinter::visit_assign_expr(Expr::Assign* expr) {
     return parenthesize("=", {expr->left, expr->right});
 }

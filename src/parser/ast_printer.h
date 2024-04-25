@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-class AstPrinter : public Expr::Visitor, public Stmt::Visitor {
+class AstPrinter : public Expr::Visitor, public Stmt::Visitor, public Decl::Visitor {
 public:
     /**
      * @brief Prints a string representation of an expression.
@@ -136,6 +136,32 @@ public:
      * @return std::any An any object containing the string representation of the expression.
      */
     std::any visit_expression_stmt(Stmt::Expression* stmt) override;
+
+    // MARK: Declarations
+
+    /**
+     * @brief Visits a variable declaration and returns a string representation of it.
+     *
+     * @param decl The variable declaration to visit.
+     * @return std::any An any object containing the string representation of the declaration.
+     */
+    std::any visit_var_decl(Decl::Var* decl) override;
+
+    /**
+     * @brief Visits a function declaration and returns a string representation of it.
+     *
+     * @param decl The function declaration to visit.
+     * @return std::any An any object containing the string representation of the declaration.
+     */
+    std::any visit_fun_decl(Decl::Fun* decl) override;
+
+    /**
+     * @brief Visits a struct declaration and returns a string representation of it.
+     *
+     * @param decl The struct declaration to visit.
+     * @return std::any An any object containing the string representation of the declaration.
+     */
+    std::any visit_struct_decl(Decl::Struct* decl) override;
 
     // MARK: Expressions
 
