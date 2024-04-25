@@ -70,6 +70,8 @@ enum ErrorCode {
     E_UNNAMED_VAR,
     // A scope resolution operator was found without a valid right-hand side
     E_NOT_AN_IDENTIFIER,
+    // A type annotation was found that was not an identifier expression
+    E_INVALID_TYPE_ANNOTATION,
 
     // Type definition errors
     E_TYPE_DEF = 4000,

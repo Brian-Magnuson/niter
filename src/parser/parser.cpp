@@ -150,14 +150,23 @@ std::shared_ptr<Stmt> Parser::expression_statement() {
 std::shared_ptr<Decl> Parser::var_decl() {
     Token declarer = previous();
     Token name = consume(TOK_IDENT, E_UNNAMED_VAR, "Expected identifier in declaration.");
+    std::shared_ptr<Expr> type_annotation = nullptr;
+    if (match({TOK_COLON})) {
+        type_annotation = expression();
+        if (std::dynamic_pointer_cast<Expr::Identifier>(type_annotation) == nullptr) {
+            ErrorLogger::inst().log_error(peek(), E_INVALID_TYPE_ANNOTATION, "Invalid type annotation.");
+            throw ParserException();
+        }
+    }
     std::shared_ptr<Expr> initializer = nullptr;
     if (match({TOK_EQ})) {
         initializer = expression();
     }
     if (!match({TOK_NEWLINE, TOK_SEMICOLON})) {
         ErrorLogger::inst().log_error(peek(), E_MISSING_STMT_END, "Expected newline or ';' after declaration.");
+        throw ParserException();
     }
-    return std::make_shared<Decl::Var>(declarer, name, initializer);
+    return std::make_shared<Decl::Var>(declarer, name, type_annotation, initializer);
 }
 
 // MARK: Expressions

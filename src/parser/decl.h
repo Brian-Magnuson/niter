@@ -39,7 +39,7 @@ public:
  */
 class Decl::Var : public Decl {
 public:
-    Var(Token declarer, Token name, std::shared_ptr<Expr> initializer) : declarer(declarer), name(name), initializer(initializer) {}
+    Var(Token declarer, Token name, std::shared_ptr<Expr> type_annotation, std::shared_ptr<Expr> initializer) : declarer(declarer), name(name), type_annotation(type_annotation), initializer(initializer) {}
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_var_decl(this);
@@ -49,6 +49,8 @@ public:
     Token declarer;
     // The name of the variable.
     Token name;
+    // The type annotation of the variable. nullptr if no type was specified.
+    std::shared_ptr<Expr> type_annotation;
     // The initializer expression. Note: if the variable is explicitly initialized to nil, this will still point to an expression that represents nil.
     std::shared_ptr<Expr> initializer;
 };
