@@ -152,7 +152,7 @@ std::shared_ptr<Decl> Parser::var_decl() {
     Token name = consume(TOK_IDENT, E_UNNAMED_VAR, "Expected identifier in declaration.");
     std::shared_ptr<Expr::Identifier> type_annotation = nullptr;
     if (match({TOK_COLON})) {
-        type_annotation = std::dynamic_pointer_cast<Expr::Identifier>(expression());
+        type_annotation = std::dynamic_pointer_cast<Expr::Identifier>(primary_expr());
         if (type_annotation == nullptr) {
             ErrorLogger::inst().log_error(peek(), E_INVALID_TYPE_ANNOTATION, "Invalid type annotation.");
             throw ParserException();

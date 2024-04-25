@@ -1167,6 +1167,23 @@ TEST_CASE("Parser idents 2", "[parser]") {
     CHECK(printer.print(stmts.at(2)) == "(stmt:eof)");
 }
 
+TEST_CASE("Parser var decls", "[parser]") {
+    std::string source_code = "var x = 5; var y: i32 = 10;";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/var_decls_test.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 3);
+    CHECK(printer.print(stmts.at(0)) == "(decl:var x auto 5)");
+    CHECK(printer.print(stmts.at(1)) == "(decl:var y i32 10)");
+    CHECK(printer.print(stmts.at(2)) == "(stmt:eof)");
+}
+
 // MARK: Parser error tests
 
 TEST_CASE("Logger unmatched paren in grouping", "[logger]") {

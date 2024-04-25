@@ -80,9 +80,8 @@ std::any AstPrinter::visit_continue_stmt(Stmt::Continue* /*stmt*/) {
     return std::any();
 }
 
-std::any AstPrinter::visit_declaration_stmt(Stmt::Declaration* /*stmt*/) {
-    // TODO: Implement this
-    return std::any();
+std::any AstPrinter::visit_declaration_stmt(Stmt::Declaration* stmt) {
+    return stmt->declaration->accept(this);
 }
 
 std::any AstPrinter::visit_eof_stmt(Stmt::EndOfFile* /*stmt*/) {
