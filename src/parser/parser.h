@@ -111,15 +111,6 @@ class Parser {
     std::shared_ptr<Stmt> declaration_statement();
 
     /**
-     * @brief Parses a print statement.
-     * Print statements begin with the keyword "puts" followed by an expression.
-     *
-     * @return std::shared_ptr<Stmt> A pointer to the parsed print statement.
-     * @throw ParserException If an error occurs while parsing the statement. Will be caught by the statement() function.
-     */
-    std::shared_ptr<Stmt> print_statement();
-
-    /**
      * @brief Parses an expression statement, i.e. an expression by itself.
      * Expression statements are expressions followed by either a semicolon or a newline.
      *
@@ -127,6 +118,23 @@ class Parser {
      * @throw ParserException If an error occurs while parsing the statement. Will be caught by the statement() function.
      */
     std::shared_ptr<Stmt> expression_statement();
+
+    /**
+     * @brief Parses a return statement.
+     *
+     * @return std::shared_ptr<Stmt> A pointer to the parsed return statement.
+     * @throw ParserException If an error occurs while parsing the statement. Will be caught by the statement() function.
+     */
+    std::shared_ptr<Stmt> return_statement();
+
+    /**
+     * @brief Parses a print statement.
+     * Print statements begin with the keyword "puts" followed by an expression.
+     *
+     * @return std::shared_ptr<Stmt> A pointer to the parsed print statement.
+     * @throw ParserException If an error occurs while parsing the statement. Will be caught by the statement() function.
+     */
+    std::shared_ptr<Stmt> print_statement();
 
     // MARK: Declarations
 
@@ -138,6 +146,15 @@ class Parser {
      * @throw ParserException If an error occurs while parsing the declaration. Will be caught by the statement() function.
      */
     std::shared_ptr<Decl> var_decl();
+
+    /**
+     * @brief Parses a function declaration.
+     * Functoin declarations begin with "fun" followed by an identifier, a list of parameters, and a set of braces containing statements.
+     *
+     * @return std::shared_ptr<Decl> A pointer to the parsed function declaration.
+     * @throw ParserException If an error occurs while parsing the declaration. Will be caught by the statement() function.
+     */
+    std::shared_ptr<Decl> fun_decl();
 
     // MARK: Expressions
 

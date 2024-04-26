@@ -85,7 +85,7 @@ public:
 
 /**
  * @brief A class representing a return statement.
- * Return statements consist of the "return" keyword followed by an expression.
+ * Return statements consist of the "return" keyword and optionally an expression.
  *
  */
 class Stmt::Return : public Stmt {
@@ -99,6 +99,8 @@ public:
     // The keyword that signifies the return statement.
     Token keyword;
     // The expression to return.
+    // If the shared_ptr is nullptr, no expression was specified.
+    // If the shared_ptr is pointing to an expression that represents nil, the return statement was explicitly specified to return nil.
     std::shared_ptr<Expr> value;
 };
 

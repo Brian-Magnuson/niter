@@ -102,9 +102,9 @@ std::shared_ptr<Stmt> Parser::statement() {
         // if (match({KW_LOOP})) {
         //     return loop_statement();
         // }
-        // if (match({KW_RETURN})) {
-        //     return return_statement();
-        // }
+        if (match({KW_RETURN})) {
+            return return_statement();
+        }
         if (match({KW_PUTS})) {
             return print_statement();
         }
@@ -129,14 +129,6 @@ std::shared_ptr<Stmt> Parser::declaration_statement() {
     return std::make_shared<Stmt::Declaration>(decl);
 }
 
-std::shared_ptr<Stmt> Parser::print_statement() {
-    std::shared_ptr<Expr> value = expression();
-    if (!match({TOK_NEWLINE, TOK_SEMICOLON})) {
-        ErrorLogger::inst().log_error(peek(), E_MISSING_STMT_END, "Expected newline or ';' after expression.");
-    }
-    return std::make_shared<Stmt::Print>(value);
-}
-
 std::shared_ptr<Stmt> Parser::expression_statement() {
     std::shared_ptr<Expr> expr = expression();
     if (!check({TOK_EOF}) && !match({TOK_NEWLINE, TOK_SEMICOLON})) {
@@ -145,11 +137,37 @@ std::shared_ptr<Stmt> Parser::expression_statement() {
     return std::make_shared<Stmt::Expression>(expr);
 }
 
+std::shared_ptr<Stmt> Parser::print_statement() {
+    std::shared_ptr<Expr> value = expression();
+    if (!match({TOK_NEWLINE, TOK_SEMICOLON})) {
+        ErrorLogger::inst().log_error(peek(), E_MISSING_STMT_END, "Expected newline or ';' after expression.");
+    }
+    return std::make_shared<Stmt::Print>(value);
+}
+
+std::shared_ptr<Stmt> Parser::return_statement() {
+    Token keyword = previous();
+    std::shared_ptr<Expr> value = nullptr;
+    if (!check({TOK_NEWLINE, TOK_SEMICOLON})) {
+        value = expression();
+    }
+    if (!match({TOK_NEWLINE, TOK_SEMICOLON})) {
+        ErrorLogger::inst().log_error(peek(), E_MISSING_STMT_END, "Expected newline or ';' after return statement.");
+    }
+    return std::make_shared<Stmt::Return>(keyword, value);
+}
+
 // MARK: Declarations
 
 std::shared_ptr<Decl> Parser::var_decl() {
-    Token declarer = previous();
+    TokenType declarer = previous().tok_type;
+    if (declarer != KW_VAR || declarer != KW_CONST) {
+        // This can only happen if var_decl was called outside of declaration_statement, i.e. in another decl function.
+        // If neither var nor const was specified, then assume const.
+        declarer = KW_CONST;
+    }
     Token name = consume(TOK_IDENT, E_UNNAMED_VAR, "Expected identifier in declaration.");
+
     std::shared_ptr<Expr::Identifier> type_annotation = nullptr;
     if (match({TOK_COLON})) {
         type_annotation = std::dynamic_pointer_cast<Expr::Identifier>(primary_expr());
@@ -177,6 +195,46 @@ std::shared_ptr<Decl> Parser::var_decl() {
         throw ParserException();
     }
     return std::make_shared<Decl::Var>(declarer, name, type_annotation, initializer);
+}
+
+std::shared_ptr<Decl> Parser::fun_decl() {
+    // One thing at a time...
+    // First, grab the declarer
+    TokenType declarer = previous().tok_type;
+    // Next, grab the identifier
+    Token name = consume(TOK_IDENT, E_UNNAMED_FUN, "Expected identifier in function declaration.");
+    // Next, the parameters
+    std::vector<std::shared_ptr<Decl::Var>> parameters;
+    consume(TOK_LEFT_PAREN, E_NO_LPAREN_IN_FUN_DECL, "Expected '(' after function name.");
+    grouping_tokens.push(TOK_RIGHT_PAREN);
+    if (!check({TOK_RIGHT_PAREN})) {
+        auto variable = var_decl();
+        if (variable == nullptr) {
+            ErrorLogger::inst().log_error(peek(), E_IMPOSSIBLE, "var_decl did not return a variable in function declaration.");
+        }
+        parameters.push_back(std::dynamic_pointer_cast<Decl::Var>(variable));
+        while (match({TOK_COMMA})) {
+            if (check({TOK_RIGHT_PAREN})) {
+                break;
+            }
+            variable = var_decl();
+            if (variable == nullptr) {
+                ErrorLogger::inst().log_error(peek(), E_IMPOSSIBLE, "var_decl did not return a variable in function declaration.");
+            }
+            parameters.push_back(std::dynamic_pointer_cast<Decl::Var>(variable));
+        }
+    }
+    consume(TOK_RIGHT_PAREN, E_UNMATCHED_PAREN_IN_PARAMS, "Expected ')' after function parameters.");
+    // TODO: Type annotations
+    // TODO: Figure out if we want to allow newlines here
+    // Next, the block
+    std::vector<std::shared_ptr<Stmt>> body;
+    consume(TOK_LEFT_BRACE, E_NO_LBRACE_IN_FUN_DECL, "Expected '{' before function body.");
+    while (!check({TOK_RIGHT_BRACE})) {
+        body.push_back(statement());
+    }
+    consume(TOK_RIGHT_BRACE, E_UNMATCHED_BRACE_IN_FUN_DECL, "Expected '}' after function body.");
+    return std::make_shared<Decl::Fun>(declarer, name, parameters, nullptr, body);
 }
 
 // MARK: Expressions

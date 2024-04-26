@@ -43,14 +43,14 @@ public:
  */
 class Decl::Var : public Decl {
 public:
-    Var(Token declarer, Token name, std::shared_ptr<Expr::Identifier> type_annotation, std::shared_ptr<Expr> initializer) : declarer(declarer), name(name), type_annotation(type_annotation), initializer(initializer) {}
+    Var(TokenType declarer, Token name, std::shared_ptr<Expr::Identifier> type_annotation, std::shared_ptr<Expr> initializer) : declarer(declarer), name(name), type_annotation(type_annotation), initializer(initializer) {}
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_var_decl(this);
     }
 
-    // The token that signifies the declaration type.
-    Token declarer;
+    // The token type that signifies the declaration type.
+    TokenType declarer;
     // The name of the variable.
     Token name;
     // The type annotation of the variable. nullptr if no type was specified.
@@ -67,6 +67,7 @@ public:
 class Decl::Fun : public Decl {
 public:
     Fun(
+        TokenType declarer,
         Token name,
         std::vector<Decl::Var> parameters,
         std::shared_ptr<Expr::Identifier> return_type,
@@ -78,6 +79,8 @@ public:
         return visitor->visit_fun_decl(this);
     }
 
+    // The token type that signifies the declaration type.
+    TokenType declarer;
     // The name of the function.
     Token name;
     // The parameters of the function.

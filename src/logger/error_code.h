@@ -72,6 +72,16 @@ enum ErrorCode {
     E_NOT_AN_IDENTIFIER,
     // A type annotation was found that was not an identifier expression
     E_INVALID_TYPE_ANNOTATION,
+    // A function declaration was found without an identifier
+    E_UNNAMED_FUN,
+    // A function declaration was found without a left parenthesis
+    E_NO_LPAREN_IN_FUN_DECL,
+    // A function declaration was found without a right parenthesis
+    E_UNMATCHED_PAREN_IN_PARAMS,
+    // A function declaration was found without a left brace
+    E_NO_LBRACE_IN_FUN_DECL,
+    // A function declaration was found without a right brace
+    E_UNMATCHED_BRACE_IN_FUN_DECL,
 
     // Type definition errors
     E_TYPE_DEF = 4000,
@@ -87,9 +97,9 @@ enum ErrorCode {
 
     // Compiler malfunction errors
     E_MALFUNCTION = 9000,
-    // Statement was reached that should be unreachable
+    // Statement was reached that should be unreachable. Typically used when a series of conditional checks do not catch every case.
     E_UNREACHABLE,
-    // Statement was reached that should be impossible
+    // Statement was reached that should be impossible. Typically used when a function does not behave as expected.
     E_IMPOSSIBLE,
     // Statement was reached that should be unimplemented
     E_UNIMPLEMENTED,
