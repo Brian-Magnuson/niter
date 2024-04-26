@@ -59,6 +59,11 @@ public:
     std::shared_ptr<Expr> initializer;
 };
 
+/**
+ * @brief A class representing a function declaration.
+ * E.g. fun add(a: int, b: int): int { return a + b; }
+ *
+ */
 class Decl::Fun : public Decl {
 public:
     Fun(

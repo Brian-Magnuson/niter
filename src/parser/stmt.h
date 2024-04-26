@@ -84,6 +84,25 @@ public:
 };
 
 /**
+ * @brief A class representing a return statement.
+ * Return statements consist of the "return" keyword followed by an expression.
+ *
+ */
+class Stmt::Return : public Stmt {
+public:
+    Return(Token keyword, std::shared_ptr<Expr> value) : keyword(keyword), value(value) {}
+
+    std::any accept(Visitor* visitor) override {
+        return visitor->visit_return_stmt(this);
+    }
+
+    // The keyword that signifies the return statement.
+    Token keyword;
+    // The expression to return.
+    std::shared_ptr<Expr> value;
+};
+
+/**
  * @brief A class representing a print statement.
  * Print statements are statements that consist of the "puts" keyword followed by an expression.
  * Designed to be temporary until a proper print function is implemented.
