@@ -5,6 +5,9 @@
 #include "expr.h"
 #include <any>
 
+class Decl;
+class Expr;
+
 /**
  * @brief An abstract base class for all statements.
  * Includes statements for expressions and declarations.

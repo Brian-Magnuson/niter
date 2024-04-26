@@ -3,8 +3,12 @@
 
 #include "../scanner/token.h"
 #include "expr.h"
+#include "stmt.h"
 #include <any>
 #include <memory>
+
+class Expr;
+class Stmt;
 
 /**
  * @brief An abstract base class for all declarations.
@@ -53,6 +57,30 @@ public:
     std::shared_ptr<Expr::Identifier> type_annotation;
     // The initializer expression. Note: if the variable is explicitly initialized to nil, this will still point to an expression that represents nil.
     std::shared_ptr<Expr> initializer;
+};
+
+class Decl::Fun : public Decl {
+public:
+    Fun(
+        Token name,
+        std::vector<Decl::Var> parameters,
+        std::shared_ptr<Expr::Identifier> return_type,
+        std::vector<std::shared_ptr<Stmt>> body
+    )
+        : name(name), parameters(parameters), return_type(return_type), body(body) {}
+
+    std::any accept(Visitor* visitor) override {
+        return visitor->visit_fun_decl(this);
+    }
+
+    // The name of the function.
+    Token name;
+    // The parameters of the function.
+    std::vector<Decl::Var> parameters;
+    // The return type of the function. If no type was provided, an identifier with the name "void" will be inserted.
+    std::shared_ptr<Expr::Identifier> return_type;
+    // The body of the function.
+    std::vector<std::shared_ptr<Stmt>> body;
 };
 
 #endif // DECL_H

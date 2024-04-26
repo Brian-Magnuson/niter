@@ -6,6 +6,9 @@
 #include <memory>
 #include <vector>
 
+class Decl;
+class Stmt;
+
 /**
  * @brief An abstract base class for all expressions.
  *
