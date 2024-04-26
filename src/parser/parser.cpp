@@ -161,7 +161,7 @@ std::shared_ptr<Stmt> Parser::return_statement() {
 
 std::shared_ptr<Decl> Parser::var_decl() {
     TokenType declarer = previous().tok_type;
-    if (declarer != KW_VAR || declarer != KW_CONST) {
+    if (declarer != KW_VAR && declarer != KW_CONST) {
         // This can only happen if var_decl was called outside of declaration_statement, i.e. in another decl function.
         // If neither var nor const was specified, then assume const.
         declarer = KW_CONST;
@@ -211,6 +211,7 @@ std::shared_ptr<Decl> Parser::fun_decl() {
         auto variable = var_decl();
         if (variable == nullptr) {
             ErrorLogger::inst().log_error(peek(), E_IMPOSSIBLE, "var_decl did not return a variable in function declaration.");
+            throw ParserException();
         }
         parameters.push_back(std::dynamic_pointer_cast<Decl::Var>(variable));
         while (match({TOK_COMMA})) {
@@ -220,21 +221,39 @@ std::shared_ptr<Decl> Parser::fun_decl() {
             variable = var_decl();
             if (variable == nullptr) {
                 ErrorLogger::inst().log_error(peek(), E_IMPOSSIBLE, "var_decl did not return a variable in function declaration.");
+                throw ParserException();
             }
             parameters.push_back(std::dynamic_pointer_cast<Decl::Var>(variable));
         }
     }
     consume(TOK_RIGHT_PAREN, E_UNMATCHED_PAREN_IN_PARAMS, "Expected ')' after function parameters.");
-    // TODO: Type annotations
-    // TODO: Figure out if we want to allow newlines here
-    // Next, the block
+
+    std::shared_ptr<Expr::Identifier> return_type = nullptr;
+    if (match({TOK_COLON})) {
+        return_type = std::dynamic_pointer_cast<Expr::Identifier>(primary_expr());
+        if (return_type == nullptr) {
+            ErrorLogger::inst().log_error(peek(), E_INVALID_TYPE_ANNOTATION, "Invalid type annotation.");
+            throw ParserException();
+        }
+    } else {
+        // Inject a 'void' token for type inference later
+        Location location = previous().location;
+        // It will be treated as having the same location as the previous token
+        return_type = std::make_shared<Expr::Identifier>(Token{
+            TOK_IDENT,
+            "void",
+            std::any(),
+            location
+        });
+    }
+
     std::vector<std::shared_ptr<Stmt>> body;
     consume(TOK_LEFT_BRACE, E_NO_LBRACE_IN_FUN_DECL, "Expected '{' before function body.");
     while (!check({TOK_RIGHT_BRACE})) {
         body.push_back(statement());
     }
     consume(TOK_RIGHT_BRACE, E_UNMATCHED_BRACE_IN_FUN_DECL, "Expected '}' after function body.");
-    return std::make_shared<Decl::Fun>(declarer, name, parameters, nullptr, body);
+    return std::make_shared<Decl::Fun>(declarer, name, parameters, return_type, body);
 }
 
 // MARK: Expressions

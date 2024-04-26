@@ -69,11 +69,11 @@ public:
     Fun(
         TokenType declarer,
         Token name,
-        std::vector<Decl::Var> parameters,
+        std::vector<std::shared_ptr<Decl::Var>> parameters,
         std::shared_ptr<Expr::Identifier> return_type,
         std::vector<std::shared_ptr<Stmt>> body
     )
-        : name(name), parameters(parameters), return_type(return_type), body(body) {}
+        : declarer(declarer), name(name), parameters(parameters), return_type(return_type), body(body) {}
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_fun_decl(this);
@@ -84,7 +84,7 @@ public:
     // The name of the function.
     Token name;
     // The parameters of the function.
-    std::vector<Decl::Var> parameters;
+    std::vector<std::shared_ptr<Decl::Var>> parameters;
     // The return type of the function. If no type was provided, an identifier with the name "void" will be inserted.
     std::shared_ptr<Expr::Identifier> return_type;
     // The body of the function.
