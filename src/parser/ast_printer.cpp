@@ -105,9 +105,31 @@ std::any AstPrinter::visit_var_decl(Decl::Var* decl) {
     return result;
 }
 
-std::any AstPrinter::visit_fun_decl(Decl::Fun* /*decl*/) {
-    // TODO: Implement this
-    return std::any();
+std::any AstPrinter::visit_fun_decl(Decl::Fun* decl) {
+    std::string result = "(decl:fun ";
+    result += decl->name.lexeme;
+    result += " ";
+    result += decl->return_type->token.lexeme;
+    result += " ";
+    for (const auto& param : decl->parameters) {
+        result += std::any_cast<std::string>(param->accept(this));
+        result += " ";
+    }
+    result += "{ ";
+    for (const auto& stmt : decl->body) {
+        result += std::any_cast<std::string>(stmt->accept(this));
+        result += " ";
+    }
+    result += "})";
+    return result;
+    /*
+    Example:
+    fun add(a: int, b: int): int {
+        return a + b;
+    }
+    ->
+    (decl:fun add int (decl:var a int nil) (decl:var b int nil) { (stmt:return (expr:+ (expr:identifier a) (expr:identifier b))) })
+    */
 }
 
 std::any AstPrinter::visit_struct_decl(Decl::Struct* /*decl*/) {

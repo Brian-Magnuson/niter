@@ -87,12 +87,9 @@ void Parser::synchronize() {
 
 std::shared_ptr<Stmt> Parser::statement() {
     try {
-        if (check({KW_VAR, KW_CONST})) {
+        if (check({KW_VAR, KW_CONST, KW_FUN})) {
             return declaration_statement();
         }
-        // if (match({KW_FUN})) {
-        //     return fun_declaration();
-        // }
         // if (match({KW_IF})) {
         //     return if_statement();
         // }
@@ -120,6 +117,8 @@ std::shared_ptr<Stmt> Parser::declaration_statement() {
     std::shared_ptr<Decl> decl;
     if (match({KW_VAR, KW_CONST})) {
         decl = var_decl();
+    } else if (match({KW_FUN})) {
+        decl = fun_decl();
     } else {
         // This function is called in statement where it is verified that the current token signifies a declaration.
         // Therefore, this should be unreachable.
