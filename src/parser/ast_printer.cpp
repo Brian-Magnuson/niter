@@ -65,9 +65,13 @@ std::any AstPrinter::visit_loop_stmt(Stmt::Loop* /*stmt*/) {
     return std::any();
 }
 
-std::any AstPrinter::visit_return_stmt(Stmt::Return* /*stmt*/) {
-    // TODO: Implement this
-    return std::any();
+std::any AstPrinter::visit_return_stmt(Stmt::Return* stmt) {
+    std::string result = "(stmt:return";
+    if (stmt->value != nullptr) {
+        result += " " + std::any_cast<std::string>(stmt->value->accept(this));
+    }
+    result += ")";
+    return result;
 }
 
 std::any AstPrinter::visit_break_stmt(Stmt::Break* /*stmt*/) {
@@ -93,7 +97,15 @@ std::any AstPrinter::visit_expression_stmt(Stmt::Expression* stmt) {
 }
 
 std::any AstPrinter::visit_var_decl(Decl::Var* decl) {
-    std::string result = "(decl:var ";
+    std::string result = "(decl:";
+    if (decl->declarer == KW_VAR) {
+        result += "var";
+    } else if (decl->declarer == KW_CONST) {
+        result += "const";
+    } else {
+        result += "unknown";
+    }
+    result += " ";
     result += decl->name.lexeme;
     if (decl->type_annotation != nullptr) {
         result += " " + decl->type_annotation->token.lexeme;

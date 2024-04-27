@@ -1200,6 +1200,57 @@ TEST_CASE("Parser fun decls", "[parser]") {
     CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
 }
 
+TEST_CASE("Parser fun decls 2", "[parser]") {
+    std::string source_code = "fun foo() { return; }";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/fun_decls_test_2.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+    std::shared_ptr<Stmt> stmt = stmts.at(0);
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 2);
+    CHECK(printer.print(stmt) == "(decl:fun foo void { (stmt:return) })");
+    CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
+}
+
+TEST_CASE("Parser fun decls 3", "[parser]") {
+    std::string source_code = "fun foo(): i32 { return 5; }";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/fun_decls_test_3.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+    std::shared_ptr<Stmt> stmt = stmts.at(0);
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 2);
+    CHECK(printer.print(stmt) == "(decl:fun foo i32 { (stmt:return 5) })");
+    CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
+}
+
+TEST_CASE("Parser fun decls 4", "[parser]") {
+    std::string source_code = "fun foo(a: i32): i32 { return a; }";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/fun_decls_test_4.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+    std::shared_ptr<Stmt> stmt = stmts.at(0);
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 2);
+    CHECK(printer.print(stmts.at(0)) == "(decl:fun foo i32 (decl:const a i32) { (stmt:return a) })");
+    CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
+}
+
 // MARK: Parser error tests
 
 TEST_CASE("Logger unmatched paren in grouping", "[logger]") {

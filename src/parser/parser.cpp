@@ -117,6 +117,10 @@ std::shared_ptr<Stmt> Parser::declaration_statement() {
     std::shared_ptr<Decl> decl;
     if (match({KW_VAR, KW_CONST})) {
         decl = var_decl();
+        if (!match({TOK_NEWLINE, TOK_SEMICOLON})) {
+            ErrorLogger::inst().log_error(peek(), E_MISSING_STMT_END, "Expected newline or ';' after declaration.");
+            throw ParserException();
+        }
     } else if (match({KW_FUN})) {
         decl = fun_decl();
     } else {
@@ -188,10 +192,6 @@ std::shared_ptr<Decl> Parser::var_decl() {
     std::shared_ptr<Expr> initializer = nullptr;
     if (match({TOK_EQ})) {
         initializer = expression();
-    }
-    if (!match({TOK_NEWLINE, TOK_SEMICOLON})) {
-        ErrorLogger::inst().log_error(peek(), E_MISSING_STMT_END, "Expected newline or ';' after declaration.");
-        throw ParserException();
     }
     return std::make_shared<Decl::Var>(declarer, name, type_annotation, initializer);
 }
