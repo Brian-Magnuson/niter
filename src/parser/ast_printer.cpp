@@ -110,7 +110,7 @@ std::any AstPrinter::visit_var_decl(Decl::Var* decl) {
     result += " ";
     result += decl->name.lexeme;
     if (decl->type_annotation != nullptr) {
-        result += " " + decl->type_annotation->token.lexeme;
+        result += " " + std::any_cast<std::string>(decl->type_annotation->accept(this));
     }
     if (decl->initializer != nullptr) {
         result += " " + std::any_cast<std::string>(decl->initializer->accept(this));
