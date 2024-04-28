@@ -15,7 +15,7 @@ Niter philosophy:
 
 - Explicit is better than implicit
 - Readability counts
-- Purity and immuntability make for predictability
+- Purity and immutability make for predictability
 - Simplicity is better than complexity
 - Versatility is better than simplicity
 - Consistency is golden
@@ -62,7 +62,7 @@ To build `bin/niterc`, the Niter compiler, navigate to the project root and run:
 make
 ```
 
-This project uses Catch2 for unit testing. To build run the tests, run:
+This project uses Catch2 for unit testing. To build and run the tests, run:
 ```sh
 make test
 ```
