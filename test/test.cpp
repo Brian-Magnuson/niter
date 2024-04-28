@@ -1202,6 +1202,24 @@ TEST_CASE("Parser var decls 2", "[parser]") {
     CHECK(printer.print(stmts.at(3)) == "(stmt:eof)");
 }
 
+TEST_CASE("Parser constants", "[parser]") {
+    std::string source_code = "const x = 5; const y: i32 = 10;";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/const_decls_test.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+    std::shared_ptr<Stmt> stmt = stmts.at(0);
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 3);
+    CHECK(printer.print(stmt) == "(decl:const x auto 5)");
+    CHECK(printer.print(stmts.at(1)) == "(decl:const y i32 10)");
+    CHECK(printer.print(stmts.at(2)) == "(stmt:eof)");
+}
+
 TEST_CASE("Parser fun decls", "[parser]") {
     std::string source_code = "fun foo() {}";
     std::shared_ptr file_name = std::make_shared<std::string>("test_files/fun_decls_test.nit");
