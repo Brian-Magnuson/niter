@@ -1287,6 +1287,22 @@ TEST_CASE("Parser fun decls 4", "[parser]") {
     CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
 }
 
+TEST_CASE("Parser fun decls 5", "[parser]") {
+    std::string source_code = "fun foo(a: i32): i32 { var b = a; return a + b; }";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/fun_decls_test_5.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 2);
+    CHECK(printer.print(stmts.at(0)) == "(decl:fun foo i32 (decl:const a i32) { (decl:var b auto a) (stmt:return (+ a b)) })");
+    CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
+}
+
 TEST_CASE("Parser print stmts", "[parser]") {
     std::string source_code = "puts 5; puts \"Hello, world!\";";
     std::shared_ptr file_name = std::make_shared<std::string>("test_files/print_stmts_test.nit");
@@ -1499,6 +1515,44 @@ TEST_CASE("Logger insignificant newlines 3", "[logger]") {
     REQUIRE(stmts.size() == 2);
     CHECK(printer.print(stmts.at(0)) == "(= arr (array 1 (tuple 2 3)))");
     CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
+
+    logger.reset();
+}
+
+TEST_CASE("Logger no lparen in fun decl", "[logger]") {
+    std::string source_code = "fun foo {}";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/no_lparen_in_fun_decl_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    parser.parse();
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_NO_LPAREN_IN_FUN_DECL);
+
+    logger.reset();
+}
+
+TEST_CASE("Logger no lbrace in fun decl", "[logger]") {
+    std::string source_code = "fun foo()";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/no_lbrace_in_fun_decl_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    parser.parse();
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_NO_LBRACE_IN_FUN_DECL);
 
     logger.reset();
 }
