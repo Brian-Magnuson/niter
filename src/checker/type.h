@@ -8,6 +8,8 @@
 
 /**
  * @brief A class for all types in our type system.
+ * Should be stored as a shared pointer.
+ * If the pointer is null, it means the type was not resolved yet.
  *
  */
 class Type {
@@ -35,6 +37,7 @@ class Void : public Type {};
 /**
  * @brief The integer type. Integers may be signed or unsigned, and may have different sizes.
  * The only sizes that should be used are 8, 16, 32, and 64.
+ * Integer literals are assumed to be signed 32-bit integers.
  *
  */
 class Int : public Type {
@@ -50,6 +53,7 @@ public:
 /**
  * @brief The floating-point type. Floating-point numbers may have different sizes.
  * The only sizes that should be used are 32 and 64.
+ * Floating-point literals are assumed to be 64-bit floating-point numbers (called doubles in other languages).
  *
  */
 class Float : public Type {
