@@ -83,11 +83,11 @@ enum ErrorCode {
     // A function declaration was found without a right brace
     E_UNMATCHED_BRACE_IN_FUN_DECL,
 
-    // Type definition errors
-    E_TYPE_DEF = 4000,
+    // Global type errors
+    E_GLOBAL_TYPE = 4000,
 
-    // Type checking errors
-    E_TYPE_CHECK = 5000,
+    // Local type errors
+    E_LOCAL_TYPE = 5000,
 
     // Code generation errors
     E_CODEGEN = 6000,
