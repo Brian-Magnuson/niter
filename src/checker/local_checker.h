@@ -1,6 +1,11 @@
 #ifndef LOCAL_CHECKER_H
 #define LOCAL_CHECKER_H
 
+#include "../parser/decl.h"
+#include "../parser/expr.h"
+#include "environment.h"
+#include <memory>
+
 /**
  * @brief A class for the local type checker.
  * The local type checker is the second part of a two-stage type checker.
@@ -10,6 +15,10 @@
  *
  */
 class LocalChecker {
+    std::shared_ptr<Environment> environment;
+
+public:
+    LocalChecker(std::shared_ptr<Environment> environment) : environment(environment) {}
 };
 
 #endif // LOCAL_CHECKER_H
