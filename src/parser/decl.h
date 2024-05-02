@@ -91,4 +91,25 @@ public:
     std::vector<std::shared_ptr<Stmt>> body;
 };
 
+/**
+ * @brief A class representing a struct declaration.
+ * E.g. struct Point { x: int; y: int; }
+ *
+ */
+class Decl::Struct : public Decl {
+public:
+    Struct(TokenType declarer, Token name, std::vector<std::shared_ptr<Decl::Var>> fields) : declarer(declarer), name(name), fields(fields) {}
+
+    std::any accept(Visitor* visitor) override {
+        return visitor->visit_struct_decl(this);
+    }
+
+    // The token type that signifies the declaration type.
+    TokenType declarer;
+    // The name of the struct.
+    Token name;
+    // The fields of the struct.
+    std::vector<std::shared_ptr<Decl::Var>> fields;
+};
+
 #endif // DECL_H
