@@ -221,6 +221,7 @@ public:
 
     // The token representing the identifier.
     Token token;
+    // FIXME: A vector might be better; consider refactoring
     // The identifier contained within *this* namespace, if it exists.
     std::shared_ptr<Expr::Identifier> contained;
 };
