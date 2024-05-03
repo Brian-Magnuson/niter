@@ -123,7 +123,7 @@ std::any AstPrinter::visit_fun_decl(Decl::Fun* decl) {
     std::string result = "(decl:fun ";
     result += decl->name.lexeme;
     result += " ";
-    result += decl->return_type->token.lexeme;
+    result += decl->return_type->tokens.back().lexeme;
     result += " ";
     for (const auto& param : decl->parameters) {
         result += std::any_cast<std::string>(param->accept(this));
@@ -189,12 +189,9 @@ std::any AstPrinter::visit_grouping_expr(Expr::Grouping* expr) {
 }
 
 std::any AstPrinter::visit_identifier_expr(Expr::Identifier* expr) {
-    auto current = expr;
-    std::string name = current->token.lexeme;
-    current = current->contained.get();
-    while (current != nullptr) {
-        name += "::" + current->token.lexeme;
-        current = current->contained.get();
+    std::string name = expr->tokens.front().lexeme;
+    for (size_t i = 1; i < expr->tokens.size(); ++i) {
+        name += "::" + expr->tokens[i].lexeme;
     }
     return name;
 }

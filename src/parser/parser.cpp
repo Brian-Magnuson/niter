@@ -437,15 +437,13 @@ std::shared_ptr<Expr> Parser::primary_expr() {
         return std::make_shared<Expr::Literal>(previous());
     }
     if (match({TOK_IDENT})) {
-        std::shared_ptr<Expr::Identifier> first = std::make_shared<Expr::Identifier>(previous());
-        std::shared_ptr<Expr::Identifier> current = first;
+        std::shared_ptr<Expr::Identifier> expr = std::make_shared<Expr::Identifier>(previous());
 
         while (match({TOK_COLON_COLON})) {
             Token name = consume(TOK_IDENT, E_NOT_AN_IDENTIFIER, "Expected identifier after '::'.");
-            current->contained = std::make_shared<Expr::Identifier>(name);
-            current = current->contained;
+            expr->tokens.push_back(name);
         }
-        return first;
+        return expr;
     }
     if (match({TOK_LEFT_SQUARE})) {
         grouping_tokens.push(TOK_RIGHT_SQUARE);
