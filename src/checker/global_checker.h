@@ -31,7 +31,7 @@ class GlobalChecker : public Stmt::Visitor, public Decl::Visitor {
      * @param stmt The statement to check
      * @return std::any The empty any object always.
      */
-    std::any visit_expression_stmt(Stmt::Expression* stmt) override { return std::any(); }
+    std::any visit_expression_stmt(Stmt::Expression* /*stmt*/) override { return std::any(); }
 
     /**
      * @brief Returns the empty any object always.
@@ -40,7 +40,7 @@ class GlobalChecker : public Stmt::Visitor, public Decl::Visitor {
      * @param stmt The statement to check
      * @return std::any The empty any object always.
      */
-    std::any visit_block_stmt(Stmt::Block* stmt) override { return std::any(); }
+    std::any visit_block_stmt(Stmt::Block* /*stmt*/) override { return std::any(); }
 
     /**
      * @brief Returns the empty any object always.
@@ -49,7 +49,7 @@ class GlobalChecker : public Stmt::Visitor, public Decl::Visitor {
      * @param stmt The statement to check
      * @return std::any The empty any object always.
      */
-    std::any visit_conditional_stmt(Stmt::Conditional* stmt) override { return std::any(); }
+    std::any visit_conditional_stmt(Stmt::Conditional* /*stmt*/) override { return std::any(); }
 
     /**
      * @brief Returns the empty any object always.
@@ -58,7 +58,7 @@ class GlobalChecker : public Stmt::Visitor, public Decl::Visitor {
      * @param stmt The statement to check
      * @return std::any The empty any object always.
      */
-    std::any visit_loop_stmt(Stmt::Loop* stmt) override { return std::any(); }
+    std::any visit_loop_stmt(Stmt::Loop* /*stmt*/) override { return std::any(); }
 
     /**
      * @brief Returns the empty any object always.
@@ -67,7 +67,7 @@ class GlobalChecker : public Stmt::Visitor, public Decl::Visitor {
      * @param stmt The statement to check
      * @return std::any The empty any object always.
      */
-    std::any visit_return_stmt(Stmt::Return* stmt) override { return std::any(); }
+    std::any visit_return_stmt(Stmt::Return* /*stmt*/) override { return std::any(); }
 
     /**
      * @brief Returns the empty any object always.
@@ -76,7 +76,7 @@ class GlobalChecker : public Stmt::Visitor, public Decl::Visitor {
      * @param stmt The statement to check
      * @return std::any The empty any object always.
      */
-    std::any visit_break_stmt(Stmt::Break* stmt) override { return std::any(); }
+    std::any visit_break_stmt(Stmt::Break* /*stmt*/) override { return std::any(); }
 
     /**
      * @brief Returns the empty any object always.
@@ -85,7 +85,7 @@ class GlobalChecker : public Stmt::Visitor, public Decl::Visitor {
      * @param stmt The statement to check
      * @return std::any The empty any object always.
      */
-    std::any visit_continue_stmt(Stmt::Continue* stmt) override { return std::any(); }
+    std::any visit_continue_stmt(Stmt::Continue* /*stmt*/) override { return std::any(); }
 
     /**
      * @brief Returns the empty any object always.
@@ -94,7 +94,7 @@ class GlobalChecker : public Stmt::Visitor, public Decl::Visitor {
      * @param stmt The statement to check
      * @return std::any The empty any object always.
      */
-    std::any visit_print_stmt(Stmt::Print* stmt) override { return std::any(); }
+    std::any visit_print_stmt(Stmt::Print* /*stmt*/) override { return std::any(); }
 
     /**
      * @brief Checks the end of file statement. May alter the environment accordingly.
