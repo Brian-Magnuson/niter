@@ -1202,6 +1202,22 @@ TEST_CASE("Parser var decls 2", "[parser]") {
     CHECK(printer.print(stmts.at(3)) == "(stmt:eof)");
 }
 
+TEST_CASE("Parser advanced type annotations", "[parser]") {
+    std::string source_code = "var x: std::pair<std::pair<i32, i32>, i32>;";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/advanced_type_annotations_test.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 2);
+    CHECK(printer.print(stmts.at(0)) == "(decl:var x std::pair<std::pair<i32, i32>, i32>)");
+    CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
+}
+
 TEST_CASE("Parser constants", "[parser]") {
     std::string source_code = "const x = 5; const y: i32 = 10;";
     std::shared_ptr file_name = std::make_shared<std::string>("test_files/const_decls_test.nit");
