@@ -504,6 +504,8 @@ std::shared_ptr<Expr::TypeIdent> Parser::type_ident_expr() {
         segments.push_back(Expr::TypeIdent::Segment(name, type_args));
     } while (match({TOK_COLON_COLON}));
 
+    // FIXME: Add support for pointers, arrays, tuples, and function types
+
     return std::make_shared<Expr::TypeIdent>(segments);
 }
 
