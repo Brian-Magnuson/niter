@@ -489,6 +489,10 @@ std::shared_ptr<Expr> Parser::primary_expr() {
     throw ParserException();
 }
 
+std::shared_ptr<Expr> Parser::type_ident_expr() {
+    // TODO: Implement type_ident_expr
+}
+
 std::vector<std::shared_ptr<Stmt>> Parser::parse() {
     std::vector<std::shared_ptr<Stmt>> statements;
 

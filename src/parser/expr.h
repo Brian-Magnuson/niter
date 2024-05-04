@@ -208,7 +208,9 @@ public:
 
 /**
  * @brief A class representing an identifier.
- * Identifiers may identify variables, functions, types, namespaces, etc
+ * Identifiers may identify variables, functions, types, namespaces, etc.
+ * If the identifier is a type, it may have type arguments and may be parsed with a wider range of symbols.
+ * E.g. (i32) and i32[] and Vector<i32> are all valid identifiers.
  *
  */
 class Expr::Identifier : public Expr {
@@ -222,13 +224,24 @@ public:
 
     // The tokens representing the identifier. The most general identifier is at the front. The most specific is at the back.
     std::vector<Token> tokens;
+    // The type arguments for the identifier, if any. E.g. Vector<i32>, array<i32>
+    std::vector<Expr::Identifier> type_args;
 
     std::string to_string() {
         std::string str = "";
         for (auto& token : tokens) {
             str += token.lexeme + "::";
         }
-        return str.substr(0, str.size() - 2);
+        str = str.substr(0, str.size() - 2);
+        if (type_args.size() > 0) {
+            str += "<";
+            for (auto& type_arg : type_args) {
+                str += type_arg.to_string() + ", ";
+            }
+            str = str.substr(0, str.size() - 2);
+            str += ">";
+        }
+        return str;
     }
 };
 
