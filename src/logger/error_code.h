@@ -71,7 +71,13 @@ enum ErrorCode {
     // A scope resolution operator was found without a valid right-hand side
     E_NOT_AN_IDENTIFIER,
     // A type annotation was found that was not an identifier expression
-    E_INVALID_TYPE_ANNOTATION,
+    // E_INVALID_TYPE_ANNOTATION,
+    // No identifier was found after the colon in a type annotation
+    E_MISSING_IDENT_IN_TYPE,
+    // A type annotation was found without a matching right square bracket
+    E_UNMATCHED_SQUARE_IN_TYPE,
+    // A type annotation was found without a matching right angle bracket
+    E_UNMATCHED_ANGLE_IN_TYPE,
     // A function declaration was found without an identifier
     E_UNNAMED_FUN,
     // A function declaration was found without a left parenthesis

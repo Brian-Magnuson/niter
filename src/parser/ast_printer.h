@@ -230,6 +230,14 @@ public:
     std::any visit_identifier_expr(Expr::Identifier* expr) override;
 
     /**
+     * @brief Visits a type identifier expression and returns a string representation of it.
+     *
+     * @param expr The type identifier expression to visit.
+     * @return std::any An any object containing the string representation of the expression.
+     */
+    std::any visit_type_ident_expr(Expr::TypeIdent* expr) override;
+
+    /**
      * @brief Visits a literal expression and returns a string representation of it.
      *
      * @param expr The literal expression to visit.

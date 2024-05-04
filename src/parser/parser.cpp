@@ -171,18 +171,14 @@ std::shared_ptr<Decl> Parser::var_decl() {
     }
     Token name = consume(TOK_IDENT, E_UNNAMED_VAR, "Expected identifier in declaration.");
 
-    std::shared_ptr<Expr::Identifier> type_annotation = nullptr;
+    std::shared_ptr<Expr::TypeIdent> type_annotation = nullptr;
     if (match({TOK_COLON})) {
-        type_annotation = std::dynamic_pointer_cast<Expr::Identifier>(primary_expr());
-        if (type_annotation == nullptr) {
-            ErrorLogger::inst().log_error(peek(), E_INVALID_TYPE_ANNOTATION, "Invalid type annotation.");
-            throw ParserException();
-        }
+        type_annotation = type_ident_expr();
     } else {
         // Inject an 'auto' token for type inference later
         Location location = name.location;
         // It will be treated as having the same location as the name
-        type_annotation = std::make_shared<Expr::Identifier>(Token{
+        type_annotation = std::make_shared<Expr::TypeIdent>(Token{
             TOK_IDENT,
             "auto",
             std::any(),
@@ -227,18 +223,14 @@ std::shared_ptr<Decl> Parser::fun_decl() {
     }
     consume(TOK_RIGHT_PAREN, E_UNMATCHED_PAREN_IN_PARAMS, "Expected ')' after function parameters.");
 
-    std::shared_ptr<Expr::Identifier> return_type = nullptr;
+    std::shared_ptr<Expr::TypeIdent> return_type = nullptr;
     if (match({TOK_COLON})) {
-        return_type = std::dynamic_pointer_cast<Expr::Identifier>(primary_expr());
-        if (return_type == nullptr) {
-            ErrorLogger::inst().log_error(peek(), E_INVALID_TYPE_ANNOTATION, "Invalid type annotation.");
-            throw ParserException();
-        }
+        return_type = type_ident_expr();
     } else {
         // Inject a 'void' token for type inference later
         Location location = previous().location;
         // It will be treated as having the same location as the previous token
-        return_type = std::make_shared<Expr::Identifier>(Token{
+        return_type = std::make_shared<Expr::TypeIdent>(Token{
             TOK_IDENT,
             "void",
             std::any(),
@@ -489,8 +481,30 @@ std::shared_ptr<Expr> Parser::primary_expr() {
     throw ParserException();
 }
 
-std::shared_ptr<Expr> Parser::type_ident_expr() {
-    // TODO: Implement type_ident_expr
+std::shared_ptr<Expr::TypeIdent> Parser::type_ident_expr() {
+    std::vector<Expr::TypeIdent::Segment> segments;
+    do {
+        Token name = consume(TOK_IDENT, E_MISSING_IDENT_IN_TYPE, "Expected identifier in type annotation.");
+        std::vector<std::shared_ptr<Expr::TypeIdent>> type_args;
+
+        if (match({TOK_LT})) {
+            grouping_tokens.push(TOK_GT);
+            if (!check({TOK_GT})) {
+                type_args.push_back(type_ident_expr());
+                while (match({TOK_COMMA})) {
+                    if (check({TOK_GT})) {
+                        break;
+                    }
+                    type_args.push_back(type_ident_expr());
+                }
+            }
+            consume(TOK_GT, E_UNMATCHED_ANGLE_IN_TYPE, "Expected '>' after type arguments.");
+        }
+
+        segments.push_back(Expr::TypeIdent::Segment(name, type_args));
+    } while (match({TOK_COLON_COLON}));
+
+    return std::make_shared<Expr::TypeIdent>(segments);
 }
 
 std::vector<std::shared_ptr<Stmt>> Parser::parse() {

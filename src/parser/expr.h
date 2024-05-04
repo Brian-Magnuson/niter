@@ -23,6 +23,7 @@ public:
     class Access;
     class Grouping;
     class Identifier;
+    class TypeIdent;
     class Literal;
     class Array;
     class Tuple;
@@ -43,6 +44,7 @@ public:
         virtual std::any visit_access_expr(Access* expr) = 0;
         virtual std::any visit_grouping_expr(Grouping* expr) = 0;
         virtual std::any visit_identifier_expr(Identifier* expr) = 0;
+        virtual std::any visit_type_ident_expr(TypeIdent* expr) = 0;
         virtual std::any visit_literal_expr(Literal* expr) = 0;
         virtual std::any visit_array_expr(Array* expr) = 0;
         virtual std::any visit_tuple_expr(Tuple* expr) = 0;
@@ -208,9 +210,8 @@ public:
 
 /**
  * @brief A class representing an identifier.
- * Identifiers may identify variables, functions, types, namespaces, etc.
- * If the identifier is a type, it may have type arguments and may be parsed with a wider range of symbols.
- * E.g. (i32) and i32[] and Vector<i32> are all valid identifiers.
+ * Identifiers may identify variables, functions, structs, namespaces, etc.
+ *
  *
  */
 class Expr::Identifier : public Expr {
@@ -224,24 +225,78 @@ public:
 
     // The tokens representing the identifier. The most general identifier is at the front. The most specific is at the back.
     std::vector<Token> tokens;
-    // The type arguments for the identifier, if any. E.g. Vector<i32>, array<i32>
-    std::vector<Expr::Identifier> type_args;
 
+    /**
+     * @brief Converts the identifier to a string.
+     *
+     * @return std::string The string representation of the identifier.
+     */
     std::string to_string() {
         std::string str = "";
         for (auto& token : tokens) {
             str += token.lexeme + "::";
         }
-        str = str.substr(0, str.size() - 2);
-        if (type_args.size() > 0) {
-            str += "<";
-            for (auto& type_arg : type_args) {
-                str += type_arg.to_string() + ", ";
+        return str.substr(0, str.size() - 2);
+    }
+};
+
+/**
+ * @brief A class representing a type identifier.
+ * Type identifiers are like normal identifiers, but they are used to represent types.
+ * They include a wider range of symbols, such as angle brackets and square brackets.
+ * E.g. (i32) and i32[] and Vector<i32> are all valid identifiers.
+ *
+ */
+class Expr::TypeIdent : public Expr {
+public:
+    /**
+     * @brief A struct representing a segment of a type identifier.
+     * Type segments are separated by colons (::) and may have type arguments.
+     *
+     */
+    struct Segment {
+        // The token representing the identifier.
+        Token token;
+        // The type arguments for the identifier, if any. E.g. Vector<i32>, array<i32>
+        std::vector<std::shared_ptr<Expr::TypeIdent>> type_args;
+
+        Segment(Token token) : token(token) {}
+        Segment(Token token, std::vector<std::shared_ptr<Expr::TypeIdent>> type_args)
+            : token(token), type_args(type_args) {}
+    };
+
+    TypeIdent(Token token) : segments({Segment(token)}) {}
+    TypeIdent(std::vector<Segment> segments) : segments(segments) {}
+
+    std::any accept(Visitor* visitor) override {
+        return visitor->visit_type_ident_expr(this);
+    }
+
+    /**
+     * @brief The segments of the type identifier.
+     *
+     */
+    std::vector<Segment> segments;
+
+    /**
+     * @brief Converts the type identifier to a string.
+     *
+     * @return std::string The string representation of the type identifier.
+     */
+    std::string to_string() {
+        std::string str = "";
+        for (auto& segment : segments) {
+            str += segment.token.lexeme;
+            if (!segment.type_args.empty()) {
+                str += "<";
+                for (auto& type_arg : segment.type_args) {
+                    str += type_arg->to_string() + ", ";
+                }
+                str = str.substr(0, str.size() - 2) + ">";
             }
-            str = str.substr(0, str.size() - 2);
-            str += ">";
+            str += "::";
         }
-        return str;
+        return str.substr(0, str.size() - 2);
     }
 };
 

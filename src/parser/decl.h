@@ -43,7 +43,7 @@ public:
  */
 class Decl::Var : public Decl {
 public:
-    Var(TokenType declarer, Token name, std::shared_ptr<Expr::Identifier> type_annotation, std::shared_ptr<Expr> initializer) : declarer(declarer), name(name), type_annotation(type_annotation), initializer(initializer) {}
+    Var(TokenType declarer, Token name, std::shared_ptr<Expr::TypeIdent> type_annotation, std::shared_ptr<Expr> initializer) : declarer(declarer), name(name), type_annotation(type_annotation), initializer(initializer) {}
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_var_decl(this);
@@ -54,7 +54,7 @@ public:
     // The name of the variable.
     Token name;
     // The type annotation of the variable. nullptr if no type was specified.
-    std::shared_ptr<Expr::Identifier> type_annotation;
+    std::shared_ptr<Expr::TypeIdent> type_annotation;
     // The initializer expression. Note: if the variable is explicitly initialized to nil, this will still point to an expression that represents nil.
     std::shared_ptr<Expr> initializer;
 };
@@ -70,7 +70,7 @@ public:
         TokenType declarer,
         Token name,
         std::vector<std::shared_ptr<Decl::Var>> parameters,
-        std::shared_ptr<Expr::Identifier> return_type,
+        std::shared_ptr<Expr::TypeIdent> return_type,
         std::vector<std::shared_ptr<Stmt>> body
     )
         : declarer(declarer), name(name), parameters(parameters), return_type(return_type), body(body) {}
@@ -86,7 +86,7 @@ public:
     // The parameters of the function.
     std::vector<std::shared_ptr<Decl::Var>> parameters;
     // The return type of the function. If no type was provided, an identifier with the name "void" will be inserted.
-    std::shared_ptr<Expr::Identifier> return_type;
+    std::shared_ptr<Expr::TypeIdent> return_type;
     // The body of the function.
     std::vector<std::shared_ptr<Stmt>> body;
 };

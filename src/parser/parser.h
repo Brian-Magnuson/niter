@@ -283,8 +283,9 @@ class Parser {
      * Note: the last two examples are actually shorthand for "array<i32>" and "tuple<i32, i32>".
      *
      * @return std::shared_ptr<Expr> A pointer to the parsed type identifier expression.
+     * @throws ParserException If an error occurs while parsing the expression. Will be caught by the statement() function.
      */
-    std::shared_ptr<Expr> type_ident_expr();
+    std::shared_ptr<Expr::TypeIdent> type_ident_expr();
 
 public:
     // MARK: Interface
