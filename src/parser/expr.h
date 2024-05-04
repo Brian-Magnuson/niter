@@ -222,6 +222,14 @@ public:
 
     // The tokens representing the identifier. The most general identifier is at the front. The most specific is at the back.
     std::vector<Token> tokens;
+
+    std::string to_string() {
+        std::string str = "";
+        for (auto& token : tokens) {
+            str += token.lexeme + "::";
+        }
+        return str.substr(0, str.size() - 2);
+    }
 };
 
 /**

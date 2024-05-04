@@ -18,8 +18,24 @@ std::any GlobalChecker::visit_var_decl(Decl::Var* decl) {
     return std::any();
 }
 
-std::any GlobalChecker::visit_fun_decl(Decl::Fun* /* decl */) {
-    // TODO: Implement
+std::any GlobalChecker::visit_fun_decl(Decl::Fun* decl) {
+    if (decl->name.lexeme == "main") {
+        // The function declarer must be "fun"
+        if (decl->declarer != KW_FUN) {
+            ErrorLogger::inst().log_error(decl->name, E_INVALID_MAIN_SIGNATURE, "The main function must be declared with the 'fun' keyword.");
+        }
+        // The return type must be i32
+        if (decl->return_type->to_string() != "i32") {
+            ErrorLogger::inst().log_error(decl->return_type->tokens.front(), E_INVALID_MAIN_SIGNATURE, "The main function must indicate a return type of i32.");
+        }
+        // The function cannot have any parameters (unimplemented)
+        if (decl->parameters.size() > 0) {
+            ErrorLogger::inst().log_error(decl->parameters.front()->name, E_UNIMPLEMENTED, "The main function cannot have any parameters.");
+        }
+    } else {
+        // TODO: Implement
+        ErrorLogger::inst().log_error(decl->name, E_UNIMPLEMENTED, "Function declarations are not yet implemented.");
+    }
     return std::any();
 }
 

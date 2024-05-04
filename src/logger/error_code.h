@@ -85,6 +85,8 @@ enum ErrorCode {
 
     // Global type errors
     E_GLOBAL_TYPE = 4000,
+    // The main function was found with the wrong signature
+    E_INVALID_MAIN_SIGNATURE,
 
     // Local type errors
     E_LOCAL_TYPE = 5000,
