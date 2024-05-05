@@ -78,6 +78,10 @@ enum ErrorCode {
     E_UNMATCHED_SQUARE_IN_TYPE,
     // A type annotation was found without a matching right angle bracket
     E_UNMATCHED_ANGLE_IN_TYPE,
+    // A comma was found in a non-tuple type annotation
+    // E_COMMA_IN_NON_TUPLE_TYPE,
+    // A type annotation was found without a matching right parenthesis
+    E_UNMATCHED_PAREN_IN_TYPE,
     // A function declaration was found without an identifier
     E_UNNAMED_FUN,
     // A function declaration was found without a left parenthesis
