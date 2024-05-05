@@ -1218,6 +1218,73 @@ TEST_CASE("Parser advanced type annotations", "[parser]") {
     CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
 }
 
+TEST_CASE("Parser rptr type", "[parser]") {
+    std::string source_code = "var x: i32*;";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/rptr_type_test.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 2);
+    CHECK(printer.print(stmts.at(0)) == "(decl:var x rptr<i32>)");
+    CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
+}
+
+TEST_CASE("Parser array type", "[parser]") {
+    std::string source_code = "var x: i32[];";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/array_type_test.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 2);
+    CHECK(printer.print(stmts.at(0)) == "(decl:var x array<i32>)");
+    CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
+}
+
+TEST_CASE("Parser tuple type", "[parser]") {
+    std::string source_code = "var x: (i32, i32); var y: ();";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/tuple_type_test.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 3);
+    CHECK(printer.print(stmts.at(0)) == "(decl:var x tuple<i32, i32>)");
+    CHECK(printer.print(stmts.at(1)) == "(decl:var y tuple)");
+    CHECK(printer.print(stmts.at(2)) == "(stmt:eof)");
+}
+
+TEST_CASE("Parser fptr type", "[parser]") {
+    std::string source_code = "var x: (i32) => i64; var y: () => i32; var z: () => void;";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/fun_type_test.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 4);
+    CHECK(printer.print(stmts.at(0)) == "(decl:var x fptr<i64, i32>)");
+    CHECK(printer.print(stmts.at(1)) == "(decl:var y fptr<i32>)");
+    CHECK(printer.print(stmts.at(2)) == "(decl:var z fptr<void>)");
+    CHECK(printer.print(stmts.at(3)) == "(stmt:eof)");
+}
+
 TEST_CASE("Parser constants", "[parser]") {
     std::string source_code = "const x = 5; const y: i32 = 10;";
     std::shared_ptr file_name = std::make_shared<std::string>("test_files/const_decls_test.nit");
