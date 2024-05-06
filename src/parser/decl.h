@@ -53,6 +53,7 @@ public:
     TokenType declarer;
     // The name of the variable.
     Token name;
+    // TODO: Change this to a type annotation class.
     // The type annotation of the variable. nullptr if no type was specified.
     std::shared_ptr<Expr::TypeIdent> type_annotation;
     // The initializer expression. Note: if the variable is explicitly initialized to nil, this will still point to an expression that represents nil.
