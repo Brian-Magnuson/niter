@@ -46,19 +46,16 @@ class Annotation::Class : public Annotation {
 public:
     // The name of the class. E.g. "std::Vector" has the class names "std" and "Vector".
     std::string name;
-    // Whether the class is mutable or not. If the class is mutable, the keyword "var" is prepended to the class name.
-    bool is_mutable;
     // The type arguments of the class. E.g. "std::Vector<int>" has the type argument "int".
     std::vector<std::shared_ptr<Annotation>> type_args;
     // The inner annotation of the class. E.g. "std::Vector<int>::Iterator" has the inner annotation "Iterator".
-    std::shared_ptr<Annotation> inner;
+    std::shared_ptr<Annotation::Class> inner;
 
-    Class(std::string name, bool is_mutable, std::vector<std::shared_ptr<Annotation>> type_args, std::shared_ptr<Annotation> inner)
-        : name(name), is_mutable(is_mutable), type_args(type_args), inner(inner) {}
+    Class(std::string name, std::vector<std::shared_ptr<Annotation>>& type_args, std::shared_ptr<Annotation::Class> inner)
+        : name(name), type_args(type_args), inner(inner) {}
 
     std::string to_string() const override {
-        std::string result = is_mutable ? "var " : "";
-        result += name;
+        std::string result = name;
         if (type_args.size() > 0) {
             result += "<";
             for (size_t i = 0; i < type_args.size(); i++) {
@@ -82,23 +79,27 @@ public:
  */
 class Annotation::Function : public Annotation {
 public:
-    // The arguments of the function. E.g. "(int, int) => void" has the arguments "int" and "int".
-    std::vector<std::shared_ptr<Annotation>> args;
+    // The arguments of the function, stored as pairs of whether the argument is mutable and the annotation of the argument.
+    std::vector<std::pair<bool, std::shared_ptr<Annotation>>> args;
     // The return type of the function. E.g. "(int, int) => void" has the return type "void".
     std::shared_ptr<Annotation> ret;
+    // Whether the return type is mutable or not. If the return type is mutable, the keyword "var" is prepended to the return type.
+    bool is_ret_mutable;
 
-    Function(std::vector<std::shared_ptr<Annotation>> args, std::shared_ptr<Annotation> ret)
-        : args(args), ret(ret) {}
+    Function(std::vector<std::pair<bool, std::shared_ptr<Annotation>>>& args, std::shared_ptr<Annotation> ret, bool is_ret_mutable)
+        : args(args), ret(ret), is_ret_mutable(is_ret_mutable) {}
 
     std::string to_string() const override {
-        std::string result = "(";
+        std::string result = "fun(";
         for (size_t i = 0; i < args.size(); i++) {
-            result += args[i]->to_string();
+            result += args[i].first ? "var " : "";
+            result += args[i].second->to_string();
             if (i < args.size() - 1) {
                 result += ", ";
             }
         }
         result += ") => ";
+        result += is_ret_mutable ? "var " : "";
         result += ret->to_string();
         return result;
     }
@@ -112,14 +113,12 @@ class Annotation::Array : public Annotation {
 public:
     // The name of the array. E.g. "int[]" has the name "int".
     std::shared_ptr<Annotation> name;
-    // Whether the array is mutable or not. If the array is mutable, the keyword "var" is prepended to the array name.
-    bool is_mutable;
 
     Array(std::shared_ptr<Annotation> name, bool is_mutable)
-        : name(name), is_mutable(is_mutable) {}
+        : name(name) {}
 
     std::string to_string() const override {
-        return (is_mutable ? "var " : "") + name->to_string() + "[]";
+        return name->to_string() + "[]";
     }
 };
 
@@ -131,14 +130,12 @@ class Annotation::Pointer : public Annotation {
 public:
     // The name of the pointer. E.g. "int*" has the name "int".
     std::shared_ptr<Annotation> name;
-    // Whether the object is mutable or not. If the object is mutable, the keyword "var" is prepended to the object name.
-    bool is_obj_mutable;
 
     Pointer(std::shared_ptr<Annotation> name, bool is_obj_mutable)
-        : name(name), is_obj_mutable(is_obj_mutable) {}
+        : name(name) {}
 
     std::string to_string() const override {
-        return (is_obj_mutable ? "var " : "") + name->to_string() + "*";
+        return name->to_string() + "*";
     }
 };
 
@@ -150,14 +147,12 @@ class Annotation::Tuple : public Annotation {
 public:
     // The elements of the tuple. E.g. "(int, int)" has the elements "int" and "int".
     std::vector<std::shared_ptr<Annotation>> elements;
-    // Whether the tuple is mutable or not. If the tuple is mutable, the keyword "var" is prepended to the tuple.
-    bool is_mutable;
 
     Tuple(std::vector<std::shared_ptr<Annotation>> elements)
         : elements(elements) {}
 
     std::string to_string() const override {
-        std::string result = is_mutable ? "var (" : "(";
+        std::string result = "(";
         for (size_t i = 0; i < elements.size(); i++) {
             result += elements[i]->to_string();
             if (i < elements.size() - 1) {
