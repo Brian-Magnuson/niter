@@ -2,6 +2,7 @@
 #define DECL_H
 
 #include "../scanner/token.h"
+#include "annotation.h"
 #include "expr.h"
 #include "stmt.h"
 #include <any>
@@ -43,7 +44,7 @@ public:
  */
 class Decl::Var : public Decl {
 public:
-    Var(TokenType declarer, Token name, std::shared_ptr<Expr::TypeIdent> type_annotation, std::shared_ptr<Expr> initializer) : declarer(declarer), name(name), type_annotation(type_annotation), initializer(initializer) {}
+    Var(TokenType declarer, Token name, std::shared_ptr<Annotation> type_annotation, std::shared_ptr<Expr> initializer) : declarer(declarer), name(name), type_annotation(type_annotation), initializer(initializer) {}
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_var_decl(this);
@@ -53,9 +54,8 @@ public:
     TokenType declarer;
     // The name of the variable.
     Token name;
-    // TODO: Change this to a type annotation class.
     // The type annotation of the variable. nullptr if no type was specified.
-    std::shared_ptr<Expr::TypeIdent> type_annotation;
+    std::shared_ptr<Annotation> type_annotation;
     // The initializer expression. Note: if the variable is explicitly initialized to nil, this will still point to an expression that represents nil.
     std::shared_ptr<Expr> initializer;
 };
@@ -71,10 +71,10 @@ public:
         TokenType declarer,
         Token name,
         std::vector<std::shared_ptr<Decl::Var>> parameters,
-        std::shared_ptr<Expr::TypeIdent> return_type,
+        std::shared_ptr<Annotation> type_annotation,
         std::vector<std::shared_ptr<Stmt>> body
     )
-        : declarer(declarer), name(name), parameters(parameters), return_type(return_type), body(body) {}
+        : declarer(declarer), name(name), parameters(parameters), type_annotation(type_annotation), body(body) {}
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_fun_decl(this);
@@ -86,8 +86,8 @@ public:
     Token name;
     // The parameters of the function.
     std::vector<std::shared_ptr<Decl::Var>> parameters;
-    // The return type of the function. If no type was provided, an identifier with the name "void" will be inserted.
-    std::shared_ptr<Expr::TypeIdent> return_type;
+    // The type of the function. Includes the return type and the type arguments.
+    std::shared_ptr<Annotation> type_annotation;
     // The body of the function.
     std::vector<std::shared_ptr<Stmt>> body;
 };

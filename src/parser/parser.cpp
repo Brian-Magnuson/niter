@@ -1,5 +1,6 @@
 #include "parser.h"
 #include "../logger/logger.h"
+
 #include <exception>
 
 Token& Parser::peek() {
@@ -171,20 +172,29 @@ std::shared_ptr<Decl> Parser::var_decl() {
     }
     Token name = consume(TOK_IDENT, E_UNNAMED_VAR, "Expected identifier in declaration.");
 
-    std::shared_ptr<Expr::TypeIdent> type_annotation = nullptr;
+    // TODO: Clean this up
+    // std::shared_ptr<Expr::TypeIdent> type_annotation = nullptr;
+    // if (match({TOK_COLON})) {
+    //     type_annotation = type_ident_expr();
+    // } else {
+    //     // Inject an 'auto' token for type inference later
+    //     Location location = name.location;
+    //     // It will be treated as having the same location as the name
+    //     type_annotation = std::make_shared<Expr::TypeIdent>(Token{
+    //         TOK_IDENT,
+    //         "auto",
+    //         std::any(),
+    //         location
+    //     });
+    // }
+    std::shared_ptr<Annotation> type_annotation = nullptr;
     if (match({TOK_COLON})) {
-        type_annotation = type_ident_expr();
+        type_annotation = annotation();
     } else {
-        // Inject an 'auto' token for type inference later
-        Location location = name.location;
-        // It will be treated as having the same location as the name
-        type_annotation = std::make_shared<Expr::TypeIdent>(Token{
-            TOK_IDENT,
-            "auto",
-            std::any(),
-            location
-        });
+        ErrorLogger::inst().log_error(peek(), E_MISSING_TYPE, "Expected type after ':' in declaration.");
+        throw ParserException();
     }
+
     std::shared_ptr<Expr> initializer = nullptr;
     if (match({TOK_EQ})) {
         initializer = expression();
@@ -193,49 +203,66 @@ std::shared_ptr<Decl> Parser::var_decl() {
 }
 
 std::shared_ptr<Decl> Parser::fun_decl() {
-    // One thing at a time...
     // First, grab the declarer
     TokenType declarer = previous().tok_type;
     // Next, grab the identifier
     Token name = consume(TOK_IDENT, E_UNNAMED_FUN, "Expected identifier in function declaration.");
+
+    // Start building the type annotation
+    auto type_annotation = std::make_shared<Annotation::Function>(
+        std::vector<std::pair<bool, std::shared_ptr<Annotation>>>(),
+        std::make_shared<Annotation::Segmented>("void"),
+        false
+    );
+
     // Next, the parameters
     std::vector<std::shared_ptr<Decl::Var>> parameters;
     consume(TOK_LEFT_PAREN, E_NO_LPAREN_IN_FUN_DECL, "Expected '(' after function name.");
     grouping_tokens.push(TOK_RIGHT_PAREN);
     if (!check({TOK_RIGHT_PAREN})) {
-        auto variable = var_decl();
+        auto variable = std::dynamic_pointer_cast<Decl::Var>(var_decl());
         if (variable == nullptr) {
             ErrorLogger::inst().log_error(peek(), E_IMPOSSIBLE, "var_decl did not return a variable in function declaration.");
             throw ParserException();
         }
-        parameters.push_back(std::dynamic_pointer_cast<Decl::Var>(variable));
+        parameters.push_back(variable);
+        type_annotation->params.push_back({declarer == KW_VAR, variable->type_annotation});
         while (match({TOK_COMMA})) {
             if (check({TOK_RIGHT_PAREN})) {
                 break;
             }
-            variable = var_decl();
+            variable = std::dynamic_pointer_cast<Decl::Var>(var_decl());
             if (variable == nullptr) {
                 ErrorLogger::inst().log_error(peek(), E_IMPOSSIBLE, "var_decl did not return a variable in function declaration.");
                 throw ParserException();
             }
             parameters.push_back(std::dynamic_pointer_cast<Decl::Var>(variable));
+            type_annotation->params.push_back({declarer == KW_VAR, variable->type_annotation});
         }
     }
     consume(TOK_RIGHT_PAREN, E_UNMATCHED_PAREN_IN_PARAMS, "Expected ')' after function parameters.");
 
-    std::shared_ptr<Expr::TypeIdent> return_type = nullptr;
+    // TODO: Clean this up
+    // std::shared_ptr<Expr::TypeIdent> return_type = nullptr;
+    // if (match({TOK_COLON})) {
+    //     return_type = type_ident_expr();
+    // } else {
+    //     // Inject a 'void' token for type inference later
+    //     Location location = previous().location;
+    //     // It will be treated as having the same location as the previous token
+    //     return_type = std::make_shared<Expr::TypeIdent>(Token{
+    //         TOK_IDENT,
+    //         "void",
+    //         std::any(),
+    //         location
+    //     });
+    // }
+
     if (match({TOK_COLON})) {
-        return_type = type_ident_expr();
+        type_annotation->ret = annotation();
     } else {
-        // Inject a 'void' token for type inference later
-        Location location = previous().location;
-        // It will be treated as having the same location as the previous token
-        return_type = std::make_shared<Expr::TypeIdent>(Token{
-            TOK_IDENT,
-            "void",
-            std::any(),
-            location
-        });
+        ErrorLogger::inst().log_error(peek(), E_MISSING_TYPE, "Expected type after ':' in function declaration.");
+        throw ParserException();
     }
 
     std::vector<std::shared_ptr<Stmt>> body;
@@ -244,7 +271,7 @@ std::shared_ptr<Decl> Parser::fun_decl() {
         body.push_back(statement());
     }
     consume(TOK_RIGHT_BRACE, E_UNMATCHED_BRACE_IN_FUN_DECL, "Expected '}' after function body.");
-    return std::make_shared<Decl::Fun>(declarer, name, parameters, return_type, body);
+    return std::make_shared<Decl::Fun>(declarer, name, parameters, type_annotation, body);
 }
 
 // MARK: Expressions
@@ -481,106 +508,219 @@ std::shared_ptr<Expr> Parser::primary_expr() {
     throw ParserException();
 }
 
-std::shared_ptr<Expr::TypeIdent> Parser::type_ident_expr() {
-    Location location = previous().location;
-    std::vector<Expr::TypeIdent::Segment> segments;
-    std::shared_ptr<Expr::TypeIdent> type_ident;
-    // Used for tuple types
-    std::vector<std::shared_ptr<Expr::TypeIdent>> tuple_type_idents;
-    bool is_tuple = false;
+// MARK: Annotations
 
-    if (match({TOK_LEFT_PAREN})) {
-        is_tuple = true;
-        grouping_tokens.push(TOK_RIGHT_PAREN);
-    }
-
-    do {
-        if (is_tuple && check({TOK_RIGHT_PAREN})) {
-            break;
-        }
-        do {
-
-            Token name = consume(TOK_IDENT, E_MISSING_IDENT_IN_TYPE, "Expected identifier in type annotation.");
-            std::vector<std::shared_ptr<Expr::TypeIdent>> type_args;
-
-            if (match({TOK_LT})) {
-                grouping_tokens.push(TOK_GT);
-                if (!check({TOK_GT})) {
-                    type_args.push_back(type_ident_expr());
-                    while (match({TOK_COMMA})) {
-                        if (check({TOK_GT})) {
-                            break;
-                        }
-                        type_args.push_back(type_ident_expr());
-                    }
-                }
-                consume(TOK_GT, E_UNMATCHED_ANGLE_IN_TYPE, "Expected '>' after type arguments.");
-            }
-
-            segments.push_back(Expr::TypeIdent::Segment(name, type_args));
-        } while (match({TOK_COLON_COLON}));
-
-        type_ident = std::make_shared<Expr::TypeIdent>(segments);
-        segments.clear();
-        tuple_type_idents.push_back(type_ident);
-    } while (is_tuple && match({TOK_COMMA}));
-
-    if (is_tuple && !match({TOK_RIGHT_PAREN})) {
-        ErrorLogger::inst().log_error(peek(), E_UNMATCHED_PAREN_IN_TYPE, "Expected ')' after in type.");
+std::shared_ptr<Annotation> Parser::annotation() {
+    std::shared_ptr<Annotation> annotation;
+    if (check({TOK_IDENT})) {
+        annotation = segmented_annotation();
+    } else if (match({KW_FUN})) {
+        annotation = function_annotation();
+    } else if (match({TOK_LEFT_PAREN})) {
+        annotation = tuple_annotation();
+    } else {
+        ErrorLogger::inst().log_error(peek(), E_INVALID_TYPE_ANNOTATION, "Expected valid type annotation.");
         throw ParserException();
     }
+}
 
-    if (match({TOK_STAR})) {
-        // Create `rptr<type>`
-        auto temp = type_ident;
-        type_ident = std::make_shared<Expr::TypeIdent>(Token{
-            TOK_IDENT,
-            "rptr",
-            std::any(),
-            location
-        });
-        type_ident->segments.at(0).type_args.push_back(temp);
-    } else if (match({TOK_LEFT_SQUARE})) {
-        // Create `array<type>`
-        consume(TOK_RIGHT_SQUARE, E_UNMATCHED_SQUARE_IN_TYPE, "Expected ']' after array type.");
-        auto temp = type_ident;
-        type_ident = std::make_shared<Expr::TypeIdent>(Token{
-            TOK_IDENT,
-            "array",
-            std::any(),
-            location
-        });
-        type_ident->segments.at(0).type_args.push_back(temp);
-    } else if (match({TOK_DOUBLE_ARROW})) {
-        // Create `fptr<return_type, ...tuple_types>`
-        std::shared_ptr<Expr::TypeIdent> return_type = type_ident_expr();
-        type_ident = std::make_shared<Expr::TypeIdent>(Token{
-            TOK_IDENT,
-            "fptr",
-            std::any(),
-            location
-        });
-        type_ident->segments.at(0).type_args.push_back(return_type);
-        for (auto& tuple_type_ident : tuple_type_idents) {
-            type_ident->segments.at(0).type_args.push_back(tuple_type_ident);
+std::shared_ptr<Annotation> Parser::segmented_annotation() {
+
+    std::shared_ptr<Annotation> type_annotation = std::make_shared<Annotation::Segmented>(std::vector<std::shared_ptr<Annotation::Segmented::Class>>());
+
+    auto seg_type_annotation = std::dynamic_pointer_cast<Annotation::Segmented>(type_annotation);
+
+    do {
+        Token name = consume(TOK_IDENT, E_NOT_AN_IDENTIFIER, "Expected identifier in type annotation.");
+        auto temp = std::make_shared<Annotation::Segmented::Class>(name.lexeme, std::vector<std::shared_ptr<Annotation>>());
+        if (match({TOK_LT})) {
+            grouping_tokens.push(TOK_GT);
+            if (!check({TOK_GT})) {
+                temp->type_args.push_back(annotation());
+                while (match({TOK_COMMA})) {
+                    if (check({TOK_GT})) {
+                        break;
+                    }
+                    temp->type_args.push_back(annotation());
+                }
+            }
+            consume(TOK_GT, E_UNMATCHED_ANGLE_IN_TYPE, "Expected '>' after type arguments.");
         }
-    } else if (is_tuple) {
-        // Create `tuple<...tuple_types>`
-        type_ident = std::make_shared<Expr::TypeIdent>(Token{
-            TOK_IDENT,
-            "tuple",
-            std::any(),
-            location
-        });
-        for (auto& tuple_type_ident : tuple_type_idents) {
-            type_ident->segments.at(0).type_args.push_back(tuple_type_ident);
+        seg_type_annotation->classes.push_back(temp);
+    } while (match({TOK_COLON_COLON}));
+
+    while (check({TOK_STAR, TOK_LEFT_SQUARE})) {
+        if (match({TOK_STAR})) {
+            type_annotation = std::make_shared<Annotation::Pointer>(type_annotation);
+        }
+        if (match({TOK_LEFT_SQUARE})) {
+            consume(TOK_RIGHT_SQUARE, E_UNMATCHED_SQUARE_IN_TYPE, "Expected ']' after array type.");
+            type_annotation = std::make_shared<Annotation::Array>(type_annotation);
         }
     }
 
-    // TODO: Add support for mutable types
-
-    return type_ident;
+    return type_annotation;
 }
+
+std::shared_ptr<Annotation::Function> Parser::function_annotation() {
+    std::vector<std::pair<bool, std::shared_ptr<Annotation>>> params;
+    std::shared_ptr<Annotation> ret;
+
+    consume(TOK_LEFT_PAREN, E_NO_LPAREN_IN_FUN_TYPE, "Expected '(' after 'fun' in type annotation.");
+
+    grouping_tokens.push(TOK_RIGHT_PAREN);
+    if (!check({TOK_RIGHT_PAREN})) {
+        if (match({KW_VAR})) {
+            auto param = std::make_pair(true, annotation());
+            params.push_back(param);
+        } else {
+            auto param = std::make_pair(false, annotation());
+            params.push_back(param);
+        }
+        while (match({TOK_COMMA})) {
+            if (check({TOK_RIGHT_PAREN})) {
+                break;
+            }
+            if (match({KW_VAR})) {
+                auto param = std::make_pair(true, annotation());
+                params.push_back(param);
+            } else {
+                auto param = std::make_pair(false, annotation());
+                params.push_back(param);
+            }
+        }
+    }
+
+    consume(TOK_RIGHT_PAREN, E_UNMATCHED_PAREN_IN_TYPE, "Expected ')' after function parameters.");
+    consume(TOK_DOUBLE_ARROW, E_NO_ARROW_IN_FUN_TYPE, "Expected '=>' after function parameters.");
+
+    bool is_ret_mutable = match({KW_VAR});
+
+    ret = annotation();
+
+    return std::make_shared<Annotation::Function>(params, ret, is_ret_mutable);
+}
+
+std::shared_ptr<Annotation::Tuple> Parser::tuple_annotation() {
+    std::vector<std::shared_ptr<Annotation>> tuple_annotations;
+
+    if (match({TOK_RIGHT_PAREN})) {
+        return std::make_shared<Annotation::Tuple>(tuple_annotations);
+    }
+
+    tuple_annotations.push_back(annotation());
+    while (match({TOK_COMMA})) {
+        if (check({TOK_RIGHT_PAREN})) {
+            break;
+        }
+        tuple_annotations.push_back(annotation());
+    }
+
+    consume(TOK_RIGHT_PAREN, E_UNMATCHED_PAREN_IN_TYPE, "Expected ')' after tuple type.");
+
+    return std::make_shared<Annotation::Tuple>(tuple_annotations);
+}
+
+// std::shared_ptr<Expr::TypeIdent> Parser::type_ident_expr() {
+//     Location location = previous().location;
+//     std::vector<Expr::TypeIdent::Segment> segments;
+//     std::shared_ptr<Expr::TypeIdent> type_ident;
+//     // Used for tuple types
+//     std::vector<std::shared_ptr<Expr::TypeIdent>> tuple_type_idents;
+//     bool is_tuple = false;
+
+//     if (match({TOK_LEFT_PAREN})) {
+//         is_tuple = true;
+//         grouping_tokens.push(TOK_RIGHT_PAREN);
+//     }
+
+//     do {
+//         if (is_tuple && check({TOK_RIGHT_PAREN})) {
+//             break;
+//         }
+//         do {
+
+//             Token name = consume(TOK_IDENT, E_MISSING_TYPE, "Expected identifier in type annotation.");
+//             std::vector<std::shared_ptr<Expr::TypeIdent>> type_args;
+
+//             if (match({TOK_LT})) {
+//                 grouping_tokens.push(TOK_GT);
+//                 if (!check({TOK_GT})) {
+//                     type_args.push_back(type_ident_expr());
+//                     while (match({TOK_COMMA})) {
+//                         if (check({TOK_GT})) {
+//                             break;
+//                         }
+//                         type_args.push_back(type_ident_expr());
+//                     }
+//                 }
+//                 consume(TOK_GT, E_UNMATCHED_ANGLE_IN_TYPE, "Expected '>' after type arguments.");
+//             }
+
+//             segments.push_back(Expr::TypeIdent::Segment(name, type_args));
+//         } while (match({TOK_COLON_COLON}));
+
+//         type_ident = std::make_shared<Expr::TypeIdent>(segments);
+//         segments.clear();
+//         tuple_type_idents.push_back(type_ident);
+//     } while (is_tuple && match({TOK_COMMA}));
+
+//     if (is_tuple && !match({TOK_RIGHT_PAREN})) {
+//         ErrorLogger::inst().log_error(peek(), E_UNMATCHED_PAREN_IN_TYPE, "Expected ')' after in type.");
+//         throw ParserException();
+//     }
+
+//     if (match({TOK_STAR})) {
+//         // Create `rptr<type>`
+//         auto temp = type_ident;
+//         type_ident = std::make_shared<Expr::TypeIdent>(Token{
+//             TOK_IDENT,
+//             "rptr",
+//             std::any(),
+//             location
+//         });
+//         type_ident->segments.at(0).type_args.push_back(temp);
+//     } else if (match({TOK_LEFT_SQUARE})) {
+//         // Create `array<type>`
+//         consume(TOK_RIGHT_SQUARE, E_UNMATCHED_SQUARE_IN_TYPE, "Expected ']' after array type.");
+//         auto temp = type_ident;
+//         type_ident = std::make_shared<Expr::TypeIdent>(Token{
+//             TOK_IDENT,
+//             "array",
+//             std::any(),
+//             location
+//         });
+//         type_ident->segments.at(0).type_args.push_back(temp);
+//     } else if (match({TOK_DOUBLE_ARROW})) {
+//         // Create `fptr<return_type, ...tuple_types>`
+//         std::shared_ptr<Expr::TypeIdent> return_type = type_ident_expr();
+//         type_ident = std::make_shared<Expr::TypeIdent>(Token{
+//             TOK_IDENT,
+//             "fptr",
+//             std::any(),
+//             location
+//         });
+//         type_ident->segments.at(0).type_args.push_back(return_type);
+//         for (auto& tuple_type_ident : tuple_type_idents) {
+//             type_ident->segments.at(0).type_args.push_back(tuple_type_ident);
+//         }
+//     } else if (is_tuple) {
+//         // Create `tuple<...tuple_types>`
+//         type_ident = std::make_shared<Expr::TypeIdent>(Token{
+//             TOK_IDENT,
+//             "tuple",
+//             std::any(),
+//             location
+//         });
+//         for (auto& tuple_type_ident : tuple_type_idents) {
+//             type_ident->segments.at(0).type_args.push_back(tuple_type_ident);
+//         }
+//     }
+
+//     // TODO: Add support for mutable types
+
+//     return type_ident;
+// }
 
 std::vector<std::shared_ptr<Stmt>> Parser::parse() {
     std::vector<std::shared_ptr<Stmt>> statements;

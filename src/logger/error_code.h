@@ -70,16 +70,18 @@ enum ErrorCode {
     E_UNNAMED_VAR,
     // A scope resolution operator was found without a valid right-hand side
     E_NOT_AN_IDENTIFIER,
-    // A type annotation was found that was not an identifier expression
-    // E_INVALID_TYPE_ANNOTATION,
+    // A type annotation was found that did not start with a valid token
+    E_INVALID_TYPE_ANNOTATION,
     // No identifier was found after the colon in a type annotation
-    E_MISSING_IDENT_IN_TYPE,
+    E_MISSING_TYPE,
     // A type annotation was found without a matching right square bracket
     E_UNMATCHED_SQUARE_IN_TYPE,
     // A type annotation was found without a matching right angle bracket
     E_UNMATCHED_ANGLE_IN_TYPE,
-    // A comma was found in a non-tuple type annotation
-    // E_COMMA_IN_NON_TUPLE_TYPE,
+    // A function pointer type was found without a left parenthesis
+    E_NO_LPAREN_IN_FUN_TYPE,
+    // A function pointer type was found without a double arrow token
+    E_NO_ARROW_IN_FUN_TYPE,
     // A type annotation was found without a matching right parenthesis
     E_UNMATCHED_PAREN_IN_TYPE,
     // A function declaration was found without an identifier

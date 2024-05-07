@@ -110,7 +110,7 @@ std::any AstPrinter::visit_var_decl(Decl::Var* decl) {
     result += " ";
     result += decl->name.lexeme;
     if (decl->type_annotation != nullptr) {
-        result += " " + std::any_cast<std::string>(decl->type_annotation->accept(this));
+        result += " " + decl->type_annotation->to_string();
     }
     if (decl->initializer != nullptr) {
         result += " " + std::any_cast<std::string>(decl->initializer->accept(this));
@@ -123,7 +123,7 @@ std::any AstPrinter::visit_fun_decl(Decl::Fun* decl) {
     std::string result = "(decl:fun ";
     result += decl->name.lexeme;
     result += " ";
-    result += std::any_cast<std::string>(decl->return_type->accept(this));
+    result += decl->type_annotation->to_string();
     result += " ";
     for (const auto& param : decl->parameters) {
         result += std::any_cast<std::string>(param->accept(this));
@@ -192,9 +192,9 @@ std::any AstPrinter::visit_identifier_expr(Expr::Identifier* expr) {
     return expr->to_string();
 }
 
-std::any AstPrinter::visit_type_ident_expr(Expr::TypeIdent* expr) {
-    return expr->to_string();
-}
+// std::any AstPrinter::visit_type_ident_expr(Expr::TypeIdent* expr) {
+//     return expr->to_string();
+// }
 
 std::any AstPrinter::visit_literal_expr(Expr::Literal* expr) {
     if (expr->token.literal.has_value()) {

@@ -3,6 +3,7 @@
 
 #include "../logger/error_code.h"
 #include "../scanner/token.h"
+#include "annotation.h"
 #include "decl.h"
 #include "expr.h"
 #include "stmt.h"
@@ -276,16 +277,59 @@ class Parser {
      */
     std::shared_ptr<Expr> primary_expr();
 
+    // /**
+    //  * @brief Parses a type identifier expression.
+    //  * Type identifier expressions are different from normal identifiers in that they may use additional symbols to specify a type.
+    //  * E.g. "Vector<i32>", "i32[]", "(i32, i32)".
+    //  * Note: the last two examples are actually shorthand for "array<i32>" and "tuple<i32, i32>".
+    //  *
+    //  * @return std::shared_ptr<Expr> A pointer to the parsed type identifier expression.
+    //  * @throws ParserException If an error occurs while parsing the expression. Will be caught by the statement() function.
+    //  */
+    // std::shared_ptr<Expr::TypeIdent> type_ident_expr();
+
+    // MARK: Annotations
+
     /**
-     * @brief Parses a type identifier expression.
-     * Type identifier expressions are different from normal identifiers in that they may use additional symbols to specify a type.
-     * E.g. "Vector<i32>", "i32[]", "(i32, i32)".
-     * Note: the last two examples are actually shorthand for "array<i32>" and "tuple<i32, i32>".
+     * @brief Parses a type annotation.
      *
-     * @return std::shared_ptr<Expr> A pointer to the parsed type identifier expression.
-     * @throws ParserException If an error occurs while parsing the expression. Will be caught by the statement() function.
+     * @return std::shared_ptr<Annotation> The parsed type annotation.
      */
-    std::shared_ptr<Expr::TypeIdent> type_ident_expr();
+    std::shared_ptr<Annotation> annotation();
+
+    /**
+     * @brief Parses a segmented type annotation.
+     * A segmented is made up of multiple "classes" separated by "::".
+     * A class is an identifier with optional type arguments.
+     * A class cannot be a tuple, array, pointer, or function annotation.
+     * E.g. "Vector<i32>::Iterator".
+     * Additionally, if the segmented annotation ends with "[]" or "*", it will
+     * be parsed as an array or pointer type annotation.
+     *
+     * @return std::shared_ptr<Annotation> The segmented, array, or pointer type annotation.
+     */
+    std::shared_ptr<Annotation> segmented_annotation();
+
+    /**
+     * @brief Parses a function type annotation.
+     * Function type annotations must begin with the keyword "fun" followed by a list of paramter types, "=>", and a return type.
+     * The parameter and return types may be mutable, and, thus, may have the "var" keyword prepended to them.
+     *
+     * @return std::shared_ptr<Annotation::Function> The parsed function type annotation.
+     */
+    std::shared_ptr<Annotation::Function> function_annotation();
+
+    /**
+     * @brief Parses a tuple type annotation.
+     * Tuple type annotations are a list of type annotations separated by commas and enclosed in parentheses.
+     * Tuple types cannot begin with "fun" to not be confused with function type annotations.
+     * E.g. "(int, int)".
+     * Trailing commas are allowed.
+     * "()" is the empty tuple type.
+     *
+     * @return std::shared_ptr<Annotation::Tuple> The parsed tuple type annotation.
+     */
+    std::shared_ptr<Annotation::Tuple> tuple_annotation();
 
 public:
     // MARK: Interface

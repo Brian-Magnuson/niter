@@ -25,8 +25,8 @@ std::any GlobalChecker::visit_fun_decl(Decl::Fun* decl) {
             ErrorLogger::inst().log_error(decl->name, E_INVALID_MAIN_SIGNATURE, "The main function must be declared with the 'fun' keyword.");
         }
         // The return type must be i32
-        if (decl->return_type->to_string() != "i32") {
-            ErrorLogger::inst().log_error(decl->return_type->segments.front().token, E_INVALID_MAIN_SIGNATURE, "The main function must indicate a return type of i32.");
+        if (decl->type_annotation->to_string() != "i32") {
+            ErrorLogger::inst().log_error(decl->name, E_INVALID_MAIN_SIGNATURE, "The main function must indicate a return type of i32.");
         }
         // The function cannot have any parameters (unimplemented)
         if (decl->parameters.size() > 0) {
