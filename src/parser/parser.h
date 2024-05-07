@@ -283,6 +283,7 @@ class Parser {
      * @brief Parses a type annotation.
      *
      * @return std::shared_ptr<Annotation> The parsed type annotation.
+     * @throw ParserException If an error occurs while parsing the annotation. Will be caught by the statement() function.
      */
     std::shared_ptr<Annotation> annotation();
 
@@ -296,6 +297,7 @@ class Parser {
      * be parsed as an array or pointer type annotation.
      *
      * @return std::shared_ptr<Annotation> The segmented, array, or pointer type annotation.
+     * @throw ParserException If an error occurs while parsing the annotation. Will be caught by the statement() function.
      */
     std::shared_ptr<Annotation> segmented_annotation();
 
@@ -305,6 +307,7 @@ class Parser {
      * The parameter and return types may be mutable, and, thus, may have the "var" keyword prepended to them.
      *
      * @return std::shared_ptr<Annotation::Function> The parsed function type annotation.
+     * @throw ParserException If an error occurs while parsing the annotation. Will be caught by the statement() function.
      */
     std::shared_ptr<Annotation::Function> function_annotation();
 
@@ -317,6 +320,7 @@ class Parser {
      * "()" is the empty tuple type.
      *
      * @return std::shared_ptr<Annotation::Tuple> The parsed tuple type annotation.
+     * @throw ParserException If an error occurs while parsing the annotation. Will be caught by the statement() function.
      */
     std::shared_ptr<Annotation::Tuple> tuple_annotation();
 

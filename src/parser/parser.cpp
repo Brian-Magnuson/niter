@@ -175,6 +175,8 @@ std::shared_ptr<Decl> Parser::var_decl() {
     std::shared_ptr<Annotation> type_annotation = nullptr;
     if (match({TOK_COLON})) {
         type_annotation = annotation();
+    } else {
+        type_annotation = std::make_shared<Annotation::Segmented>("auto");
     }
 
     std::shared_ptr<Expr> initializer = nullptr;
@@ -226,9 +228,6 @@ std::shared_ptr<Decl> Parser::fun_decl() {
 
     if (match({TOK_COLON})) {
         type_annotation->ret = annotation();
-    } else {
-        ErrorLogger::inst().log_error(peek(), E_MISSING_TYPE, "Expected type after ':' in function declaration.");
-        throw ParserException();
     }
 
     std::vector<std::shared_ptr<Stmt>> body;
@@ -572,6 +571,11 @@ std::shared_ptr<Annotation::Tuple> Parser::tuple_annotation() {
     std::vector<std::shared_ptr<Annotation>> tuple_annotations;
 
     if (match({TOK_RIGHT_PAREN})) {
+        if (match({TOK_DOUBLE_ARROW})) {
+            // This is an error
+            ErrorLogger::inst().log_error(previous(), E_FUN_IN_NON_FUN_TYPE, "Function type must be specified with 'fun' keyword.");
+            throw ParserException();
+        }
         return std::make_shared<Annotation::Tuple>(tuple_annotations);
     }
 
@@ -584,6 +588,12 @@ std::shared_ptr<Annotation::Tuple> Parser::tuple_annotation() {
     }
 
     consume(TOK_RIGHT_PAREN, E_UNMATCHED_PAREN_IN_TYPE, "Expected ')' after tuple type.");
+
+    if (match({TOK_DOUBLE_ARROW})) {
+        // This is an error
+        ErrorLogger::inst().log_error(previous(), E_FUN_IN_NON_FUN_TYPE, "Function type must be specified with 'fun' keyword.");
+        throw ParserException();
+    }
 
     return std::make_shared<Annotation::Tuple>(tuple_annotations);
 }

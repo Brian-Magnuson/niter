@@ -1230,7 +1230,7 @@ TEST_CASE("Parser rptr type", "[parser]") {
 
     AstPrinter printer;
     REQUIRE(stmts.size() == 2);
-    CHECK(printer.print(stmts.at(0)) == "(decl:var x rptr<i32>)");
+    CHECK(printer.print(stmts.at(0)) == "(decl:var x i32*)");
     CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
 }
 
@@ -1246,7 +1246,7 @@ TEST_CASE("Parser array type", "[parser]") {
 
     AstPrinter printer;
     REQUIRE(stmts.size() == 2);
-    CHECK(printer.print(stmts.at(0)) == "(decl:var x array<i32>)");
+    CHECK(printer.print(stmts.at(0)) == "(decl:var x i32[])");
     CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
 }
 
@@ -1262,13 +1262,13 @@ TEST_CASE("Parser tuple type", "[parser]") {
 
     AstPrinter printer;
     REQUIRE(stmts.size() == 3);
-    CHECK(printer.print(stmts.at(0)) == "(decl:var x tuple<i32, i32>)");
-    CHECK(printer.print(stmts.at(1)) == "(decl:var y tuple)");
+    CHECK(printer.print(stmts.at(0)) == "(decl:var x (i32, i32))");
+    CHECK(printer.print(stmts.at(1)) == "(decl:var y ())");
     CHECK(printer.print(stmts.at(2)) == "(stmt:eof)");
 }
 
 TEST_CASE("Parser fptr type", "[parser]") {
-    std::string source_code = "var x: (i32) => i64; var y: () => i32; var z: () => void;";
+    std::string source_code = "var x: fun(i32) => i64; var y: fun() => i32; var z: fun() => void;";
     std::shared_ptr file_name = std::make_shared<std::string>("test_files/fun_type_test.nit");
 
     Scanner scanner;
@@ -1279,9 +1279,9 @@ TEST_CASE("Parser fptr type", "[parser]") {
 
     AstPrinter printer;
     REQUIRE(stmts.size() == 4);
-    CHECK(printer.print(stmts.at(0)) == "(decl:var x fptr<i64, i32>)");
-    CHECK(printer.print(stmts.at(1)) == "(decl:var y fptr<i32>)");
-    CHECK(printer.print(stmts.at(2)) == "(decl:var z fptr<void>)");
+    CHECK(printer.print(stmts.at(0)) == "(decl:var x fun(i32) => i64)");
+    CHECK(printer.print(stmts.at(1)) == "(decl:var y fun() => i32)");
+    CHECK(printer.print(stmts.at(2)) == "(decl:var z fun() => void)");
     CHECK(printer.print(stmts.at(3)) == "(stmt:eof)");
 }
 
@@ -1315,7 +1315,7 @@ TEST_CASE("Parser fun decls", "[parser]") {
 
     AstPrinter printer;
     REQUIRE(stmts.size() == 2);
-    CHECK(printer.print(stmts.at(0)) == "(decl:fun foo void { })");
+    CHECK(printer.print(stmts.at(0)) == "(decl:fun foo fun() => void { })");
     CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
 }
 
@@ -1332,7 +1332,7 @@ TEST_CASE("Parser fun decls 2", "[parser]") {
 
     AstPrinter printer;
     REQUIRE(stmts.size() == 2);
-    CHECK(printer.print(stmt) == "(decl:fun foo void { (stmt:return) })");
+    CHECK(printer.print(stmt) == "(decl:fun foo fun() => void { (stmt:return) })");
     CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
 }
 
@@ -1349,7 +1349,7 @@ TEST_CASE("Parser fun decls 3", "[parser]") {
 
     AstPrinter printer;
     REQUIRE(stmts.size() == 2);
-    CHECK(printer.print(stmt) == "(decl:fun foo i32 { (stmt:return 5) })");
+    CHECK(printer.print(stmt) == "(decl:fun foo fun() => i32 { (stmt:return 5) })");
     CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
 }
 
@@ -1366,7 +1366,7 @@ TEST_CASE("Parser fun decls 4", "[parser]") {
 
     AstPrinter printer;
     REQUIRE(stmts.size() == 2);
-    CHECK(printer.print(stmts.at(0)) == "(decl:fun foo i32 (decl:const a i32) { (stmt:return a) })");
+    CHECK(printer.print(stmts.at(0)) == "(decl:fun foo fun(i32) => i32 (decl:const a i32) { (stmt:return a) })");
     CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
 }
 
@@ -1382,7 +1382,7 @@ TEST_CASE("Parser fun decls 5", "[parser]") {
 
     AstPrinter printer;
     REQUIRE(stmts.size() == 2);
-    CHECK(printer.print(stmts.at(0)) == "(decl:fun foo i32 (decl:const a i32) { (decl:var b auto a) (stmt:return (+ a b)) })");
+    CHECK(printer.print(stmts.at(0)) == "(decl:fun foo fun(i32) => i32 (decl:const a i32) { (decl:var b auto a) (stmt:return (+ a b)) })");
     CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
 }
 

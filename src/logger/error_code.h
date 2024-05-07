@@ -84,6 +84,8 @@ enum ErrorCode {
     E_NO_ARROW_IN_FUN_TYPE,
     // A type annotation was found without a matching right parenthesis
     E_UNMATCHED_PAREN_IN_TYPE,
+    // The 'fun' keyword was found without a valid function type
+    E_FUN_IN_NON_FUN_TYPE,
     // A function declaration was found without an identifier
     E_UNNAMED_FUN,
     // A function declaration was found without a left parenthesis
