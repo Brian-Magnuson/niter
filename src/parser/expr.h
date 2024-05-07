@@ -241,66 +241,6 @@ public:
     }
 };
 
-// /**
-//  * @brief A class representing a type identifier.
-//  * Type identifiers are like normal identifiers, but they are used to represent types.
-//  * They include a wider range of symbols, such as angle brackets and square brackets.
-//  * E.g. (i32) and i32[] and Vector<i32> are all valid identifiers.
-//  *
-//  */
-// class Expr::TypeIdent : public Expr {
-// public:
-//     /**
-//      * @brief A struct representing a segment of a type identifier.
-//      * Type segments are separated by colons (::) and may have type arguments.
-//      *
-//      */
-//     struct Segment {
-//         // The token representing the identifier.
-//         Token token;
-//         // The type arguments for the identifier, if any. E.g. Vector<i32>, array<i32>
-//         std::vector<std::shared_ptr<Expr::TypeIdent>> type_args;
-
-//         Segment(Token token) : token(token) {}
-//         Segment(Token token, std::vector<std::shared_ptr<Expr::TypeIdent>> type_args)
-//             : token(token), type_args(type_args) {}
-//     };
-
-//     TypeIdent(Token token) : segments({Segment(token)}) {}
-//     TypeIdent(std::vector<Segment> segments) : segments(segments) {}
-
-//     std::any accept(Visitor* visitor) override {
-//         return visitor->visit_type_ident_expr(this);
-//     }
-
-//     /**
-//      * @brief The segments of the type identifier.
-//      *
-//      */
-//     std::vector<Segment> segments;
-
-//     /**
-//      * @brief Converts the type identifier to a string.
-//      *
-//      * @return std::string The string representation of the type identifier.
-//      */
-//     std::string to_string() {
-//         std::string str = "";
-//         for (auto& segment : segments) {
-//             str += segment.token.lexeme;
-//             if (!segment.type_args.empty()) {
-//                 str += "<";
-//                 for (auto& type_arg : segment.type_args) {
-//                     str += type_arg->to_string() + ", ";
-//                 }
-//                 str = str.substr(0, str.size() - 2) + ">";
-//             }
-//             str += "::";
-//         }
-//         return str.substr(0, str.size() - 2);
-//     }
-// };
-
 /**
  * @brief A class representing a literal expression.
  * E.g. a number, string, or boolean.

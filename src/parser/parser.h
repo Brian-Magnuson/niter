@@ -277,17 +277,6 @@ class Parser {
      */
     std::shared_ptr<Expr> primary_expr();
 
-    // /**
-    //  * @brief Parses a type identifier expression.
-    //  * Type identifier expressions are different from normal identifiers in that they may use additional symbols to specify a type.
-    //  * E.g. "Vector<i32>", "i32[]", "(i32, i32)".
-    //  * Note: the last two examples are actually shorthand for "array<i32>" and "tuple<i32, i32>".
-    //  *
-    //  * @return std::shared_ptr<Expr> A pointer to the parsed type identifier expression.
-    //  * @throws ParserException If an error occurs while parsing the expression. Will be caught by the statement() function.
-    //  */
-    // std::shared_ptr<Expr::TypeIdent> type_ident_expr();
-
     // MARK: Annotations
 
     /**
