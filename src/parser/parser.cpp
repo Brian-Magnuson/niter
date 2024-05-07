@@ -190,9 +190,6 @@ std::shared_ptr<Decl> Parser::var_decl() {
     std::shared_ptr<Annotation> type_annotation = nullptr;
     if (match({TOK_COLON})) {
         type_annotation = annotation();
-    } else {
-        ErrorLogger::inst().log_error(peek(), E_MISSING_TYPE, "Expected type after ':' in declaration.");
-        throw ParserException();
     }
 
     std::shared_ptr<Expr> initializer = nullptr;
@@ -511,17 +508,18 @@ std::shared_ptr<Expr> Parser::primary_expr() {
 // MARK: Annotations
 
 std::shared_ptr<Annotation> Parser::annotation() {
-    std::shared_ptr<Annotation> annotation;
+    std::shared_ptr<Annotation> type_annotation;
     if (check({TOK_IDENT})) {
-        annotation = segmented_annotation();
+        type_annotation = segmented_annotation();
     } else if (match({KW_FUN})) {
-        annotation = function_annotation();
+        type_annotation = function_annotation();
     } else if (match({TOK_LEFT_PAREN})) {
-        annotation = tuple_annotation();
+        type_annotation = tuple_annotation();
     } else {
         ErrorLogger::inst().log_error(peek(), E_INVALID_TYPE_ANNOTATION, "Expected valid type annotation.");
         throw ParserException();
     }
+    return type_annotation;
 }
 
 std::shared_ptr<Annotation> Parser::segmented_annotation() {
