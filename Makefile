@@ -7,11 +7,11 @@ test: test/bin/test
 
 # Recipes
 
-bin/niterc: src/*.cpp src/*/*.cpp
+bin/niterc: src/*.cpp src/*/*.cpp src/*/*.h
 	mkdir -p bin
-	clang++ -std=c++17 -O3 -Wall -Wextra -g -o bin/niterc src/*.cpp $(SOURCE_FILES)
+	clang++ -std=c++17 -O3 -Wall -Wextra -g -o bin/niterc src/*.cpp src/*/*.cpp
 
-test/bin/test: src/*/*.cpp test/*.cpp test/bin/catch_amalgamated.o
+test/bin/test: src/*/*.cpp src/*/*.h test/*.cpp test/bin/catch_amalgamated.o
 	mkdir -p test/bin
 	clang++ -std=c++17 -O0 -Wall -Wextra -g -o test/bin/test src/*/*.cpp test/*.cpp test/bin/catch_amalgamated.o
 
