@@ -232,7 +232,7 @@ std::shared_ptr<Decl> Parser::fun_decl() {
 
     std::vector<std::shared_ptr<Stmt>> body;
     consume(TOK_LEFT_BRACE, E_NO_LBRACE_IN_FUN_DECL, "Expected '{' before function body.");
-    while (!check({TOK_RIGHT_BRACE})) {
+    while (!check({TOK_RIGHT_BRACE}) && !is_at_end()) {
         body.push_back(statement());
     }
     consume(TOK_RIGHT_BRACE, E_UNMATCHED_BRACE_IN_FUN_DECL, "Expected '}' after function body.");
@@ -497,7 +497,7 @@ std::shared_ptr<Annotation> Parser::segmented_annotation() {
     auto seg_type_annotation = std::dynamic_pointer_cast<Annotation::Segmented>(type_annotation);
 
     do {
-        Token name = consume(TOK_IDENT, E_NOT_AN_IDENTIFIER, "Expected identifier in type annotation.");
+        Token name = consume(TOK_IDENT, E_MISSING_IDENT_IN_TYPE, "Expected identifier in type annotation.");
         auto temp = std::make_shared<Annotation::Segmented::Class>(name.lexeme, std::vector<std::shared_ptr<Annotation>>());
         if (match({TOK_LT})) {
             grouping_tokens.push(TOK_GT);
@@ -573,7 +573,7 @@ std::shared_ptr<Annotation::Tuple> Parser::tuple_annotation() {
     if (match({TOK_RIGHT_PAREN})) {
         if (match({TOK_DOUBLE_ARROW})) {
             // This is an error
-            ErrorLogger::inst().log_error(previous(), E_FUN_IN_NON_FUN_TYPE, "Function type must be specified with 'fun' keyword.");
+            ErrorLogger::inst().log_error(previous(), E_ARROW_IN_NON_FUN_TYPE, "Function type must be specified with 'fun' keyword.");
             throw ParserException();
         }
         return std::make_shared<Annotation::Tuple>(tuple_annotations);
@@ -591,7 +591,7 @@ std::shared_ptr<Annotation::Tuple> Parser::tuple_annotation() {
 
     if (match({TOK_DOUBLE_ARROW})) {
         // This is an error
-        ErrorLogger::inst().log_error(previous(), E_FUN_IN_NON_FUN_TYPE, "Function type must be specified with 'fun' keyword.");
+        ErrorLogger::inst().log_error(previous(), E_ARROW_IN_NON_FUN_TYPE, "Function type must be specified with 'fun' keyword.");
         throw ParserException();
     }
 

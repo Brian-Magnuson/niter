@@ -253,6 +253,194 @@ TEST_CASE("Parser print stmts", "[parser]") {
 
 // MARK: Error tests
 
+TEST_CASE("Logger invalid type annotation", "[logger]") {
+    std::string source_code = "var x: ;";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/invalid_type_annotation_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+    Parser parser(scanner.get_tokens());
+    parser.parse();
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_INVALID_TYPE_ANNOTATION);
+
+    logger.reset();
+}
+
+TEST_CASE("Logger missing ident in type", "[logger]") {
+    std::string source_code = "var x: object::;";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/missing_ident_in_type_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    parser.parse();
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_MISSING_IDENT_IN_TYPE);
+
+    logger.reset();
+}
+
+TEST_CASE("Logger unmatched square in type", "[logger]") {
+    std::string source_code = "var x: i32[;";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/unmatched_square_in_type_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    parser.parse();
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_UNMATCHED_SQUARE_IN_TYPE);
+
+    logger.reset();
+}
+
+TEST_CASE("Logger unmatched angle in type", "[logger]") {
+    std::string source_code = "var x: std::pair<i32, i32;";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/unmatched_angle_in_type_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    parser.parse();
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_UNMATCHED_ANGLE_IN_TYPE);
+
+    logger.reset();
+}
+
+TEST_CASE("Logger no lparen in fun type", "[logger]") {
+    std::string source_code = "var x: fun i32) => i64;";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/no_lparen_in_fun_type_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    parser.parse();
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_NO_LPAREN_IN_FUN_TYPE);
+
+    logger.reset();
+}
+
+TEST_CASE("Logger no arrow in fun type", "[logger]") {
+    std::string source_code = "var x: fun(i32) i64;";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/no_arrow_in_fun_type_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    parser.parse();
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_NO_ARROW_IN_FUN_TYPE);
+
+    logger.reset();
+}
+
+TEST_CASE("Logger unmatched paren in type", "[logger]") {
+    std::string source_code = "var x: (i32;";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/unmatched_paren_in_type_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    parser.parse();
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_UNMATCHED_PAREN_IN_TYPE);
+
+    logger.reset();
+}
+
+TEST_CASE("Logger arrow in non fun type", "[logger]") {
+    std::string source_code = "var x: () => i32;";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/fun_in_non_fun_type_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    parser.parse();
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_ARROW_IN_NON_FUN_TYPE);
+
+    logger.reset();
+}
+
+TEST_CASE("Logger arrow in non fun type 2", "[logger]") {
+    std::string source_code = "var x: (i32) => i32;";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/fun_in_non_fun_type_test_2.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+    Parser parser(scanner.get_tokens());
+    parser.parse();
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_ARROW_IN_NON_FUN_TYPE);
+
+    logger.reset();
+}
+
+TEST_CASE("Logger unnamed fun", "[logger]") {
+    std::string source_code = "fun () {}";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/unnamed_fun_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    parser.parse();
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_UNNAMED_FUN);
+
+    logger.reset();
+}
+
 TEST_CASE("Logger no lparen in fun decl", "[logger]") {
     std::string source_code = "fun foo {}";
     std::shared_ptr file_name = std::make_shared<std::string>("test_files/no_lparen_in_fun_decl_test.nit");
@@ -272,6 +460,25 @@ TEST_CASE("Logger no lparen in fun decl", "[logger]") {
     logger.reset();
 }
 
+TEST_CASE("Logger unmatched paren in params", "[logger]") {
+    std::string source_code = "fun foo(a: i32 { return a; }";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/unmatched_paren_in_params_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    parser.parse();
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_UNMATCHED_PAREN_IN_PARAMS);
+
+    logger.reset();
+}
+
 TEST_CASE("Logger no lbrace in fun decl", "[logger]") {
     std::string source_code = "fun foo()";
     std::shared_ptr file_name = std::make_shared<std::string>("test_files/no_lbrace_in_fun_decl_test.nit");
@@ -287,6 +494,25 @@ TEST_CASE("Logger no lbrace in fun decl", "[logger]") {
 
     REQUIRE(logger.get_errors().size() >= 1);
     CHECK(logger.get_errors().at(0) == E_NO_LBRACE_IN_FUN_DECL);
+
+    logger.reset();
+}
+
+TEST_CASE("Logger unmatched brace in fun decl", "[logger]") {
+    std::string source_code = "fun foo() {";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/unmatched_brace_in_fun_decl_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    parser.parse();
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_UNMATCHED_BRACE_IN_FUN_DECL);
 
     logger.reset();
 }
