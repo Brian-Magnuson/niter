@@ -63,7 +63,8 @@ enum ErrorCode {
     // A left square bracket was found without a matching right square bracket
     E_UNMATCHED_LEFT_SQUARE,
     // An equal sign was found without a valid left-hand side
-    E_INVALID_ASSIGNMENT,
+    // E_INVALID_ASSIGNMENT,
+
     // A call expression was found to have over the maximum number of arguments (of 255)
     E_TOO_MANY_ARGS,
     // A variable declaration was found without an identifier
@@ -73,7 +74,8 @@ enum ErrorCode {
     // A type annotation was found that did not start with a valid token
     E_INVALID_TYPE_ANNOTATION,
     // No identifier was found after the colon in a type annotation
-    E_MISSING_TYPE,
+    // E_MISSING_TYPE,
+
     // A type annotation was found without a matching right square bracket
     E_UNMATCHED_SQUARE_IN_TYPE,
     // A type annotation was found without a matching right angle bracket
