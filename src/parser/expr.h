@@ -2,6 +2,7 @@
 #define EXPR_H
 
 #include "../scanner/token.h"
+#include "annotation.h"
 #include <any>
 #include <memory>
 #include <vector>
@@ -23,11 +24,12 @@ public:
     class Access;
     class Grouping;
     class Identifier;
-    // TODO: Remove TypeIdent class.
-    // class TypeIdent;
     class Literal;
     class Array;
     class Tuple;
+
+    // An annotation representing the type of the expression. Set to nullptr, to be filled in by the type checker.
+    std::shared_ptr<Annotation> type_annotation = nullptr;
 
     virtual ~Expr() {}
 
@@ -45,7 +47,6 @@ public:
         virtual std::any visit_access_expr(Access* expr) = 0;
         virtual std::any visit_grouping_expr(Grouping* expr) = 0;
         virtual std::any visit_identifier_expr(Identifier* expr) = 0;
-        // virtual std::any visit_type_ident_expr(TypeIdent* expr) = 0;
         virtual std::any visit_literal_expr(Literal* expr) = 0;
         virtual std::any visit_array_expr(Array* expr) = 0;
         virtual std::any visit_tuple_expr(Tuple* expr) = 0;

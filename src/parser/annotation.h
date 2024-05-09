@@ -40,7 +40,8 @@ public:
 };
 
 /**
- * @brief A class annotation.
+ * @brief A segmented annotation.
+ * Segmented annotations consist of multiple classes separated by "::".
  *
  */
 class Annotation::Segmented : public Annotation {

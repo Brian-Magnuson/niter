@@ -7,6 +7,7 @@
 #include "decl.h"
 #include "expr.h"
 #include "stmt.h"
+#include <exception>
 #include <memory>
 #include <stack>
 #include <vector>
@@ -323,6 +324,14 @@ class Parser {
      * @throw ParserException If an error occurs while parsing the annotation. Will be caught by the statement() function.
      */
     std::shared_ptr<Annotation::Tuple> tuple_annotation();
+
+    /**
+     * @brief Resolves a segmented annotation to its fully qualified name.
+     * Useful if a using declaration is present.
+     *
+     * @param annotation A reference segmented annotation to resolve. Will be modified in place.
+     */
+    void resolve_annotation(std::shared_ptr<Annotation::Segmented>& annotation);
 
 public:
     // MARK: Interface

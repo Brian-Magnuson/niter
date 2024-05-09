@@ -515,6 +515,8 @@ std::shared_ptr<Annotation> Parser::segmented_annotation() {
         seg_type_annotation->classes.push_back(temp);
     } while (match({TOK_COLON_COLON}));
 
+    resolve_annotation(seg_type_annotation);
+
     while (check({TOK_STAR, TOK_LEFT_SQUARE})) {
         if (match({TOK_STAR})) {
             type_annotation = std::make_shared<Annotation::Pointer>(type_annotation);
@@ -596,6 +598,10 @@ std::shared_ptr<Annotation::Tuple> Parser::tuple_annotation() {
     }
 
     return std::make_shared<Annotation::Tuple>(tuple_annotations);
+}
+
+void Parser::resolve_annotation(std::shared_ptr<Annotation::Segmented>& /*annotation*/) {
+    // Right now, we don't need to do anything here.
 }
 
 std::vector<std::shared_ptr<Stmt>> Parser::parse() {
