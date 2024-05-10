@@ -6,8 +6,6 @@
 #include <utility>
 #include <vector>
 
-#define IS_TYPE(ptr, x) (std::dynamic_pointer_cast<x>(ptr) != nullptr)
-
 /**
  * @brief A class for all types in our type system.
  * Should be stored as a shared pointer.

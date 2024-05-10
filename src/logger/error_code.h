@@ -104,11 +104,17 @@ enum ErrorCode {
     E_INVALID_MAIN_SIGNATURE,
     // A symbol was declared with the same name in the same scope
     E_SYMBOL_ALREADY_DECLARED,
-    // A function was declared with the same name in the same scope
-    E_FUN_ALREADY_DECLARED,
+    // A namespace was introduced in a struct
+    E_NAMESPACE_IN_STRUCT,
+    // A struct was declared with the same name in the same scope
+    E_STRUCT_ALREADY_DECLARED,
 
     // Local type errors
     E_LOCAL_TYPE = 5000,
+    // A namespace was introduced in a non-global scope
+    E_NAMESPACE_IN_LOCAL_SCOPE,
+    // A struct was introduced in a non-global scope
+    E_STRUCT_IN_LOCAL_SCOPE,
 
     // Code generation errors
     E_CODEGEN = 6000,

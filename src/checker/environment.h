@@ -36,22 +36,26 @@ public:
     /**
      * @brief Adds a namespace to the current scope and enters it.
      * A namespace can only be added if the current scope is a namespace or the root.
+     * Namespaces can actually be opened with the same name in the same scope.
+     * In this case, new symbols will be added to the existing namespace.
      *
      * @param name The name of the namespace to add.
-     * @return true If the namespace was added successfully.
-     * @return false If the namespace cannot be added.
+     * @return ErrorCode 0 if the namespace was added successfully.
+     * E_NAMESPACE_IN_LOCAL_SCOPE if the namespace was added in a local scope.
+     * E_NAMESPACE_IN_STRUCT if the namespace was added in a struct.
      */
-    bool add_namespace(const std::string& name);
+    ErrorCode add_namespace(const std::string& name);
 
     /**
      * @brief Adds a struct to the current scope and enters it.
      * A struct can only be added if the current scope is the root, a namespace, or another struct.
      *
      * @param name The name of the struct to add.
-     * @return true If the struct was added successfully.
-     * @return false If the struct cannot be added.
+     * @return ErrorCode 0 if the struct was added successfully.
+     * E_STRUCT_ALREADY_DECLARED if the struct already exists in the current scope.
+     * E_STRUCT_IN_LOCAL_SCOPE if the struct was added in a local scope.
      */
-    bool add_struct(const std::string& name);
+    ErrorCode add_struct(const std::string& name);
 
     /**
      * @brief Adds a local scope to the enivironment.

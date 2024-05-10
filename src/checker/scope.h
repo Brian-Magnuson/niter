@@ -12,6 +12,7 @@
  */
 class Scope {
 public:
+    class Global;
     class Root;
     class Namespace;
     class Struct;
@@ -24,16 +25,28 @@ public:
 };
 
 /**
+ * @brief A base class representing a scope in the namespace tree.
+ * Can be a global scope, a namespace scope, or a struct scope.
+ * All global scopes have children.
+ * This class is not meant to be instantiated directly.
+ *
+ */
+class Scope::Global : public Scope {
+protected:
+    Global() = default;
+
+public:
+    std::unordered_map<std::string, std::shared_ptr<Scope>> children;
+};
+
+/**
  * @brief The root scope of the namespace tree.
  * It is similar to a namespace scope, but it has no parent.
  * There should only be one root scope in the namespace tree at the root.
  *
  */
-class Scope::Root : public Scope {
+class Scope::Root : public Scope::Global {
 public:
-    // The global namespaces contained in the root.
-    std::unordered_map<std::string, std::shared_ptr<Scope>> children;
-
     Root() = default;
 };
 
@@ -42,12 +55,10 @@ public:
  * Its children may be namespaces, structs, or local scopes.
  *
  */
-class Scope::Namespace : public Scope {
+class Scope::Namespace : public Scope::Global {
 public:
     // The parent scope of the namespace.
     std::shared_ptr<Scope> parent;
-    // The global scopes contained in the namespace.
-    std::unordered_map<std::string, std::shared_ptr<Scope>> children;
 
     Namespace(std::shared_ptr<Scope> parent)
         : parent(parent) {}
@@ -60,12 +71,10 @@ public:
  * It has an additional symbol table for the instance members.
  *
  */
-class Scope::Struct : public Scope {
+class Scope::Struct : public Scope::Global {
 public:
     // The parent scope of the struct.
     std::shared_ptr<Scope> parent;
-    // The structs contained in the struct.
-    std::unordered_map<std::string, std::shared_ptr<Scope>> children;
     // The non-static members of the struct.
     std::unordered_map<std::string, std::shared_ptr<Annotation>> instance_members;
 
