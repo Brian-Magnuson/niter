@@ -4,7 +4,15 @@
 #include "../parser/decl.h"
 #include "../parser/stmt.h"
 #include "environment.h"
+#include <any>
+#include <exception>
 #include <memory>
+
+/**
+ * @brief An exception for global type errors.
+ *
+ */
+class GlobalTypeException : public std::exception {};
 
 /**
  * @brief A class for the global type checker.
@@ -132,6 +140,13 @@ class GlobalChecker : public Stmt::Visitor, public Decl::Visitor {
 
 public:
     GlobalChecker(std::shared_ptr<Environment> environment) : environment(environment) {}
+
+    /**
+     * @brief Runs the global type checker on a list of statements.
+     *
+     * @param stmts The list of statements to check.
+     */
+    void type_check(std::vector<std::shared_ptr<Stmt>> stmts);
 };
 
 #endif // GLOBAL_CHECKER_H

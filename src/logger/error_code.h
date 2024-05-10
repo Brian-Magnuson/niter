@@ -102,6 +102,10 @@ enum ErrorCode {
     E_GLOBAL_TYPE = 4000,
     // The main function was found with the wrong signature
     E_INVALID_MAIN_SIGNATURE,
+    // A symbol was declared with the same name in the same scope
+    E_SYMBOL_ALREADY_DECLARED,
+    // A function was declared with the same name in the same scope
+    E_FUN_ALREADY_DECLARED,
 
     // Local type errors
     E_LOCAL_TYPE = 5000,

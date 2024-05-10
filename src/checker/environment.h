@@ -1,6 +1,7 @@
 #ifndef ENVIRONMENT_H
 #define ENVIRONMENT_H
 
+#include "../logger/error_code.h"
 #include "../parser/annotation.h"
 #include "../scanner/token.h"
 #include "scope.h"
@@ -81,10 +82,10 @@ public:
      *
      * @param name The name of the symbol to declare.
      * @param type The type of the symbol to declare.
-     * @return true If the symbol was declared successfully.
-     * @return false If the symbol cannot be declared.
+     * @return ErrorCode 0 if the symbol was declared successfully.
+     * E_SYMBOL_ALREADY_DECLARED if the symbol already exists in the current scope.
      */
-    bool declare_symbol(const std::string& name, std::shared_ptr<Annotation> type);
+    ErrorCode declare_symbol(const std::string& name, std::shared_ptr<Annotation> type);
 
     /**
      * @brief Retrieves the type of a symbol in the current scope.
