@@ -33,6 +33,20 @@ ErrorCode Environment::add_struct(const std::string& name) {
     }
 }
 
+void Environment::install_primitive_types() {
+    auto global_scope = std::dynamic_pointer_cast<Scope::Global>(global_tree);
+    std::vector<std::string> primitive_types = {
+        "i32",
+        "f64",
+        "bool",
+        "char",
+        "void",
+    };
+    for (auto& type : primitive_types) {
+        global_scope->children[type] = std::make_shared<Scope::Struct>(global_scope);
+    }
+}
+
 void Environment::increase_local_scope() {
     auto local_scope = std::make_shared<Scope::Local>(current_scope);
     current_scope = local_scope;

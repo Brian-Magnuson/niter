@@ -9,6 +9,8 @@
 #include <memory>
 #include <string>
 #include <tuple>
+#include <utility>
+#include <vector>
 
 /**
  * @brief A singleton class to store environment information for the type checkers.
@@ -21,6 +23,9 @@ class Environment {
     std::shared_ptr<Scope> global_tree;
     // The current scope in the namespace tree.
     std::shared_ptr<Scope> current_scope;
+
+    // A list of deferred types to be resolved later.
+    std::vector<std::pair<std::shared_ptr<Annotation>, std::shared_ptr<Scope>>> deferred_types;
 
     Environment() {
         reset();
@@ -62,6 +67,12 @@ public:
     ErrorCode add_struct(const std::string& name);
 
     /**
+     * @brief Adds the primitive types to the global scope.
+     *
+     */
+    void install_primitive_types();
+
+    /**
      * @brief Adds a local scope to the enivironment.
      * A local scope is added when a function is encountered.
      * Unlike global scopes, local scopes are removed when exited.
@@ -95,6 +106,24 @@ public:
     ErrorCode declare_symbol(const std::string& name, std::shared_ptr<Annotation> type);
 
     /**
+     * @brief Verifies that a type is valid and returns a pointer to the corresponding Scope::Struct if it is.
+     * That is, the type is either a primitive or references a struct that has been declared.
+     * Can be set to allow types to be deferred.
+     * When a type is deferred, a pointer to the type and scope will be saved for later resolution.
+     * Only the global checker should be deferring types.
+     *
+     * @param type The type to verify.
+     * @param allow_deferral Whether or not to allow the type to be deferred. Default is false.
+     * @param from_scope The scope from which the type is being verified. If nullptr, the current scope will be used. Default is nullptr.
+     * @return std::shared_ptr<Scope> A pointer to the Scope::Struct if the type is valid. Otherwise, nullptr.
+     */
+    std::shared_ptr<Scope::Struct> verify_type(
+        const std::shared_ptr<Annotation>& type,
+        bool allow_deferral = false,
+        std::shared_ptr<Scope> from_scope = nullptr
+    );
+
+    /**
      * @brief Retrieves the type of a symbol in the current scope.
      * If the symbol does not exist in the current scope, the parent scopes will be searched from the current scope to the root.
      * If the parent scopes do not contain the symbol, nullptr will be returned.
@@ -104,6 +133,15 @@ public:
      * @return std::shared_ptr<Annotation> The type of the symbol.
      */
     std::shared_ptr<Annotation> get_type(const std::string& name);
+
+    /**
+     * @brief Iterates through the list of deferred types and verifies them.
+     * Should be called by the global checker after all statements have been visited.
+     *
+     * @return true If the list is empty or all deferred types are valid.
+     * @return false If any deferred type is found to be invalid.
+     */
+    bool verify_deferred_types();
 
     /**
      * @brief Resets the environment to its initial state.
