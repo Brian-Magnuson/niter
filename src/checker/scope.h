@@ -20,6 +20,9 @@ public:
 
     virtual ~Scope() = default;
 
+    // The parent scope of the scope. If the scope is the root, the parent is nullptr.
+    std::shared_ptr<Scope> parent = nullptr;
+
     // The symbol table of the scope.
     std::unordered_map<std::string, std::shared_ptr<Annotation>> symbol_table;
 };
@@ -57,11 +60,9 @@ public:
  */
 class Scope::Namespace : public Scope::Global {
 public:
-    // The parent scope of the namespace.
-    std::shared_ptr<Scope> parent;
-
-    Namespace(std::shared_ptr<Scope> parent)
-        : parent(parent) {}
+    Namespace(std::shared_ptr<Scope> parent) {
+        this->parent = parent;
+    }
 };
 
 /**
@@ -78,8 +79,9 @@ public:
     // The non-static members of the struct.
     std::unordered_map<std::string, std::shared_ptr<Annotation>> instance_members;
 
-    Struct(std::shared_ptr<Scope> parent)
-        : parent(parent) {}
+    Struct(std::shared_ptr<Scope> parent) {
+        this->parent = parent;
+    }
 };
 
 /**
@@ -94,8 +96,9 @@ public:
     // The parent scope of the local scope.
     std::shared_ptr<Scope> parent;
 
-    Local(std::shared_ptr<Scope> parent)
-        : parent(parent) {}
+    Local(std::shared_ptr<Scope> parent) {
+        this->parent = parent;
+    }
 };
 
 #endif // SCOPE_H

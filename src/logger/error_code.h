@@ -133,7 +133,9 @@ enum ErrorCode {
     // A function was called with an invalid argument
     E_CONVERSION,
     // An error for testing purposes
-    E_TEST_ERROR
+    E_TEST_ERROR,
+    // The compiler attempted to exit the root scope
+    E_EXITED_ROOT_SCOPE,
 };
 
 #endif // ERROR_CODE_H

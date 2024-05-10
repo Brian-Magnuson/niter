@@ -22,6 +22,10 @@ class Environment {
     // The current scope in the namespace tree.
     std::shared_ptr<Scope> current_scope;
 
+    Environment() {
+        reset();
+    }
+
 public:
     /**
      * @brief Get the singleton instance of the Environment. Will create the instance if it does not exist.
@@ -61,11 +65,10 @@ public:
      * @brief Adds a local scope to the enivironment.
      * A local scope is added when a function is encountered.
      * Unlike global scopes, local scopes are removed when exited.
+     * This function shouldn't throw any errors.
      *
-     * @return true If the scope was added successfully.
-     * @return false If the scope cannot be added.
      */
-    bool increase_local_scope();
+    void increase_local_scope();
 
     /**
      * @brief Exits the current scope.
@@ -73,10 +76,10 @@ public:
      * If the current scope is a local scope, the local scope will be removed.
      * If the current scope is a namespace or struct, it will exit to the parent scope, but the current scope will not be removed.
      *
-     * @return true If the scope was exited successfully.
-     * @return false If the scope cannot be exited.
+     * @return ErrorCode 0 if the scope was exited successfully.
+     * E_EXITED_ROOT_SCOPE if the root scope was exited (should never happen).
      */
-    bool exit_scope();
+    ErrorCode exit_scope();
 
     /**
      * @brief Declares a new symbol in the current scope.
@@ -101,6 +104,13 @@ public:
      * @return std::shared_ptr<Annotation> The type of the symbol.
      */
     std::shared_ptr<Annotation> get_type(const std::string& name);
+
+    /**
+     * @brief Resets the environment to its initial state.
+     * Useful for testing purposes.
+     *
+     */
+    void reset();
 };
 
 #endif // ENVIRONMENT_H
