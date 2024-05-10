@@ -3,40 +3,22 @@
 
 #include "../parser/annotation.h"
 #include "../scanner/token.h"
+#include "scope.h"
 #include <map>
 #include <memory>
 #include <string>
 #include <tuple>
 
-enum class ScopeType {
-    // The root scope of the environment.
-    ROOT,
-    // A namespace scope.
-    NAMESPACE,
-    // A struct scope.
-    STRUCT,
-    // A local block scope.
-    LOCAL,
-};
-
 /**
  * @brief A singleton class to store environment information for the type checkers.
- * Includes a registry of all structs and functions.
- * Also tracks namespaces in a tree.
+ * Uses a namespace tree to store scopes.
  *
  */
 class Environment {
-    struct Scope {
-        ScopeType kind;
-        std::shared_ptr<Scope> parent;
-        std::map<std::string, std::shared_ptr<Annotation>> table;
-        std::map<std::string, std::shared_ptr<Scope>> children;
 
-        Scope(ScopeType kind, std::shared_ptr<Scope> parent)
-            : kind(kind), parent(parent) {}
-    };
-
+    // The root of the namespace tree.
     std::shared_ptr<Scope> global_tree;
+    // The current scope in the namespace tree.
     std::shared_ptr<Scope> current_scope;
 
 public:
@@ -45,28 +27,35 @@ public:
      *
      * @return Environment& A reference to the Environment singleton instance.
      */
-    static Environment&
-    inst() {
+    static Environment& inst() {
         static Environment instance;
         return instance;
     }
 
     /**
-     * @brief Adds a global scope to the enivironment.
-     * Adding a ROOT scope is not allowed.
-     * NAMESPACES may only be added to ROOT scopes or other NAMESPACES.
-     * STRUCTS may be added to ROOT, NAMESPACES, or other STRUCTS.
-     * Adding a LOCAL scope is not allowed. Use increase_local_scope() instead.
+     * @brief Adds a namespace to the current scope and enters it.
+     * A namespace can only be added if the current scope is a namespace or the root.
      *
-     * @param kind The kind of scope to add.
-     * @param name The name of the scope to add.
-     * @return true If the scope was added successfully.
-     * @return false If the scope cannot be added.
+     * @param name The name of the namespace to add.
+     * @return true If the namespace was added successfully.
+     * @return false If the namespace cannot be added.
      */
-    bool add_global_scope(ScopeType kind, const std::string& name);
+    bool add_namespace(const std::string& name);
+
+    /**
+     * @brief Adds a struct to the current scope and enters it.
+     * A struct can only be added if the current scope is the root, a namespace, or another struct.
+     *
+     * @param name The name of the struct to add.
+     * @return true If the struct was added successfully.
+     * @return false If the struct cannot be added.
+     */
+    bool add_struct(const std::string& name);
 
     /**
      * @brief Adds a local scope to the enivironment.
+     * A local scope is added when a function is encountered.
+     * Unlike global scopes, local scopes are removed when exited.
      *
      * @return true If the scope was added successfully.
      * @return false If the scope cannot be added.
@@ -74,23 +63,38 @@ public:
     bool increase_local_scope();
 
     /**
-     * @brief Removes the current local scope from the environment.
+     * @brief Exits the current scope.
+     * If the current scope is the root, it will not exit.
+     * If the current scope is a local scope, the local scope will be removed.
+     * If the current scope is a namespace or struct, it will exit to the parent scope, but the current scope will not be removed.
      *
-     * @return true If the scope was removed successfully.
-     * @return false If the scope cannot be removed.
+     * @return true If the scope was exited successfully.
+     * @return false If the scope cannot be exited.
      */
-    bool decrease_local_scope();
+    bool exit_scope();
 
     /**
-     * @brief Declares a local variable.
+     * @brief Declares a new symbol in the current scope.
+     * If the symbol already exists in the current scope, it will not be declared.
+     * If the current scope is a local scope, this information will be removed when the local scope is exited.
+     * If the current scope is a global scope, this information will be kept until the program ends or the environment is reset.
      *
-     * @param name The name of the variable to declare.
-     * @param annotation The type of the variable. Should not be auto.
-     * @return true If the variable was declared successfully.
-     * @return false If the variable cannot be declared.
+     * @param name The name of the symbol to declare.
+     * @param type The type of the symbol to declare.
+     * @return true If the symbol was declared successfully.
+     * @return false If the symbol cannot be declared.
      */
-    bool declare_local(const std::string& name, const std::shared_ptr<Annotation>& annotation);
+    bool declare_symbol(const std::string& name, std::shared_ptr<Annotation> type);
 
+    /**
+     * @brief Retrieves the type of a symbol in the current scope.
+     * If the symbol does not exist in the current scope, the parent scopes will be searched from the current scope to the root.
+     * If the parent scopes do not contain the symbol, nullptr will be returned.
+     * If the symbol happens to be of type `void` or `nil`, an annotation representing the type will be returned (not nullptr).
+     *
+     * @param name The name of the symbol to retrieve.
+     * @return std::shared_ptr<Annotation> The type of the symbol.
+     */
     std::shared_ptr<Annotation> get_type(const std::string& name);
 };
 
