@@ -39,7 +39,8 @@ protected:
     Global() = default;
 
 public:
-    std::unordered_map<std::string, std::shared_ptr<Scope>> children;
+    // The children of the scope.
+    std::unordered_map<std::string, std::shared_ptr<Scope::Global>> children;
 };
 
 /**

@@ -3,6 +3,7 @@
 
 #include "../logger/error_code.h"
 #include "../parser/annotation.h"
+#include "../parser/expr.h"
 #include "../scanner/token.h"
 #include "scope.h"
 #include <map>
@@ -20,9 +21,11 @@
 class Environment {
 
     // The root of the namespace tree.
-    std::shared_ptr<Scope> global_tree;
+    std::shared_ptr<Scope::Global> global_tree;
     // The current scope in the namespace tree.
     std::shared_ptr<Scope> current_scope;
+    // The current global scope in the namespace tree.
+    std::shared_ptr<Scope::Global> current_global_scope;
 
     // A list of deferred types to be resolved later.
     std::vector<std::pair<std::shared_ptr<Annotation>, std::shared_ptr<Scope>>> deferred_types;
@@ -31,13 +34,37 @@ class Environment {
         reset();
     }
 
+    /**
+     * @brief A symbol lookup function that searches downward in the namespace tree.
+     * Can be called with symbols of any length.
+     * Lookup starts from the current global scope and searches downward until the symbol is found.
+     * If any part of the symbol is not found, lookup fails.
+     * If first lookup fails, the function will try again from the root.
+     * If any part of the symbol is still not found, lookup fails and nullptr is returned.
+     *
+     * @param identifier The identifier of the symbol to look up.
+     * @return std::shared_ptr<Annotation> The type of the symbol if found. Otherwise, nullptr.
+     */
+    std::shared_ptr<Annotation> downward_lookup(std::shared_ptr<Expr::Identifier> identifier);
+
+    /**
+     * @brief A symbol lookup function that searches upward in the namespace tree.
+     * Upward search is used to find symbols only one token long (e.g. `x`, `y`, not `ns::x`).
+     * Lookup starts from the current scope and goes up to the root.
+     *
+     * @param identifier The identifier of the symbol to look up.
+     * @return std::shared_ptr<Annotation> The type of the symbol if found. Otherwise, nullptr.
+     */
+    std::shared_ptr<Annotation> upward_lookup(std::shared_ptr<Expr::Identifier> identifier);
+
 public:
     /**
      * @brief Get the singleton instance of the Environment. Will create the instance if it does not exist.
      *
      * @return Environment& A reference to the Environment singleton instance.
      */
-    static Environment& inst() {
+    static Environment&
+    inst() {
         static Environment instance;
         return instance;
     }
@@ -125,14 +152,14 @@ public:
 
     /**
      * @brief Retrieves the type of a symbol in the current scope.
-     * If the symbol does not exist in the current scope, the parent scopes will be searched from the current scope to the root.
-     * If the parent scopes do not contain the symbol, nullptr will be returned.
+     * If the symbol has namespaces, downward lookup will be used.
+     * If the symbol is only one token long, upward lookup will be used, then downward lookup if the symbol is not found.
      * If the symbol happens to be of type `void` or `nil`, an annotation representing the type will be returned (not nullptr).
      *
-     * @param name The name of the symbol to retrieve.
+     * @param identifier The identifier of the symbol to retrieve.
      * @return std::shared_ptr<Annotation> The type of the symbol.
      */
-    std::shared_ptr<Annotation> get_type(const std::string& name);
+    std::shared_ptr<Annotation> get_type(std::shared_ptr<Expr::Identifier> identifier);
 
     /**
      * @brief Iterates through the list of deferred types and verifies them.
