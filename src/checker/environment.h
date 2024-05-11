@@ -28,7 +28,7 @@ class Environment {
     std::shared_ptr<Scope::Global> current_global_scope;
 
     // A list of deferred types to be resolved later.
-    std::vector<std::pair<std::shared_ptr<Annotation>, std::shared_ptr<Scope>>> deferred_types;
+    std::vector<std::pair<std::shared_ptr<Annotation>, std::shared_ptr<Scope::Global>>> deferred_types;
 
     Environment() {
         reset();
@@ -133,7 +133,7 @@ public:
     ErrorCode declare_symbol(const std::string& name, std::shared_ptr<Annotation> type);
 
     /**
-     * @brief Verifies that a type is valid and returns a pointer to the corresponding Scope::Struct if it is.
+     * @brief Verifies that a type is valid.
      * That is, the type is either a primitive or references a struct that has been declared.
      * Can be set to allow types to be deferred.
      * When a type is deferred, a pointer to the type and scope will be saved for later resolution.
@@ -141,13 +141,14 @@ public:
      *
      * @param type The type to verify.
      * @param allow_deferral Whether or not to allow the type to be deferred. Default is false.
-     * @param from_scope The scope from which the type is being verified. If nullptr, the current scope will be used. Default is nullptr.
-     * @return std::shared_ptr<Scope> A pointer to the Scope::Struct if the type is valid. Otherwise, nullptr.
+     * @param from_scope The scope from which the type is being verified. If nullptr, the current global scope will be used. Default is nullptr.
+     * @return true If the type is valid.
+     * @return false If the type is invalid.
      */
-    std::shared_ptr<Scope::Struct> verify_type(
+    bool verify_type(
         const std::shared_ptr<Annotation>& type,
         bool allow_deferral = false,
-        std::shared_ptr<Scope> from_scope = nullptr
+        std::shared_ptr<Scope::Global> from_scope = nullptr
     );
 
     /**

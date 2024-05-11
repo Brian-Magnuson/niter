@@ -141,6 +141,76 @@ ErrorCode Environment::declare_symbol(const std::string& name, std::shared_ptr<A
     }
 }
 
+bool Environment::verify_type(const std::shared_ptr<Annotation>& type, bool allow_deferral, std::shared_ptr<Scope::Global> from_scope) {
+    if (from_scope == nullptr) {
+        from_scope = current_global_scope;
+    }
+
+    std::shared_ptr<Scope::Global> current = from_scope;
+
+    if (IS_TYPE(type, Annotation::Function)) {
+        auto fun_type = std::dynamic_pointer_cast<Annotation::Function>(type);
+        auto ret = verify_type(fun_type->ret, allow_deferral, from_scope);
+        if (!ret) {
+            return false;
+        }
+        for (auto& param : fun_type->params) {
+            ret = verify_type(param.second, allow_deferral, from_scope);
+            if (!ret) {
+                return false;
+            }
+        }
+        return true;
+    } else if (IS_TYPE(type, Annotation::Tuple)) {
+        auto tuple_type = std::dynamic_pointer_cast<Annotation::Tuple>(type);
+        for (auto& elem : tuple_type->elements) {
+            auto ret = verify_type(elem, allow_deferral, from_scope);
+            if (!ret) {
+                return false;
+            }
+        }
+        return true;
+    } else if (IS_TYPE(type, Annotation::Array)) {
+        auto array_type = std::dynamic_pointer_cast<Annotation::Array>(type);
+        return verify_type(array_type->name, allow_deferral, from_scope);
+    } else if (IS_TYPE(type, Annotation::Pointer)) {
+        auto pointer_type = std::dynamic_pointer_cast<Annotation::Pointer>(type);
+        return verify_type(pointer_type->name, allow_deferral, from_scope);
+    } else if (IS_TYPE(type, Annotation::Segmented)) {
+        // Perform a downward lookup
+        auto segmented_type = std::dynamic_pointer_cast<Annotation::Segmented>(type);
+        // Start from the from_scope
+        bool traversed = true;
+        for (auto& class_ : segmented_type->classes) {
+            auto it = current->children.find(class_->name);
+            if (it == current->children.end()) {
+                traversed = false;
+                break;
+            }
+            current = it->second;
+        }
+        if (traversed) {
+            return true;
+        }
+        // Try again from the root
+        traversed = true;
+        current = global_tree;
+        for (auto& class_ : segmented_type->classes) {
+            auto it = current->children.find(class_->name);
+            if (it == current->children.end()) {
+                traversed = false;
+                break;
+            }
+            current = it->second;
+        }
+        if (!traversed && allow_deferral) {
+            // Save the type and scope for later resolution
+            deferred_types.push_back({type, from_scope});
+        }
+        return traversed;
+    }
+}
+
 std::shared_ptr<Annotation> Environment::get_type(std::shared_ptr<Expr::Identifier> identifier) {
     std::shared_ptr<Annotation> found_type = nullptr;
     // If the identifier is a single token, we can look up the type in the global scope.
@@ -153,6 +223,15 @@ std::shared_ptr<Annotation> Environment::get_type(std::shared_ptr<Expr::Identifi
         found_type = downward_lookup(identifier);
     }
     return found_type;
+}
+
+bool Environment::verify_deferred_types() {
+    for (auto& deferred_type : deferred_types) {
+        if (!verify_type(deferred_type.first, false, deferred_type.second)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 void Environment::reset() {
