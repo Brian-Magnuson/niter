@@ -5,7 +5,7 @@
 #include "../parser/annotation.h"
 #include "../parser/expr.h"
 #include "../scanner/token.h"
-#include "scope.h"
+#include "node.h"
 #include <map>
 #include <memory>
 #include <string>
@@ -21,41 +21,18 @@
 class Environment {
 
     // The root of the namespace tree.
-    std::shared_ptr<Scope::Global> global_tree;
+    std::shared_ptr<Node::RootScope> global_tree;
     // The current scope in the namespace tree.
-    std::shared_ptr<Scope> current_scope;
-    // The current global scope in the namespace tree.
-    std::shared_ptr<Scope::Global> current_global_scope;
+    std::shared_ptr<Node::Scope> current_scope;
 
     // A list of deferred types to be resolved later.
-    std::vector<std::pair<std::shared_ptr<Annotation>, std::shared_ptr<Scope::Global>>> deferred_types;
+    std::vector<std::pair<std::shared_ptr<Annotation>, std::shared_ptr<Node::Scope>>> deferred_types;
+
+    // TODO: We recently switched from using the Scope class to using the Node class. Check documentation comments if they still make sense.
 
     Environment() {
         reset();
     }
-
-    /**
-     * @brief A symbol lookup function that searches downward in the namespace tree.
-     * Can be called with symbols of any length.
-     * Lookup starts from the current global scope and searches downward until the symbol is found.
-     * If any part of the symbol is not found, lookup fails.
-     * If first lookup fails, the function will try again from the root.
-     * If any part of the symbol is still not found, lookup fails and nullptr is returned.
-     *
-     * @param identifier The identifier of the symbol to look up.
-     * @return std::shared_ptr<Annotation> The type of the symbol if found. Otherwise, nullptr.
-     */
-    std::shared_ptr<Annotation> downward_lookup(std::shared_ptr<Expr::Identifier> identifier);
-
-    /**
-     * @brief A symbol lookup function that searches upward in the namespace tree.
-     * Upward search is used to find symbols only one token long (e.g. `x`, `y`, not `ns::x`).
-     * Lookup starts from the current scope and goes up to the root.
-     *
-     * @param identifier The identifier of the symbol to look up.
-     * @return std::shared_ptr<Annotation> The type of the symbol if found. Otherwise, nullptr.
-     */
-    std::shared_ptr<Annotation> upward_lookup(std::shared_ptr<Expr::Identifier> identifier);
 
 public:
     /**
@@ -148,7 +125,7 @@ public:
     bool verify_type(
         const std::shared_ptr<Annotation>& type,
         bool allow_deferral = false,
-        std::shared_ptr<Scope::Global> from_scope = nullptr
+        std::shared_ptr<Node::Scope> from_scope = nullptr
     );
 
     /**
