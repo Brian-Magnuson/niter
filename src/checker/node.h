@@ -7,6 +7,10 @@
 #include <unordered_map>
 #include <vector>
 
+/**
+ * @brief A base class for nodes in the namespace tree.
+ *
+ */
 class Node {
 public:
     class Scope;
@@ -18,15 +22,30 @@ public:
 
     virtual ~Node() = default;
 
+    // The parent scope of this node. This is never a variable since variables do not have children.
     std::shared_ptr<Scope> parent = nullptr;
 };
 
+/**
+ * @brief A base class for a scope in the namespace tree.
+ * A scope is a node that can contain other nodes.
+ *
+ */
 class Node::Scope : public Node {
 public:
     virtual ~Scope() = default;
 
+    // The children of this scope. The key is the name of the child.
     std::unordered_map<std::string, std::shared_ptr<Node>> children;
 
+    /**
+     * @brief Perform an upward lookup for a node with the given name.
+     * Should only be called with a name that is not a path.
+     * An upward lookup starts at the current scope and goes up the tree until it finds a node with the given name.
+     *
+     * @param name The name of the node to look for.
+     * @return std::shared_ptr<Node> A shared pointer to the node if it is found, or nullptr if it is not found.
+     */
     std::shared_ptr<Node> upward_lookup(const std::string& name) {
         if (children.find(name) != children.end()) {
             return children[name];
@@ -37,6 +56,15 @@ public:
         }
     }
 
+    /**
+     * @brief Perform a downward lookup for a node with the given path.
+     * A downward lookup starts at the current scope and attempts to follow a path to the desired node.
+     * If lookup fails at any point along the path, the lookup is restarted from the parent scope.
+     *
+     * @param path The path to the node to look for. A path is a series of namespaces followed by a name.
+     * E.g. for A::B::c, the path is {"A", "B", "c"}.
+     * @return std::shared_ptr<Node> A shared pointer to the node if it is found, or nullptr if it is not found.
+     */
     std::shared_ptr<Node> downward_lookup(const std::vector<std::string>& path) {
         if (path.empty()) {
             return nullptr;
@@ -70,11 +98,21 @@ public:
     };
 };
 
+/**
+ * @brief A special scope that is the root of the namespace tree.
+ * Its parent is always nullptr.
+ *
+ */
 class Node::RootScope : public Node::Scope {
 public:
     RootScope() = default;
 };
 
+/**
+ * @brief A scope that represents a namespace.
+ * Namespaces can contain variables, structs, local scopes, and other namespaces.
+ *
+ */
 class Node::NamespaceScope : public Node::Scope {
 public:
     NamespaceScope(std::shared_ptr<Scope> parent) {
@@ -82,6 +120,13 @@ public:
     }
 };
 
+/**
+ * @brief A scope that represents a struct.
+ * Has an extra map for instance members.
+ * Its children represent static members.
+ * Structs can contain variables, local scopes, and other structs, but not namespaces.
+ *
+ */
 class Node::StructScope : public Node::Scope {
 public:
     std::unordered_map<std::string, std::shared_ptr<Annotation>> instance_members;
@@ -91,6 +136,15 @@ public:
     }
 };
 
+/**
+ * @brief A scope that represents a local scope.
+ * Local scopes are used for blocks of code, such as function bodies.
+ * They are not permanent members of the namespace tree.
+ * They can contain variables and other local scopes.
+ * Local scopes do not have names and global scopes do not track local scopes as children.
+ * As a result, when a current scope moves out of a local scope, the local scope becomes inaccessible.
+ *
+ */
 class Node::LocalScope : public Node::Scope {
 public:
     LocalScope(std::shared_ptr<Scope> parent) {
@@ -98,6 +152,13 @@ public:
     }
 };
 
+/**
+ * @brief A node that represents a variable.
+ * Despite the name "Variable", this class is also used for function pointers.
+ * Variables may not have children, though they still track their parent scope.
+ * Variables may have an annotation, which is used to store type information.
+ *
+ */
 class Node::Variable : public Node {
 public:
     std::shared_ptr<Annotation> annotation;
