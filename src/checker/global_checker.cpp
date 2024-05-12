@@ -15,8 +15,16 @@ std::any GlobalChecker::visit_eof_stmt(Stmt::EndOfFile* /* stmt */) {
 }
 
 std::any GlobalChecker::visit_var_decl(Decl::Var* decl) {
-    // This function is only ever called on global variable declarations.
-    // The visit_fun_decl function does not call this function.
+
+    // Verify the type of the variable, defer if necessary
+    Environment::inst().verify_type(decl->type_annotation, true);
+    // Declare the variable
+    ErrorCode result = Environment::inst().declare_variable(decl->name.lexeme, decl->type_annotation);
+    if (result == E_SYMBOL_ALREADY_DECLARED) {
+        ErrorLogger::inst().log_error(decl->name, result, "A symbol with the same name has already been declared in this scope.");
+    } else if (result != 0) {
+        ErrorLogger::inst().log_error(decl->name, result, "An error occurred while declaring the variable.");
+    }
 
     return std::any();
 }
@@ -36,10 +44,13 @@ std::any GlobalChecker::visit_fun_decl(Decl::Fun* decl) {
         }
     }
 
+    // Verify the return type of the function, defer if necessary
+    Environment::inst().verify_type(decl->type_annotation, true);
+
     ErrorCode result = Environment::inst().declare_variable(decl->name.lexeme, decl->type_annotation);
 
     if (result == E_SYMBOL_ALREADY_DECLARED) {
-        ErrorLogger::inst().log_error(decl->name, result, "A function with the same name has already been declared in this scope.");
+        ErrorLogger::inst().log_error(decl->name, result, "A symbol with the same name has already been declared in this scope.");
     } else if (result != 0) {
         ErrorLogger::inst().log_error(decl->name, result, "An error occurred while declaring the function.");
     }
