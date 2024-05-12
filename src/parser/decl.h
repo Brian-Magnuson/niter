@@ -3,13 +3,10 @@
 
 #include "../scanner/token.h"
 #include "annotation.h"
-#include "expr.h"
-#include "stmt.h"
+
 #include <any>
 #include <memory>
-
-class Expr;
-class Stmt;
+#include <vector>
 
 /**
  * @brief An abstract base class for all declarations.
@@ -22,6 +19,9 @@ public:
     class Struct;
 
     virtual ~Decl() {}
+
+    // The location of the declaration. Useful for error messages.
+    Location location;
 
     /**
      * @brief A visitor class for declarations.
@@ -37,6 +37,10 @@ public:
     virtual std::any accept(Visitor* visitor) = 0;
 };
 
+// Include the other declaration classes.
+#include "expr.h"
+#include "stmt.h"
+
 /**
  * @brief A class representing a variable declaration.
  * E.g. var a = 1; const msg = "Hello, world!";
@@ -44,7 +48,9 @@ public:
  */
 class Decl::Var : public Decl {
 public:
-    Var(TokenType declarer, Token name, std::shared_ptr<Annotation> type_annotation, std::shared_ptr<Expr> initializer) : declarer(declarer), name(name), type_annotation(type_annotation), initializer(initializer) {}
+    Var(TokenType declarer, Token name, std::shared_ptr<Annotation> type_annotation, std::shared_ptr<Expr> initializer) : declarer(declarer), name(name), type_annotation(type_annotation), initializer(initializer) {
+        location = name.location;
+    }
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_var_decl(this);
@@ -74,7 +80,9 @@ public:
         std::shared_ptr<Annotation> type_annotation,
         std::vector<std::shared_ptr<Stmt>> body
     )
-        : declarer(declarer), name(name), parameters(parameters), type_annotation(type_annotation), body(body) {}
+        : declarer(declarer), name(name), parameters(parameters), type_annotation(type_annotation), body(body) {
+        location = name.location;
+    }
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_fun_decl(this);
@@ -99,7 +107,9 @@ public:
  */
 class Decl::Struct : public Decl {
 public:
-    Struct(TokenType declarer, Token name, std::vector<std::shared_ptr<Decl::Var>> fields) : declarer(declarer), name(name), fields(fields) {}
+    Struct(TokenType declarer, Token name, std::vector<std::shared_ptr<Decl::Var>> fields) : declarer(declarer), name(name), fields(fields) {
+        location = name.location;
+    }
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_struct_decl(this);

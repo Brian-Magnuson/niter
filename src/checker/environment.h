@@ -95,6 +95,15 @@ public:
     ErrorCode exit_scope();
 
     /**
+     * @brief Checks if the current scope is a global scope.
+     * Any scope that is not a local scope is considered a global scope.
+     *
+     * @return true If the current scope is a global scope.
+     * @return false If the current scope is a local scope.
+     */
+    bool in_global_scope();
+
+    /**
      * @brief Declares a new variable in the current scope.
      * If the symbol already exists in the current scope, it will not be declared.
      * If the current scope is a local scope, this information will be removed when the local scope is exited.

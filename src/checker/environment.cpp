@@ -39,6 +39,7 @@ void Environment::install_primitive_types() {
         "bool",
         "char",
         "void",
+        "auto"
     };
     for (auto& type : primitive_types) {
         global_tree->children[type] = std::make_shared<Node::StructScope>(global_tree);
@@ -59,11 +60,15 @@ ErrorCode Environment::exit_scope() {
     }
 }
 
+bool Environment::in_global_scope() {
+    return !IS_TYPE(current_scope, Node::LocalScope);
+}
+
 ErrorCode Environment::declare_variable(const std::string& name, std::shared_ptr<Annotation> type) {
     if (HAS_KEY(current_scope->children, name)) {
         return E_SYMBOL_ALREADY_DECLARED;
     } else {
-        current_scope->children[name] = std::make_shared<Node::Variable>(type);
+        current_scope->children[name] = std::make_shared<Node::Variable>(current_scope, type);
         return (ErrorCode)0;
     }
 }
@@ -137,6 +142,9 @@ bool Environment::verify_type(const std::shared_ptr<Annotation>& type, bool allo
             return false;
         }
     }
+
+    // Unreachable
+    return false;
 }
 
 std::shared_ptr<Annotation> Environment::get_type(std::shared_ptr<Expr::Identifier> identifier) {

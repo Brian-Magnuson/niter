@@ -61,11 +61,11 @@ void ErrorLogger::print_pretty_error(const Location& location, const std::string
     */
 }
 
-void ErrorLogger::log_error(const Token& token, ErrorCode error_code, const std::string& message) {
+void ErrorLogger::log_error(const Location& location, ErrorCode error_code, const std::string& message) {
     auto new_message = std::to_string(static_cast<int>(error_code)) + " " + message;
     errors.push_back(error_code);
     if (printing_enabled)
-        print_pretty_error(token.location, new_message);
+        print_pretty_error(location, new_message);
 }
 
 void ErrorLogger::reset() {

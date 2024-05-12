@@ -74,7 +74,7 @@ public:
         Scope* current = this;
         // E.g. if the identifier is A::B::c, attempt to enter scope A, then B, then find c.
         // Iterate through all but the last element in the path. E.g. for A::B::c, iterate through A and B.
-        for (int i = 0; i < path.size() - 1; i++) {
+        for (unsigned i = 0; i < path.size() - 1; i++) {
             // See if 'A' exists in the current scope.
             if (current->children.find(path[i]) == current->children.end()) {
                 found = false;
@@ -163,7 +163,7 @@ class Node::Variable : public Node {
 public:
     std::shared_ptr<Annotation> annotation;
 
-    Variable(std::shared_ptr<Scope> parent) {
+    Variable(std::shared_ptr<Scope> parent, std::shared_ptr<Annotation> annotation) : annotation(annotation) {
         this->parent = parent;
     }
 };

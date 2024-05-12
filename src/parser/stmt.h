@@ -1,12 +1,9 @@
 #ifndef STMT_H
 #define STMT_H
 
-#include "decl.h"
-#include "expr.h"
+#include "../scanner/token.h"
 #include <any>
-
-class Decl;
-class Expr;
+#include <memory>
 
 /**
  * @brief An abstract base class for all statements.
@@ -27,6 +24,9 @@ public:
     class EndOfFile;
 
     virtual ~Stmt() {}
+
+    // The location of the statement. Useful for error messages.
+    Location location;
 
     /**
      * @brief A visitor class for statements.
@@ -49,6 +49,9 @@ public:
     virtual std::any accept(Visitor* visitor) = 0;
 };
 
+#include "decl.h"
+#include "expr.h"
+
 /**
  * @brief A class representing a declaration statement.
  * Declaration statements are statements that consist of a declaration.
@@ -56,7 +59,9 @@ public:
  */
 class Stmt::Declaration : public Stmt {
 public:
-    Declaration(std::shared_ptr<Decl> declaration) : declaration(declaration) {}
+    Declaration(std::shared_ptr<Decl> declaration) : declaration(declaration) {
+        location = declaration->location;
+    }
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_declaration_stmt(this);
@@ -73,7 +78,9 @@ public:
  */
 class Stmt::Expression : public Stmt {
 public:
-    Expression(std::shared_ptr<Expr> expression) : expression(expression) {}
+    Expression(std::shared_ptr<Expr> expression) : expression(expression) {
+        location = expression->location;
+    }
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_expression_stmt(this);
@@ -90,7 +97,9 @@ public:
  */
 class Stmt::Return : public Stmt {
 public:
-    Return(Token keyword, std::shared_ptr<Expr> value) : keyword(keyword), value(value) {}
+    Return(Token keyword, std::shared_ptr<Expr> value) : keyword(keyword), value(value) {
+        location = keyword.location;
+    }
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_return_stmt(this);
@@ -112,7 +121,9 @@ public:
  */
 class Stmt::Print : public Stmt {
 public:
-    Print(std::shared_ptr<Expr> value) : value(value) {}
+    Print(std::shared_ptr<Expr> value) : value(value) {
+        location = value->location;
+    }
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_print_stmt(this);

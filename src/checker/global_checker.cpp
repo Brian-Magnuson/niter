@@ -21,9 +21,9 @@ std::any GlobalChecker::visit_var_decl(Decl::Var* decl) {
     // Declare the variable
     ErrorCode result = Environment::inst().declare_variable(decl->name.lexeme, decl->type_annotation);
     if (result == E_SYMBOL_ALREADY_DECLARED) {
-        ErrorLogger::inst().log_error(decl->name, result, "A symbol with the same name has already been declared in this scope.");
+        ErrorLogger::inst().log_error(decl->name.location, result, "A symbol with the same name has already been declared in this scope.");
     } else if (result != 0) {
-        ErrorLogger::inst().log_error(decl->name, result, "An error occurred while declaring the variable.");
+        ErrorLogger::inst().log_error(decl->name.location, result, "An error occurred while declaring the variable.");
     }
 
     return std::any();
@@ -33,14 +33,14 @@ std::any GlobalChecker::visit_fun_decl(Decl::Fun* decl) {
     if (decl->name.lexeme == "main") {
         // The function declarer must be "fun"
         if (decl->declarer != KW_FUN) {
-            ErrorLogger::inst().log_error(decl->name, E_INVALID_MAIN_SIGNATURE, "The main function must be declared with the 'fun' keyword.");
+            ErrorLogger::inst().log_error(decl->name.location, E_INVALID_MAIN_SIGNATURE, "The main function must be declared with the 'fun' keyword.");
         }
 
         // The function type must be either fun() => i32 or fun(int, char**) => i32
         auto type_annotation = decl->type_annotation->to_string();
 
         if (type_annotation != "fun() => i32" && type_annotation != "fun(int, char**) => i32") {
-            ErrorLogger::inst().log_error(decl->name, E_INVALID_MAIN_SIGNATURE, "The main function must have the signature 'fun() => i32' or 'fun(int, char**) => i32'.");
+            ErrorLogger::inst().log_error(decl->name.location, E_INVALID_MAIN_SIGNATURE, "The main function must have the signature 'fun() => i32' or 'fun(int, char**) => i32'.");
         }
     }
 
@@ -50,9 +50,9 @@ std::any GlobalChecker::visit_fun_decl(Decl::Fun* decl) {
     ErrorCode result = Environment::inst().declare_variable(decl->name.lexeme, decl->type_annotation);
 
     if (result == E_SYMBOL_ALREADY_DECLARED) {
-        ErrorLogger::inst().log_error(decl->name, result, "A symbol with the same name has already been declared in this scope.");
+        ErrorLogger::inst().log_error(decl->name.location, result, "A symbol with the same name has already been declared in this scope.");
     } else if (result != 0) {
-        ErrorLogger::inst().log_error(decl->name, result, "An error occurred while declaring the function.");
+        ErrorLogger::inst().log_error(decl->name.location, result, "An error occurred while declaring the function.");
     }
 
     return std::any();
@@ -60,7 +60,7 @@ std::any GlobalChecker::visit_fun_decl(Decl::Fun* decl) {
 
 std::any GlobalChecker::visit_struct_decl(Decl::Struct* decl) {
     // TODO: Implement
-    ErrorLogger::inst().log_error(decl->name, E_UNIMPLEMENTED, "Struct declarations are not yet implemented.");
+    ErrorLogger::inst().log_error(decl->name.location, E_UNIMPLEMENTED, "Struct declarations are not yet implemented.");
     return std::any();
 }
 

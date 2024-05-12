@@ -2,13 +2,15 @@
 #include "../logger/logger.h"
 #include <iostream>
 
-std::any LocalChecker::visit_declaration_stmt(Stmt::Declaration* /* stmt */) {
-    // TODO: Implement this
+std::any LocalChecker::visit_declaration_stmt(Stmt::Declaration* stmt) {
+    // Visit the declaration
+    return stmt->declaration->accept(this);
     return std::any();
 }
 
 std::any LocalChecker::visit_expression_stmt(Stmt::Expression* /* stmt */) {
-    // TODO: Implement this
+    // Expression statements are not allowed in global scope
+
     return std::any();
 }
 
@@ -93,6 +95,11 @@ std::any LocalChecker::visit_access_expr(Expr::Access* /* expr */) {
     return std::any();
 }
 
+std::any LocalChecker::visit_grouping_expr(Expr::Grouping* /* expr */) {
+    // TODO: Implement this
+    return std::any();
+}
+
 std::any LocalChecker::visit_identifier_expr(Expr::Identifier* /* expr */) {
     // TODO: Implement this
     return std::any();
@@ -103,12 +110,12 @@ std::any LocalChecker::visit_literal_expr(Expr::Literal* /* expr */) {
     return std::any();
 }
 
-std::any visit_array_expr(Expr::Array* /* expr */) {
+std::any LocalChecker::visit_array_expr(Expr::Array* /* expr */) {
     // TODO: Implement this
     return std::any();
 }
 
-std::any visit_tuple_expr(Expr::Tuple* /* expr */) {
+std::any LocalChecker::visit_tuple_expr(Expr::Tuple* /* expr */) {
     // TODO: Implement this
     return std::any();
 }

@@ -53,7 +53,7 @@ Token& Parser::consume(TokenType tok_type, ErrorCode error_code, const std::stri
     if (check({tok_type})) {
         return advance();
     }
-    ErrorLogger::inst().log_error(peek(), error_code, message);
+    ErrorLogger::inst().log_error(peek().location, error_code, message);
     throw ParserException();
 }
 
@@ -119,7 +119,7 @@ std::shared_ptr<Stmt> Parser::declaration_statement() {
     if (match({KW_VAR, KW_CONST})) {
         decl = var_decl();
         if (!match({TOK_NEWLINE, TOK_SEMICOLON})) {
-            ErrorLogger::inst().log_error(peek(), E_MISSING_STMT_END, "Expected newline or ';' after declaration.");
+            ErrorLogger::inst().log_error(peek().location, E_MISSING_STMT_END, "Expected newline or ';' after declaration.");
             throw ParserException();
         }
     } else if (match({KW_FUN})) {
@@ -127,7 +127,7 @@ std::shared_ptr<Stmt> Parser::declaration_statement() {
     } else {
         // This function is called in statement where it is verified that the current token signifies a declaration.
         // Therefore, this should be unreachable.
-        ErrorLogger::inst().log_error(peek(), E_UNREACHABLE, "Unreachable code reached in declaration statement.");
+        ErrorLogger::inst().log_error(peek().location, E_UNREACHABLE, "Unreachable code reached in declaration statement.");
         throw ParserException();
     }
     return std::make_shared<Stmt::Declaration>(decl);
@@ -136,7 +136,7 @@ std::shared_ptr<Stmt> Parser::declaration_statement() {
 std::shared_ptr<Stmt> Parser::expression_statement() {
     std::shared_ptr<Expr> expr = expression();
     if (!check({TOK_EOF}) && !match({TOK_NEWLINE, TOK_SEMICOLON})) {
-        ErrorLogger::inst().log_error(peek(), E_MISSING_STMT_END, "Expected newline or ';' after expression.");
+        ErrorLogger::inst().log_error(peek().location, E_MISSING_STMT_END, "Expected newline or ';' after expression.");
     }
     return std::make_shared<Stmt::Expression>(expr);
 }
@@ -144,7 +144,7 @@ std::shared_ptr<Stmt> Parser::expression_statement() {
 std::shared_ptr<Stmt> Parser::print_statement() {
     std::shared_ptr<Expr> value = expression();
     if (!match({TOK_NEWLINE, TOK_SEMICOLON})) {
-        ErrorLogger::inst().log_error(peek(), E_MISSING_STMT_END, "Expected newline or ';' after expression.");
+        ErrorLogger::inst().log_error(peek().location, E_MISSING_STMT_END, "Expected newline or ';' after expression.");
     }
     return std::make_shared<Stmt::Print>(value);
 }
@@ -156,7 +156,7 @@ std::shared_ptr<Stmt> Parser::return_statement() {
         value = expression();
     }
     if (!match({TOK_NEWLINE, TOK_SEMICOLON})) {
-        ErrorLogger::inst().log_error(peek(), E_MISSING_STMT_END, "Expected newline or ';' after return statement.");
+        ErrorLogger::inst().log_error(peek().location, E_MISSING_STMT_END, "Expected newline or ';' after return statement.");
     }
     return std::make_shared<Stmt::Return>(keyword, value);
 }
@@ -206,7 +206,7 @@ std::shared_ptr<Decl> Parser::fun_decl() {
     if (!check({TOK_RIGHT_PAREN})) {
         auto variable = std::dynamic_pointer_cast<Decl::Var>(var_decl());
         if (variable == nullptr) {
-            ErrorLogger::inst().log_error(peek(), E_IMPOSSIBLE, "var_decl did not return a variable in function declaration.");
+            ErrorLogger::inst().log_error(peek().location, E_IMPOSSIBLE, "var_decl did not return a variable in function declaration.");
             throw ParserException();
         }
         parameters.push_back(variable);
@@ -217,7 +217,7 @@ std::shared_ptr<Decl> Parser::fun_decl() {
             }
             variable = std::dynamic_pointer_cast<Decl::Var>(var_decl());
             if (variable == nullptr) {
-                ErrorLogger::inst().log_error(peek(), E_IMPOSSIBLE, "var_decl did not return a variable in function declaration.");
+                ErrorLogger::inst().log_error(peek().location, E_IMPOSSIBLE, "var_decl did not return a variable in function declaration.");
                 throw ParserException();
             }
             parameters.push_back(std::dynamic_pointer_cast<Decl::Var>(variable));
@@ -387,7 +387,7 @@ std::shared_ptr<Expr> Parser::call_expr() {
                 }
                 arguments.push_back(expression());
                 if (arguments.size() > 255) {
-                    ErrorLogger::inst().log_error(peek(), E_TOO_MANY_ARGS, "Cannot have more than 255 arguments.");
+                    ErrorLogger::inst().log_error(peek().location, E_TOO_MANY_ARGS, "Cannot have more than 255 arguments.");
                     throw ParserException();
                 }
             }
@@ -430,6 +430,7 @@ std::shared_ptr<Expr> Parser::primary_expr() {
         return expr;
     }
     if (match({TOK_LEFT_SQUARE})) {
+        Token& bracket = previous();
         grouping_tokens.push(TOK_RIGHT_SQUARE);
         std::vector<std::shared_ptr<Expr>> elements;
         if (!check({TOK_RIGHT_SQUARE})) {
@@ -443,15 +444,16 @@ std::shared_ptr<Expr> Parser::primary_expr() {
         }
 
         consume(TOK_RIGHT_SQUARE, E_UNMATCHED_LEFT_SQUARE, "Expected ']' after array.");
-        return std::make_shared<Expr::Array>(elements);
+        return std::make_shared<Expr::Array>(elements, bracket);
     }
 
     if (match({TOK_LEFT_PAREN})) {
+        Token& paren = previous();
         grouping_tokens.push(TOK_RIGHT_PAREN);
         std::vector<std::shared_ptr<Expr>> expressions;
         if (match({TOK_RIGHT_PAREN})) {
             // Empty tuple
-            return std::make_shared<Expr::Tuple>(expressions); // expressions is empty
+            return std::make_shared<Expr::Tuple>(expressions, paren); // expressions is empty
         }
         // There must be at least one expression if it's a tuple, so "(,)" is invalid
         expressions.push_back(expression());
@@ -464,12 +466,12 @@ std::shared_ptr<Expr> Parser::primary_expr() {
                 expressions.push_back(expression());
             }
             consume(TOK_RIGHT_PAREN, E_UNMATCHED_PAREN_IN_TUPLE, "Expected ')' after tuple.");
-            return std::make_shared<Expr::Tuple>(expressions);
+            return std::make_shared<Expr::Tuple>(expressions, paren);
         }
         consume(TOK_RIGHT_PAREN, E_UNMATCHED_PAREN_IN_GROUPING, "Expected ')' after expression.");
         return expressions[0];
     }
-    ErrorLogger::inst().log_error(peek(), E_NOT_AN_EXPRESSION, "Expected expression.");
+    ErrorLogger::inst().log_error(peek().location, E_NOT_AN_EXPRESSION, "Expected expression.");
     throw ParserException();
 }
 
@@ -484,7 +486,7 @@ std::shared_ptr<Annotation> Parser::annotation() {
     } else if (match({TOK_LEFT_PAREN})) {
         type_annotation = tuple_annotation();
     } else {
-        ErrorLogger::inst().log_error(peek(), E_INVALID_TYPE_ANNOTATION, "Expected valid type annotation.");
+        ErrorLogger::inst().log_error(peek().location, E_INVALID_TYPE_ANNOTATION, "Expected valid type annotation.");
         throw ParserException();
     }
     return type_annotation;
@@ -575,7 +577,7 @@ std::shared_ptr<Annotation::Tuple> Parser::tuple_annotation() {
     if (match({TOK_RIGHT_PAREN})) {
         if (match({TOK_DOUBLE_ARROW})) {
             // This is an error
-            ErrorLogger::inst().log_error(previous(), E_ARROW_IN_NON_FUN_TYPE, "Function type must be specified with 'fun' keyword.");
+            ErrorLogger::inst().log_error(previous().location, E_ARROW_IN_NON_FUN_TYPE, "Function type must be specified with 'fun' keyword.");
             throw ParserException();
         }
         return std::make_shared<Annotation::Tuple>(tuple_annotations);
@@ -593,7 +595,7 @@ std::shared_ptr<Annotation::Tuple> Parser::tuple_annotation() {
 
     if (match({TOK_DOUBLE_ARROW})) {
         // This is an error
-        ErrorLogger::inst().log_error(previous(), E_ARROW_IN_NON_FUN_TYPE, "Function type must be specified with 'fun' keyword.");
+        ErrorLogger::inst().log_error(previous().location, E_ARROW_IN_NON_FUN_TYPE, "Function type must be specified with 'fun' keyword.");
         throw ParserException();
     }
 

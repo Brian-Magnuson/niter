@@ -60,11 +60,11 @@ public:
     /**
      * @brief Logs an error message to the console.
      *
-     * @param token The relevant token.
+     * @param location The location of the error.
      * @param error_code The error code.
      * @param message The error message.
      */
-    void log_error(const Token& token, ErrorCode error_code, const std::string& message);
+    void log_error(const Location& location, ErrorCode error_code, const std::string& message);
 
     /**
      * @brief Changes the output stream to log errors to.

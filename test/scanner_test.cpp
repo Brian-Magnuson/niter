@@ -28,7 +28,7 @@ TEST_CASE("Logger", "[logger]") {
     // std::stringstream ss;
     // logger.set_ostream(ss);
     logger.set_printing_enabled(false);
-    logger.log_error(token, E_CONFIG, "Test error message");
+    logger.log_error(token.location, E_CONFIG, "Test error message");
 
     REQUIRE(logger.get_errors().size() == 1);
     REQUIRE(logger.get_errors().at(0) == E_CONFIG);
@@ -76,8 +76,8 @@ TEST_CASE("Log in order", "[logger]") {
     // std::stringstream ss;
     // logger.set_ostream(ss);
     logger.set_printing_enabled(false);
-    logger.log_error(token, E_CONFIG, "Test error message");
-    logger.log_error(token2, E_TEST_ERROR, "Test error message 2");
+    logger.log_error(token.location, E_CONFIG, "Test error message");
+    logger.log_error(token2.location, E_TEST_ERROR, "Test error message 2");
 
     REQUIRE(logger.get_errors().size() == 2);
     CHECK(logger.get_errors().at(0) == E_CONFIG);

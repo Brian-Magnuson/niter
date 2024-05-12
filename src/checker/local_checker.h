@@ -127,7 +127,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      * @param decl The struct declaration to visit.
      * @return std::any The empty std::any value always.
      */
-    std::any visit_struct_decl(Decl::Struct* decl) override { return std::any(); }
+    std::any visit_struct_decl(Decl::Struct* /* decl */) override { return std::any(); }
 
     /**
      * @brief Visits an assignment expression and determines if the assignment is valid.

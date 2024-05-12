@@ -7,9 +7,6 @@
 #include <memory>
 #include <vector>
 
-class Decl;
-class Stmt;
-
 /**
  * @brief An abstract base class for all expressions.
  *
@@ -30,6 +27,8 @@ public:
 
     // An annotation representing the type of the expression. Set to nullptr, to be filled in by the type checker.
     std::shared_ptr<Annotation> type_annotation = nullptr;
+    // A location useful for error messages.
+    Location location;
 
     virtual ~Expr() {}
 
@@ -70,7 +69,9 @@ public:
 class Expr::Assign : public Expr {
 public:
     Assign(std::shared_ptr<Expr> left, Token op, std::shared_ptr<Expr> right)
-        : left(left), op(op), right(right) {}
+        : left(left), op(op), right(right) {
+        location = op.location;
+    }
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_assign_expr(this);
@@ -92,7 +93,9 @@ public:
 class Expr::Logical : public Expr {
 public:
     Logical(std::shared_ptr<Expr> left, Token op, std::shared_ptr<Expr> right)
-        : left(left), op(op), right(right) {}
+        : left(left), op(op), right(right) {
+        location = op.location;
+    }
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_logical_expr(this);
@@ -114,7 +117,9 @@ public:
 class Expr::Binary : public Expr {
 public:
     Binary(std::shared_ptr<Expr> left, Token op, std::shared_ptr<Expr> right)
-        : left(left), op(op), right(right) {}
+        : left(left), op(op), right(right) {
+        location = op.location;
+    }
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_binary_expr(this);
@@ -134,7 +139,9 @@ public:
  */
 class Expr::Unary : public Expr {
 public:
-    Unary(Token op, std::shared_ptr<Expr> right) : op(op), right(right) {}
+    Unary(Token op, std::shared_ptr<Expr> right) : op(op), right(right) {
+        location = op.location;
+    }
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_unary_expr(this);
@@ -156,7 +163,9 @@ public:
 class Expr::Access : public Expr {
 public:
     Access(std::shared_ptr<Expr> left, Token op, std::shared_ptr<Expr> right)
-        : left(left), op(op), right(right) {}
+        : left(left), op(op), right(right) {
+        location = op.location;
+    }
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_access_expr(this);
@@ -179,7 +188,9 @@ public:
 class Expr::Call : public Expr {
 public:
     Call(std::shared_ptr<Expr> callee, Token paren, std::vector<std::shared_ptr<Expr>> arguments)
-        : callee(callee), paren(paren), arguments(arguments) {}
+        : callee(callee), paren(paren), arguments(arguments) {
+        location = paren.location;
+    }
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_call_expr(this);
@@ -200,7 +211,9 @@ public:
  */
 class Expr::Grouping : public Expr {
 public:
-    Grouping(std::shared_ptr<Expr> expression) : expression(expression) {}
+    Grouping(std::shared_ptr<Expr> expression) : expression(expression) {
+        location = expression->location;
+    }
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_grouping_expr(this);
@@ -218,8 +231,12 @@ public:
  */
 class Expr::Identifier : public Expr {
 public:
-    Identifier(std::vector<Token> tokens) : tokens(tokens) {}
-    Identifier(Token token) : tokens({token}) {}
+    Identifier(std::vector<Token> tokens) : tokens(tokens) {
+        location = tokens[0].location;
+    }
+    Identifier(Token token) : tokens({token}) {
+        location = token.location;
+    }
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_identifier_expr(this);
@@ -249,7 +266,9 @@ public:
  */
 class Expr::Literal : public Expr {
 public:
-    Literal(Token token) : token(token) {}
+    Literal(Token token) : token(token) {
+        location = token.location;
+    }
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_literal_expr(this);
@@ -266,11 +285,15 @@ public:
  */
 class Expr::Array : public Expr {
 public:
-    Array(std::vector<std::shared_ptr<Expr>> elements) : elements(elements) {}
+    Array(std::vector<std::shared_ptr<Expr>> elements, Token bracket) : bracket(bracket), elements(elements) {
+        location = bracket.location;
+    }
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_array_expr(this);
     }
+    // The token representing the opening bracket.
+    Token bracket;
 
     // The elements of the array.
     std::vector<std::shared_ptr<Expr>> elements;
@@ -287,7 +310,9 @@ public:
  */
 class Expr::Tuple : public Expr {
 public:
-    Tuple(std::vector<std::shared_ptr<Expr>> elements) : elements(elements) {}
+    Tuple(std::vector<std::shared_ptr<Expr>> elements, Token paren) : elements(elements), paren(paren) {
+        location = paren.location;
+    }
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_tuple_expr(this);
@@ -295,6 +320,8 @@ public:
 
     // The elements of the tuple.
     std::vector<std::shared_ptr<Expr>> elements;
+    // The token representing the opening parenthesis.
+    Token paren;
 };
 
 #endif // EXPR_H

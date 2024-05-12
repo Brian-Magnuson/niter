@@ -115,6 +115,8 @@ enum ErrorCode {
     E_NAMESPACE_IN_LOCAL_SCOPE,
     // A struct was introduced in a non-global scope
     E_STRUCT_IN_LOCAL_SCOPE,
+    // An expression statement was found in global space
+    E_GLOBAL_EXPRESSION,
 
     // Code generation errors
     E_CODEGEN = 6000,
