@@ -59,7 +59,7 @@ ErrorCode Environment::exit_scope() {
     }
 }
 
-ErrorCode Environment::declare_symbol(const std::string& name, std::shared_ptr<Annotation> type) {
+ErrorCode Environment::declare_variable(const std::string& name, std::shared_ptr<Annotation> type) {
     if (HAS_KEY(current_scope->children, name)) {
         return E_SYMBOL_ALREADY_DECLARED;
     } else {
@@ -74,6 +74,7 @@ bool Environment::verify_type(const std::shared_ptr<Annotation>& type, bool allo
     }
 
     if (IS_TYPE(type, Annotation::Function)) {
+        // Annotations of the form `fun(t, t) -> t`
         auto fun_type = std::dynamic_pointer_cast<Annotation::Function>(type);
         auto ret = verify_type(fun_type->ret, allow_deferral, from_scope);
         if (!ret) {
@@ -87,6 +88,7 @@ bool Environment::verify_type(const std::shared_ptr<Annotation>& type, bool allo
         }
         return true;
     } else if (IS_TYPE(type, Annotation::Tuple)) {
+        // Annotations of the form `(t, t, t)`
         auto tuple_type = std::dynamic_pointer_cast<Annotation::Tuple>(type);
         for (auto& elem : tuple_type->elements) {
             auto ret = verify_type(elem, allow_deferral, from_scope);
@@ -96,14 +98,18 @@ bool Environment::verify_type(const std::shared_ptr<Annotation>& type, bool allo
         }
         return true;
     } else if (IS_TYPE(type, Annotation::Array)) {
+        // Annotations of the form `t[]`
         auto array_type = std::dynamic_pointer_cast<Annotation::Array>(type);
         return verify_type(array_type->name, allow_deferral, from_scope);
     } else if (IS_TYPE(type, Annotation::Pointer)) {
+        // Annotations of the form `t*`
         auto pointer_type = std::dynamic_pointer_cast<Annotation::Pointer>(type);
         return verify_type(pointer_type->name, allow_deferral, from_scope);
     } else if (IS_TYPE(type, Annotation::Segmented)) {
+        // Annotations of the form `t<t>::t<t>`
         auto segmented_type = std::dynamic_pointer_cast<Annotation::Segmented>(type);
         std::vector<std::string> path;
+        // Verify each type argument in the segmented type.
         for (auto& class_ : segmented_type->classes) {
             path.push_back(class_->name);
             // If any of the type arguments are invalid, return false.
@@ -113,7 +119,14 @@ bool Environment::verify_type(const std::shared_ptr<Annotation>& type, bool allo
                 }
             }
         }
-        auto node = from_scope->downward_lookup(path);
+        // If there is only one class in the segmented type, we can perform an upward lookup.
+        std::shared_ptr<Node> node = nullptr;
+        if (path.size() == 1) {
+            node = from_scope->upward_lookup(path[0]);
+        }
+        if (node == nullptr) {
+            node = from_scope->downward_lookup(path);
+        }
         // If allow_deferral is true, we can defer the type if it is not found.
         if (node != nullptr) {
             return true;

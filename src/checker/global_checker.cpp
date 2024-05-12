@@ -36,7 +36,7 @@ std::any GlobalChecker::visit_fun_decl(Decl::Fun* decl) {
         }
     }
 
-    ErrorCode result = Environment::inst().declare_symbol(decl->name.lexeme, decl->type_annotation);
+    ErrorCode result = Environment::inst().declare_variable(decl->name.lexeme, decl->type_annotation);
 
     if (result == E_SYMBOL_ALREADY_DECLARED) {
         ErrorLogger::inst().log_error(decl->name, result, "A function with the same name has already been declared in this scope.");

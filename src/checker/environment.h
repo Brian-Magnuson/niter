@@ -28,8 +28,6 @@ class Environment {
     // A list of deferred types to be resolved later.
     std::vector<std::pair<std::shared_ptr<Annotation>, std::shared_ptr<Node::Scope>>> deferred_types;
 
-    // TODO: We recently switched from using the Scope class to using the Node class. Check documentation comments if they still make sense.
-
     Environment() {
         reset();
     }
@@ -97,17 +95,17 @@ public:
     ErrorCode exit_scope();
 
     /**
-     * @brief Declares a new symbol in the current scope.
+     * @brief Declares a new variable in the current scope.
      * If the symbol already exists in the current scope, it will not be declared.
      * If the current scope is a local scope, this information will be removed when the local scope is exited.
      * If the current scope is a global scope, this information will be kept until the program ends or the environment is reset.
      *
      * @param name The name of the symbol to declare.
-     * @param type The type of the symbol to declare.
-     * @return ErrorCode 0 if the symbol was declared successfully.
+     * @param type The type of the variable to declare.
+     * @return ErrorCode 0 if the variable was declared successfully.
      * E_SYMBOL_ALREADY_DECLARED if the symbol already exists in the current scope.
      */
-    ErrorCode declare_symbol(const std::string& name, std::shared_ptr<Annotation> type);
+    ErrorCode declare_variable(const std::string& name, std::shared_ptr<Annotation> type);
 
     /**
      * @brief Verifies that a type is valid.
@@ -129,13 +127,13 @@ public:
     );
 
     /**
-     * @brief Retrieves the type of a symbol in the current scope.
+     * @brief Retrieves the type of a variable in the current scope.
      * If the symbol has namespaces, downward lookup will be used.
      * If the symbol is only one token long, upward lookup will be used, then downward lookup if the symbol is not found.
      * If the symbol happens to be of type `void` or `nil`, an annotation representing the type will be returned (not nullptr).
      *
-     * @param identifier The identifier of the symbol to retrieve.
-     * @return std::shared_ptr<Annotation> The type of the symbol.
+     * @param identifier The identifier of the variable to retrieve.
+     * @return std::shared_ptr<Annotation> The type of the symbol. If the symbol is not found (or the symbol does not name a variable), nullptr will be returned.
      */
     std::shared_ptr<Annotation> get_type(std::shared_ptr<Expr::Identifier> identifier);
 
