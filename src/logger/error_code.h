@@ -117,6 +117,10 @@ enum ErrorCode {
     E_STRUCT_IN_LOCAL_SCOPE,
     // An expression statement was found in global space
     E_GLOBAL_EXPRESSION,
+    // A return statement was found outside of a function
+    E_GLOBAL_RETURN,
+    // A print statement was found with a non-string argument
+    E_PUTS_WITHOUT_STRING,
 
     // Code generation errors
     E_CODEGEN = 6000,
