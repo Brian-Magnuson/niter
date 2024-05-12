@@ -220,6 +220,11 @@ std::shared_ptr<Decl> Parser::fun_decl() {
                 ErrorLogger::inst().log_error(peek().location, E_IMPOSSIBLE, "var_decl did not return a variable in function declaration.");
                 throw ParserException();
             }
+            // Parameters are not allowed to have a type annotation of `auto`
+            if (variable->type_annotation->to_string() == "auto") {
+                ErrorLogger::inst().log_error(variable->name.location, E_AUTO_IN_PARAM, "Parameters cannot have type 'auto'.");
+                throw ParserException();
+            }
             parameters.push_back(std::dynamic_pointer_cast<Decl::Var>(variable));
             type_annotation->params.push_back({declarer == KW_VAR, variable->type_annotation});
         }

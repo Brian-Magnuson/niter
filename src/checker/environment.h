@@ -95,6 +95,13 @@ public:
     ErrorCode exit_scope();
 
     /**
+     * @brief Exits all local scopes.
+     * Useful when an error occurs and the local scopes need to be removed.
+     *
+     */
+    void exit_all_local_scopes();
+
+    /**
      * @brief Checks if the current scope is a global scope.
      * Any scope that is not a local scope is considered a global scope.
      *
@@ -110,11 +117,12 @@ public:
      * If the current scope is a global scope, this information will be kept until the program ends or the environment is reset.
      *
      * @param name The name of the symbol to declare.
+     * @param declarer The type of the token that declared the variable.
      * @param type The type of the variable to declare.
      * @return ErrorCode 0 if the variable was declared successfully.
      * E_SYMBOL_ALREADY_DECLARED if the symbol already exists in the current scope.
      */
-    ErrorCode declare_variable(const std::string& name, std::shared_ptr<Annotation> type);
+    ErrorCode declare_variable(const std::string& name, TokenType declarer, std::shared_ptr<Annotation> type);
 
     /**
      * @brief Verifies that a type is valid.

@@ -60,15 +60,21 @@ ErrorCode Environment::exit_scope() {
     }
 }
 
+void Environment::exit_all_local_scopes() {
+    while (!IS_TYPE(current_scope, Node::RootScope)) {
+        exit_scope();
+    }
+}
+
 bool Environment::in_global_scope() {
     return !IS_TYPE(current_scope, Node::LocalScope);
 }
 
-ErrorCode Environment::declare_variable(const std::string& name, std::shared_ptr<Annotation> type) {
+ErrorCode Environment::declare_variable(const std::string& name, TokenType declarer, std::shared_ptr<Annotation> type) {
     if (HAS_KEY(current_scope->children, name)) {
         return E_SYMBOL_ALREADY_DECLARED;
     } else {
-        current_scope->children[name] = std::make_shared<Node::Variable>(current_scope, type);
+        current_scope->children[name] = std::make_shared<Node::Variable>(current_scope, declarer, type);
         return (ErrorCode)0;
     }
 }

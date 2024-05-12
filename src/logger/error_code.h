@@ -93,6 +93,8 @@ enum ErrorCode {
     E_NO_LPAREN_IN_FUN_DECL,
     // A function declaration was found without a right parenthesis
     E_UNMATCHED_PAREN_IN_PARAMS,
+    // A function declaration parameter was found without a type annotation
+    E_AUTO_IN_PARAM,
     // A function declaration was found without a left brace
     E_NO_LBRACE_IN_FUN_DECL,
     // A function declaration was found without a right brace
@@ -115,12 +117,30 @@ enum ErrorCode {
     E_NAMESPACE_IN_LOCAL_SCOPE,
     // A struct was introduced in a non-global scope
     E_STRUCT_IN_LOCAL_SCOPE,
+    // A function was introduced in a non-global scope
+    E_FUN_IN_LOCAL_SCOPE,
     // An expression statement was found in global space
     E_GLOBAL_EXPRESSION,
     // A return statement was found outside of a function
     E_GLOBAL_RETURN,
     // A print statement was found with a non-string argument
     E_PUTS_WITHOUT_STRING,
+    // A variable was declared without an initializer
+    E_AUTO_WITHOUT_INITIALIZER,
+    // A constant was declared without an initializer
+    E_UNINITIALIZED_CONST,
+    // A type annotation could not be resolved
+    E_UNKNOWN_TYPE,
+    // An assignment was found with incompatible types
+    E_INCOMPATIBLE_TYPES,
+    // A function was found to have multiple parameters with the same name
+    E_DUPLICATE_PARAM_NAME,
+    // A function was found with a return statement with an incompatible type
+    E_RETURN_INCOMPATIBLE,
+    // A return statement with a value was found in a void function
+    E_RETURN_IN_VOID_FUN,
+    // A return statement was not found in a non-void function
+    E_NO_RETURN_IN_NON_VOID_FUN,
 
     // Code generation errors
     E_CODEGEN = 6000,
@@ -130,6 +150,8 @@ enum ErrorCode {
 
     // Compiler malfunction errors
     E_MALFUNCTION = 9000,
+    // An unknown error occurred
+    E_UNKNOWN,
     // Statement was reached that should be unreachable. Typically used when a series of conditional checks do not catch every case.
     E_UNREACHABLE,
     // Statement was reached that should be impossible. Typically used when a function does not behave as expected.
@@ -138,6 +160,8 @@ enum ErrorCode {
     E_UNIMPLEMENTED,
     // A function was called with an invalid argument
     E_CONVERSION,
+    // Any cast failed
+    E_ANY_CAST,
     // An error for testing purposes
     E_TEST_ERROR,
     // The compiler attempted to exit the root scope

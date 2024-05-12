@@ -81,16 +81,143 @@ std::any LocalChecker::visit_eof_stmt(Stmt::EndOfFile* stmt) {
 }
 
 std::any LocalChecker::visit_var_decl(Decl::Var* decl) {
-    // Log error with location
-    // TODO: Implement variable declarations
-    ErrorLogger::inst().log_error(decl->location, E_UNIMPLEMENTED, "Variable declarations are not yet implemented.");
+    // Handle the case where the initializer is not present
+    if (decl->initializer == nullptr) {
+        // Ensure the type annotation is not auto and the declarer is not const.
+        if (decl->type_annotation->to_string() == "auto") {
+            ErrorLogger::inst().log_error(decl->name.location, E_AUTO_WITHOUT_INITIALIZER, "Cannot infer type without an initializer.");
+            throw LocalTypeException();
+        }
+        if (decl->declarer == KW_CONST) {
+            ErrorLogger::inst().log_error(decl->name.location, E_UNINITIALIZED_CONST, "Cannot declare a constant without an initializer.");
+            throw LocalTypeException();
+        }
+    } else {
+        // Get the type of the initializer
+        std::shared_ptr<Annotation> init_type = std::any_cast<std::shared_ptr<Annotation>>(decl->initializer->accept(this));
+
+        // If the type annotation is auto, set it to the type of the initializer
+        if (decl->type_annotation->to_string() == "auto") {
+            decl->type_annotation = init_type;
+        } else {
+            // Verify that the type of the initializer matches the type annotation
+            if (decl->type_annotation->to_string() != init_type->to_string()) {
+                ErrorLogger::inst().log_error(decl->name.location, E_INCOMPATIBLE_TYPES, "Cannot convert from " + init_type->to_string() + " to " + decl->type_annotation->to_string() + ".");
+                throw LocalTypeException();
+            }
+        }
+    }
+
+    // Verify the type of the variable, do not defer
+    bool type_verified = Environment::inst().verify_type(decl->type_annotation);
+    if (!type_verified) {
+        ErrorLogger::inst().log_error(decl->name.location, E_UNKNOWN_TYPE, "Could not resolve type annotation.");
+        throw LocalTypeException();
+    }
+
+    // Declare the variable
+    ErrorCode result = Environment::inst().declare_variable(decl->name.lexeme, decl->declarer, decl->type_annotation);
+
+    if (result == E_SYMBOL_ALREADY_DECLARED) {
+        ErrorLogger::inst().log_error(decl->name.location, result, "A symbol with the same name has already been declared in this scope.");
+        throw LocalTypeException();
+    } else if (result != 0) {
+        ErrorLogger::inst().log_error(decl->name.location, result, "An error occurred while declaring the variable.");
+        throw LocalTypeException();
+    }
+
     return std::any();
 }
 
 std::any LocalChecker::visit_fun_decl(Decl::Fun* decl) {
-    // Log error with location
-    // TODO: Implement function declarations
-    ErrorLogger::inst().log_error(decl->location, E_UNIMPLEMENTED, "Function declarations are not yet implemented.");
+    // Function declarations are not allowed in local scope
+    if (!Environment::inst().in_global_scope()) {
+        ErrorLogger::inst().log_error(decl->name.location, E_FUN_IN_LOCAL_SCOPE, "Function declarations are not allowed in local scope.");
+        throw LocalTypeException();
+    }
+
+    // Declare the function
+    ErrorCode result = Environment::inst().declare_variable(decl->name.lexeme, decl->declarer, decl->type_annotation);
+    if (result == E_SYMBOL_ALREADY_DECLARED) {
+        ErrorLogger::inst().log_error(decl->name.location, result, "A symbol with the same name has already been declared in this scope.");
+        throw LocalTypeException();
+    } else if (result != 0) {
+        ErrorLogger::inst().log_error(decl->name.location, result, "An error occurred while declaring the function.");
+        throw LocalTypeException();
+    }
+
+    // We could verify the entire function pointer, but then we'd get less specific error messages
+    // So we'll just verify the return type and the parameter types separately
+    auto fun_type = std::dynamic_pointer_cast<Annotation::Function>(decl->type_annotation);
+
+    std::shared_ptr<Annotation> ret_type = fun_type->ret;
+    if (!Environment::inst().verify_type(ret_type)) {
+        ErrorLogger::inst().log_error(decl->name.location, E_UNKNOWN_TYPE, "Could not resolve return type annotation.");
+        throw LocalTypeException();
+    }
+
+    // Increase the local scope
+    Environment::inst().increase_local_scope();
+
+    for (unsigned i = 0; i < decl->parameters.size(); i++) {
+        // Verify the type of the parameter, do not defer
+        bool type_verified = Environment::inst().verify_type(decl->parameters[i]->type_annotation);
+        if (!type_verified) {
+            ErrorLogger::inst().log_error(decl->name.location, E_UNKNOWN_TYPE, "Could not resolve type annotation.");
+            throw LocalTypeException();
+        }
+        // The type annotation won't be `auto` by the way; the parser already checks for that
+
+        // Declare the parameter
+        ErrorCode result = Environment::inst().declare_variable(
+            decl->parameters[i]->name.lexeme,
+            decl->parameters[i]->declarer,
+            decl->parameters[i]->type_annotation
+        );
+
+        if (result == E_SYMBOL_ALREADY_DECLARED) {
+            // We just increased the local scope, so the only way this could happen is if there are multiple parameters with the same name
+            ErrorLogger::inst().log_error(decl->parameters[i]->name.location, E_DUPLICATE_PARAM_NAME, "A parameter with the same name has already been declared here.");
+            throw LocalTypeException();
+        } else if (result != 0) {
+            ErrorLogger::inst().log_error(decl->parameters[i]->name.location, result, "An error occurred while declaring the parameter.");
+            throw LocalTypeException();
+        }
+    }
+
+    // Increase the local scope
+    Environment::inst().increase_local_scope();
+
+    // Verify the body of the function
+    // If any statement returns a non-empty any, either the statement is a return statement or is a block containing one
+    // Verify the return statement types and log the appropriate error messages
+
+    bool has_return = false;
+    for (auto& stmt : decl->body) {
+        std::any stmt_type = stmt->accept(this);
+        if (stmt_type.has_value()) {
+            has_return = true;
+            if (fun_type->ret->to_string() == "void") {
+                ErrorLogger::inst().log_error(stmt->location, E_RETURN_IN_VOID_FUN, "Function with return type 'void' cannot return a value.");
+                throw LocalTypeException();
+            } else {
+                std::shared_ptr<Annotation> ret_type = std::any_cast<std::shared_ptr<Annotation>>(stmt_type);
+                if (ret_type->to_string() != fun_type->ret->to_string()) {
+                    ErrorLogger::inst().log_error(stmt->location, E_RETURN_INCOMPATIBLE, "Cannot convert from " + ret_type->to_string() + " to return type " + fun_type->ret->to_string() + ".");
+                    throw LocalTypeException();
+                }
+            }
+        }
+    }
+    if (!has_return && fun_type->ret->to_string() != "void") {
+        ErrorLogger::inst().log_error(decl->name.location, E_NO_RETURN_IN_NON_VOID_FUN, "Function with non-void return type must return a value.");
+        throw LocalTypeException();
+    }
+
+    // Exit both local scopes
+    Environment::inst().exit_scope();
+    Environment::inst().exit_scope();
+
     return std::any();
 }
 
@@ -176,8 +303,12 @@ void LocalChecker::type_check(std::vector<std::shared_ptr<Stmt>> stmts) {
         try {
             stmt->accept(this);
         } catch (const LocalTypeException&) {
-            // Do nothing
+            Environment::inst().exit_all_local_scopes();
+        } catch (const std::bad_any_cast& e) {
+            ErrorLogger::inst().log_error(stmt->location, E_ANY_CAST, "Any cast failed in local type checking.");
+            std::cerr << e.what() << std::endl;
         } catch (const std::exception& e) {
+            ErrorLogger::inst().log_error(stmt->location, E_UNKNOWN, "An error occurred while type checking the statement.");
             std::cerr << e.what() << std::endl;
         }
     }

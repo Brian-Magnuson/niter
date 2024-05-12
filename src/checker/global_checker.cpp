@@ -19,7 +19,7 @@ std::any GlobalChecker::visit_var_decl(Decl::Var* decl) {
     // Verify the type of the variable, defer if necessary
     Environment::inst().verify_type(decl->type_annotation, true);
     // Declare the variable
-    ErrorCode result = Environment::inst().declare_variable(decl->name.lexeme, decl->type_annotation);
+    ErrorCode result = Environment::inst().declare_variable(decl->name.lexeme, decl->declarer, decl->type_annotation);
     if (result == E_SYMBOL_ALREADY_DECLARED) {
         ErrorLogger::inst().log_error(decl->name.location, result, "A symbol with the same name has already been declared in this scope.");
     } else if (result != 0) {
@@ -47,7 +47,7 @@ std::any GlobalChecker::visit_fun_decl(Decl::Fun* decl) {
     // Verify the return type of the function, defer if necessary
     Environment::inst().verify_type(decl->type_annotation, true);
 
-    ErrorCode result = Environment::inst().declare_variable(decl->name.lexeme, decl->type_annotation);
+    ErrorCode result = Environment::inst().declare_variable(decl->name.lexeme, decl->declarer, decl->type_annotation);
 
     if (result == E_SYMBOL_ALREADY_DECLARED) {
         ErrorLogger::inst().log_error(decl->name.location, result, "A symbol with the same name has already been declared in this scope.");
@@ -70,7 +70,11 @@ void GlobalChecker::type_check(std::vector<std::shared_ptr<Stmt>> stmts) {
             stmt->accept(this);
         } catch (const GlobalTypeException&) {
             // Do nothing
+        } catch (const std::bad_any_cast& e) {
+            ErrorLogger::inst().log_error(stmt->location, E_ANY_CAST, "Any cast failed in global type checking.");
+            std::cerr << e.what() << std::endl;
         } catch (const std::exception& e) {
+            ErrorLogger::inst().log_error(stmt->location, E_UNKNOWN, "An error occurred while type checking the statement.");
             std::cerr << e.what() << std::endl;
         }
     }

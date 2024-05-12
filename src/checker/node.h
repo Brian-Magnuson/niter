@@ -2,6 +2,7 @@
 #define NODE_H
 
 #include "../parser/annotation.h"
+#include "../scanner/token.h"
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -161,9 +162,14 @@ public:
  */
 class Node::Variable : public Node {
 public:
+    TokenType declarer;
     std::shared_ptr<Annotation> annotation;
 
-    Variable(std::shared_ptr<Scope> parent, std::shared_ptr<Annotation> annotation) : annotation(annotation) {
+    Variable(
+        std::shared_ptr<Scope> parent,
+        TokenType declarer,
+        std::shared_ptr<Annotation> annotation
+    ) : declarer(declarer), annotation(annotation) {
         this->parent = parent;
     }
 };
