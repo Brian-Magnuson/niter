@@ -4,6 +4,7 @@
 /**
  * @brief An enum to name the different error codes that can be thrown by the compiler.
  *  Error codes are prefixed with E or W, where E represents an error, and W represents a warning.
+ * Note: Error codes are named based on what the compiler *observes*, not what is disallowed.
  */
 enum ErrorCode {
 
@@ -133,6 +134,8 @@ enum ErrorCode {
     E_UNKNOWN_TYPE,
     // An assignment was found with incompatible types
     E_INCOMPATIBLE_TYPES,
+    // An array was found with inconsistent types
+    E_INCONSISTENT_ARRAY_TYPES,
     // A function was found to have multiple parameters with the same name
     E_DUPLICATE_PARAM_NAME,
     // A function was found with a return statement with an incompatible type
@@ -141,6 +144,8 @@ enum ErrorCode {
     E_RETURN_IN_VOID_FUN,
     // A return statement was not found in a non-void function
     E_NO_RETURN_IN_NON_VOID_FUN,
+    // An expression was interpreted as a literal, but the literal was not recognized
+    E_UNRECOGNIZED_LITERAL,
 
     // Code generation errors
     E_CODEGEN = 6000,

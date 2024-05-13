@@ -39,7 +39,6 @@ void Environment::install_primitive_types() {
         "bool",
         "char",
         "void",
-        "auto"
     };
     for (auto& type : primitive_types) {
         global_tree->children[type] = std::make_shared<Node::StructScope>(global_tree);

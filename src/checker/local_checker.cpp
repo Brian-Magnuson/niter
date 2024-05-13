@@ -1,5 +1,6 @@
 #include "local_checker.h"
 #include "../logger/logger.h"
+#include "../utility/utils.h"
 #include <iostream>
 
 std::any LocalChecker::visit_declaration_stmt(Stmt::Declaration* stmt) {
@@ -96,19 +97,15 @@ std::any LocalChecker::visit_var_decl(Decl::Var* decl) {
         // Get the type of the initializer
         std::shared_ptr<Annotation> init_type = std::any_cast<std::shared_ptr<Annotation>>(decl->initializer->accept(this));
 
-        // If the type annotation is auto, set it to the type of the initializer
-        if (decl->type_annotation->to_string() == "auto") {
-            decl->type_annotation = init_type;
-        } else {
-            // Verify that the type of the initializer matches the type annotation
-            if (decl->type_annotation->to_string() != init_type->to_string()) {
-                ErrorLogger::inst().log_error(decl->name.location, E_INCOMPATIBLE_TYPES, "Cannot convert from " + init_type->to_string() + " to " + decl->type_annotation->to_string() + ".");
-                throw LocalTypeException();
-            }
+        // Verify that the type of the initializer matches the type annotation
+        if (!decl->type_annotation->is_compatible_with(init_type)) {
+            ErrorLogger::inst().log_error(decl->name.location, E_INCOMPATIBLE_TYPES, "Cannot convert from " + init_type->to_string() + " to " + decl->type_annotation->to_string() + ".");
+            throw LocalTypeException();
         }
     }
 
     // Verify the type of the variable, do not defer
+    // Note that `auto` not installed as a primitive type. If any part of the type is `auto`, verification will fail.
     bool type_verified = Environment::inst().verify_type(decl->type_annotation);
     if (!type_verified) {
         ErrorLogger::inst().log_error(decl->name.location, E_UNKNOWN_TYPE, "Could not resolve type annotation.");
@@ -202,7 +199,7 @@ std::any LocalChecker::visit_fun_decl(Decl::Fun* decl) {
                 throw LocalTypeException();
             } else {
                 std::shared_ptr<Annotation> ret_type = std::any_cast<std::shared_ptr<Annotation>>(stmt_type);
-                if (ret_type->to_string() != fun_type->ret->to_string()) {
+                if (!fun_type->ret->is_compatible_with(ret_type)) {
                     ErrorLogger::inst().log_error(stmt->location, E_RETURN_INCOMPATIBLE, "Cannot convert from " + ret_type->to_string() + " to return type " + fun_type->ret->to_string() + ".");
                     throw LocalTypeException();
                 }
@@ -278,24 +275,75 @@ std::any LocalChecker::visit_identifier_expr(Expr::Identifier* expr) {
 }
 
 std::any LocalChecker::visit_literal_expr(Expr::Literal* expr) {
-    // Log error with location
-    // TODO: Implement literal expressions
-    ErrorLogger::inst().log_error(expr->location, E_UNIMPLEMENTED, "Literal expressions are not yet implemented.");
-    return std::any();
+
+    std::shared_ptr<Annotation> type = nullptr;
+
+    switch (expr->token.tok_type) {
+    case TOK_INT:
+        type = std::make_shared<Annotation::Segmented>("i32");
+        break;
+    case TOK_FLOAT:
+        type = std::make_shared<Annotation::Segmented>("f64");
+        break;
+    case TOK_CHAR:
+        type = std::make_shared<Annotation::Segmented>("char");
+        break;
+    case TOK_STR:
+        type = std::make_shared<Annotation::Segmented>("char");
+        type = std::make_shared<Annotation::Pointer>(type);
+        // Creates type `char*`
+        break;
+    case TOK_BOOL:
+        type = std::make_shared<Annotation::Segmented>("bool");
+        break;
+    case TOK_NIL:
+        type = std::make_shared<Annotation::Segmented>("auto");
+        type = std::make_shared<Annotation::Pointer>(type);
+        // Creates type `auto*`
+        // Note: `auto` is not a primitive type, so this is not a valid type.
+        // However, when later checked for type compatibility, the type will be updated to the correct type.
+        break;
+    default:
+        ErrorLogger::inst().log_error(expr->location, E_UNRECOGNIZED_LITERAL, "Unknown literal type.");
+        throw LocalTypeException();
+    }
+
+    expr->type_annotation = type;
+    return type;
 }
 
 std::any LocalChecker::visit_array_expr(Expr::Array* expr) {
-    // Log error with location
-    // TODO: Implement array expressions
-    ErrorLogger::inst().log_error(expr->location, E_UNIMPLEMENTED, "Array expressions are not yet implemented.");
-    return std::any();
+    // Handle the case where the array is empty
+    if (expr->elements.empty()) {
+        expr->type_annotation = std::make_shared<Annotation::Segmented>("auto");
+        expr->type_annotation = std::make_shared<Annotation::Array>(expr->type_annotation);
+        return expr->type_annotation;
+    } else {
+        // Ensure all elements have the same type
+        std::shared_ptr<Annotation> type = std::any_cast<std::shared_ptr<Annotation>>(expr->elements[0]->accept(this));
+        // In the case that this element is an `auto` type, the repeated compatibility checks in the following loop will build the type until it is complete.
+        for (auto& elem : expr->elements) {
+            std::shared_ptr<Annotation> elem_type = std::any_cast<std::shared_ptr<Annotation>>(elem->accept(this));
+            if (!type->is_compatible_with(elem_type)) {
+                ErrorLogger::inst().log_error(elem->location, E_INCONSISTENT_ARRAY_TYPES, "Array elements must have the same type. Expected " + type->to_string() + ", found " + elem_type->to_string() + ".");
+                throw LocalTypeException();
+            }
+        }
+        // If, after this loop, the type still contains `auto`, it will later be checked against the type annotation on the left-hand side of the assignment
+        type = std::make_shared<Annotation::Array>(type);
+        expr->type_annotation = type;
+        return type;
+    }
 }
 
 std::any LocalChecker::visit_tuple_expr(Expr::Tuple* expr) {
-    // Log error with location
-    // TODO: Implement tuple expressions
-    ErrorLogger::inst().log_error(expr->location, E_UNIMPLEMENTED, "Tuple expressions are not yet implemented.");
-    return std::any();
+    std::vector<std::shared_ptr<Annotation>> types;
+    for (auto& elem : expr->elements) {
+        std::shared_ptr<Annotation> elem_type = std::any_cast<std::shared_ptr<Annotation>>(elem->accept(this));
+        types.push_back(elem_type);
+    }
+    expr->type_annotation = std::make_shared<Annotation::Tuple>(types);
+    return expr->type_annotation;
 }
 
 void LocalChecker::type_check(std::vector<std::shared_ptr<Stmt>> stmts) {
