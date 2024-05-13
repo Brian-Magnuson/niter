@@ -146,6 +146,14 @@ enum ErrorCode {
     E_NO_RETURN_IN_NON_VOID_FUN,
     // An expression was interpreted as a literal, but the literal was not recognized
     E_UNRECOGNIZED_LITERAL,
+    // A dot-access expression was found without an identifier after the dot
+    E_NO_IDENT_AFTER_DOT,
+    // A dot-access expression was found on a non-struct type
+    E_ACCESS_ON_NON_STRUCT,
+    // A subscript-access expression was found on a non-array type
+    E_INDEX_ON_NON_ARRAY,
+    // A struct member could not be found
+    E_INVALID_STRUCT_MEMBER,
 
     // Code generation errors
     E_CODEGEN = 6000,

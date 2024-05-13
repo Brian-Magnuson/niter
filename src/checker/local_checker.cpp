@@ -254,24 +254,98 @@ std::any LocalChecker::visit_call_expr(Expr::Call* expr) {
 }
 
 std::any LocalChecker::visit_access_expr(Expr::Access* expr) {
-    // Log error with location
-    // TODO: Implement access expressions
-    ErrorLogger::inst().log_error(expr->location, E_UNIMPLEMENTED, "Access expressions are not yet implemented.");
-    return std::any();
+    auto left_type = std::any_cast<std::shared_ptr<Annotation>>(expr->left->accept(this));
+
+    if (expr->op.tok_type == TOK_DOT) {
+        std::shared_ptr<Expr::Identifier> right = std::dynamic_pointer_cast<Expr::Identifier>(expr->right);
+
+        if (right == nullptr) {
+            ErrorLogger::inst().log_error(expr->location, E_NO_IDENT_AFTER_DOT, "Expected identifier after '.'.");
+            throw LocalTypeException();
+        }
+        auto left_seg_type = std::dynamic_pointer_cast<Annotation::Segmented>(left_type);
+        if (left_seg_type == nullptr) {
+            if (IS_TYPE(left_type, Annotation::Pointer)) {
+                // This is still an error, but we can give a more specific error message
+                ErrorLogger::inst().log_error(expr->location, E_ACCESS_ON_NON_STRUCT, "Cannot access member of non-struct type. Did you mean to use '->' instead of '.'?");
+                throw LocalTypeException();
+            }
+            ErrorLogger::inst().log_error(expr->location, E_ACCESS_ON_NON_STRUCT, "Cannot access member of non-struct type.");
+            throw LocalTypeException();
+        }
+
+        expr->type_annotation = Environment::inst().get_instance_member_type(left_seg_type, right->to_string());
+        // If this returns nullptr, the member was not found
+        if (expr->type_annotation == nullptr) {
+            ErrorLogger::inst().log_error(expr->location, E_INVALID_STRUCT_MEMBER, "Struct type " + left_seg_type->to_string() + " does not have member " + right->to_string() + ".");
+            throw LocalTypeException();
+        }
+
+        return expr->type_annotation;
+    } else if (expr->op.tok_type == TOK_ARROW) {
+        // Pretty much the same as the dot operator, but the left side is dereferenced first
+        auto left_ptr_type = std::dynamic_pointer_cast<Annotation::Pointer>(left_type);
+        if (left_ptr_type == nullptr) {
+            ErrorLogger::inst().log_error(expr->location, E_ACCESS_ON_NON_STRUCT, "Cannot access member of non-struct type.");
+            throw LocalTypeException();
+        }
+        auto left_seg_type = std::dynamic_pointer_cast<Annotation::Segmented>(left_ptr_type->name);
+        if (left_seg_type == nullptr) {
+            ErrorLogger::inst().log_error(expr->location, E_ACCESS_ON_NON_STRUCT, "Cannot access member of non-struct type.");
+            throw LocalTypeException();
+        }
+
+        std::shared_ptr<Expr::Identifier> right = std::dynamic_pointer_cast<Expr::Identifier>(expr->right);
+        if (right == nullptr) {
+            ErrorLogger::inst().log_error(expr->location, E_NO_IDENT_AFTER_DOT, "Expected identifier after '->'.");
+            throw LocalTypeException();
+        }
+
+        expr->type_annotation = Environment::inst().get_instance_member_type(left_seg_type, right->to_string());
+        // If this returns nullptr, the member was not found
+        if (expr->type_annotation == nullptr) {
+            ErrorLogger::inst().log_error(expr->location, E_INVALID_STRUCT_MEMBER, "Struct type " + left_seg_type->to_string() + " does not have member " + right->to_string() + ".");
+            throw LocalTypeException();
+        }
+
+        return expr->type_annotation;
+    } else if (expr->op.tok_type == TOK_LEFT_SQUARE) {
+        // Right now, this only works with arrays
+        auto left_arr_type = std::dynamic_pointer_cast<Annotation::Array>(left_type);
+        if (left_arr_type == nullptr) {
+            ErrorLogger::inst().log_error(expr->location, E_INDEX_ON_NON_ARRAY, "Cannot index non-array type.");
+            throw LocalTypeException();
+        }
+
+        // The index must be an integer
+        auto index_type = std::any_cast<std::shared_ptr<Annotation>>(expr->right->accept(this));
+        if (index_type->to_string() != "i32") {
+            ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot index array with type " + index_type->to_string() + ". Expected type 'i32'.");
+            throw LocalTypeException();
+        }
+
+        // The type of the expression is the type of the array elements
+        expr->type_annotation = left_arr_type->name;
+        return expr->type_annotation;
+    } else {
+        // Unreachable
+        ErrorLogger::inst().log_error(expr->location, E_UNREACHABLE, "Unknown access operator.");
+        throw LocalTypeException();
+    }
 }
 
 std::any LocalChecker::visit_grouping_expr(Expr::Grouping* expr) {
-    // Log error with location
-    // TODO: Implement grouping expressions
-    ErrorLogger::inst().log_error(expr->location, E_UNIMPLEMENTED, "Grouping expressions are not yet implemented.");
-    return std::any();
+    expr->type_annotation = std::any_cast<std::shared_ptr<Annotation>>(expr->expression->accept(this));
+    return expr->type_annotation;
 }
 
 std::any LocalChecker::visit_identifier_expr(Expr::Identifier* expr) {
-    // Log error with location
-    // TODO: Implement identifier expressions
-    ErrorLogger::inst().log_error(expr->location, E_UNIMPLEMENTED, "Identifier expressions are not yet implemented.");
-    return std::any();
+    expr->type_annotation = Environment::inst().get_type(expr);
+    if (expr->type_annotation == nullptr) {
+        ErrorLogger::inst().log_error(expr->location, E_UNKNOWN_TYPE, "Could not resolve type annotation.");
+        throw LocalTypeException();
+    }
+    return expr->type_annotation;
 }
 
 std::any LocalChecker::visit_literal_expr(Expr::Literal* expr) {

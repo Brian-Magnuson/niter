@@ -152,7 +152,7 @@ bool Environment::verify_type(const std::shared_ptr<Annotation>& type, bool allo
     return false;
 }
 
-std::shared_ptr<Annotation> Environment::get_type(std::shared_ptr<Expr::Identifier> identifier) {
+std::shared_ptr<Annotation> Environment::get_type(const Expr::Identifier* identifier) {
     std::shared_ptr<Node> found_node = nullptr;
     // If the identifier is a single token, we can look up the type in the global scope.
     if (identifier->tokens.size() == 1) {
@@ -167,6 +167,29 @@ std::shared_ptr<Annotation> Environment::get_type(std::shared_ptr<Expr::Identifi
         }
         found_node = current_scope->downward_lookup(path);
     }
+
+    if (found_node == nullptr) {
+        return nullptr;
+    }
+
+    auto found_var = std::dynamic_pointer_cast<Node::Variable>(found_node);
+
+    if (found_var != nullptr) {
+        return found_var->annotation;
+    } else {
+        return nullptr;
+    }
+}
+
+std::shared_ptr<Annotation> Environment::get_instance_member_type(std::shared_ptr<Annotation::Segmented> instance_type, const std::string& member_name) {
+
+    std::vector<std::string> path;
+    for (auto& class_ : instance_type->classes) {
+        path.push_back(class_->name);
+    }
+    path.push_back(member_name);
+
+    auto found_node = current_scope->downward_lookup(path);
 
     if (found_node == nullptr) {
         return nullptr;

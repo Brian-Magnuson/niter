@@ -152,7 +152,18 @@ public:
      * @param identifier The identifier of the variable to retrieve.
      * @return std::shared_ptr<Annotation> The type of the symbol. If the symbol is not found (or the symbol does not name a variable), nullptr will be returned.
      */
-    std::shared_ptr<Annotation> get_type(std::shared_ptr<Expr::Identifier> identifier);
+    std::shared_ptr<Annotation> get_type(const Expr::Identifier* identifier);
+
+    /**
+     * @brief Get the instance member type object for a given instance type and member name.
+     * The instance type must be a segmented annotation.
+     * If it is a pointer, it must be dereferenced first.
+     *
+     * @param instance_type The type of the instance. Must reference a struct scope in the global tree.
+     * @param member_name The name of the member to retrieve.
+     * @return std::shared_ptr<Annotation> The type of the member. If the member is not found, nullptr will be returned.
+     */
+    std::shared_ptr<Annotation> get_instance_member_type(std::shared_ptr<Annotation::Segmented> instance_type, const std::string& member_name);
 
     /**
      * @brief Iterates through the list of deferred types and verifies them.
