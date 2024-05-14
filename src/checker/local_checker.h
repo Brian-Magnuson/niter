@@ -26,6 +26,16 @@ class LocalTypeException : public std::exception {};
 class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Visitor {
 
     /**
+     * @brief Checks if a token type is of a certain type.
+     *
+     * @param token The token type to check.
+     * @param types The list of types to check against.
+     * @return true If the token is of one of the types.
+     * @return false If the token is not of one of the types.
+     */
+    bool check_token(TokenType token, const std::vector<TokenType>& types) const;
+
+    /**
      * @brief Visits a declaration statement and determines if the declaration is valid.
      *
      * @param stmt The declaration statement to visit.

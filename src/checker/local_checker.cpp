@@ -3,6 +3,15 @@
 #include "../utility/utils.h"
 #include <iostream>
 
+bool LocalChecker::check_token(TokenType token, const std::vector<TokenType>& types) const {
+    for (auto type : types) {
+        if (token == type) {
+            return true;
+        }
+    }
+    return false;
+}
+
 std::any LocalChecker::visit_declaration_stmt(Stmt::Declaration* stmt) {
     // Visit the declaration
     return stmt->declaration->accept(this);
@@ -226,21 +235,89 @@ std::any LocalChecker::visit_assign_expr(Expr::Assign* expr) {
 }
 
 std::any LocalChecker::visit_logical_expr(Expr::Logical* expr) {
-    // Log error with location
-    // TODO: Implement logical expressions
-    ErrorLogger::inst().log_error(expr->location, E_UNIMPLEMENTED, "Logical expressions are not yet implemented.");
-    return std::any();
+    // There are 2 logical operators: `&&` and `||`
+    // In both cases, the operands must be of type `bool` and the result is of type `bool`
+
+    auto l_type = std::any_cast<std::shared_ptr<Annotation>>(expr->left->accept(this));
+    auto r_type = std::any_cast<std::shared_ptr<Annotation>>(expr->right->accept(this));
+
+    if (l_type->to_string() != "bool") {
+        ErrorLogger::inst().log_error(expr->left->location, E_INCOMPATIBLE_TYPES, "Cannot apply logical operator '" + expr->op.lexeme + "' to type " + l_type->to_string() + ". Expected type 'bool'.");
+        throw LocalTypeException();
+    }
+    if (r_type->to_string() != "bool") {
+        ErrorLogger::inst().log_error(expr->right->location, E_INCOMPATIBLE_TYPES, "Cannot apply logical operator '" + expr->op.lexeme + "' to type " + r_type->to_string() + ". Expected type 'bool'.");
+        throw LocalTypeException();
+    }
+
+    expr->type_annotation = std::make_shared<Annotation::Segmented>("bool");
+    return expr->type_annotation;
 }
 
 std::any LocalChecker::visit_binary_expr(Expr::Binary* expr) {
-    // Log error with location
-    // TODO: Implement binary expressions
-    ErrorLogger::inst().log_error(expr->location, E_UNIMPLEMENTED, "Binary expressions are not yet implemented.");
-    return std::any();
+    // There are 12 binary operators: `+`, `-`, `*`, `/`, `%`, `^`, `==`, `!=`, `<`, `<=`, `>`, `>=`
+
+    // For now, we require that operands have the exact required types (no implicit conversions)
+    auto l_type = std::any_cast<std::shared_ptr<Annotation>>(expr->left->accept(this));
+    auto r_type = std::any_cast<std::shared_ptr<Annotation>>(expr->right->accept(this));
+
+    TokenType op = expr->op.tok_type;
+
+    if (check_token(op, {TOK_PLUS, TOK_MINUS, TOK_STAR, TOK_SLASH, TOK_CARET})) {
+        // For PLUS, MINUS, STAR, SLASH the operands must be equal and must be of type `int` or `float` and the result is of the same type
+
+        if (!l_type->is_compatible_with(r_type)) {
+            ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply operator '" + expr->op.lexeme + "' to types " + l_type->to_string() + " and " + r_type->to_string() + ".");
+            throw LocalTypeException();
+        }
+        if (!l_type->is_int() && !l_type->is_float()) {
+            ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply operator '" + expr->op.lexeme + "' to type " + l_type->to_string() + ". Expected int or float.");
+            throw LocalTypeException();
+        }
+        expr->type_annotation = l_type;
+    } else if (check_token(op, {TOK_PERCENT})) {
+        // For PERCENT, the operands must be equal and must be of type `int` and the result is of type `int`
+        if (!l_type->is_compatible_with(r_type)) {
+            ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply operator '" + expr->op.lexeme + "' to types " + l_type->to_string() + " and " + r_type->to_string() + ".");
+            throw LocalTypeException();
+        }
+        if (!l_type->is_int()) {
+            ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply operator '" + expr->op.lexeme + "' to type " + l_type->to_string() + ". Expected int.");
+            throw LocalTypeException();
+        }
+        expr->type_annotation = l_type;
+    } else if (check_token(op, {TOK_CARET})) {
+        // For CARET, the operands must be equal and must be either `int` or `float`. Unlike the other operators, the result is always of type `f64`
+        if (!l_type->is_compatible_with(r_type)) {
+            ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply operator '" + expr->op.lexeme + "' to types " + l_type->to_string() + " and " + r_type->to_string() + ".");
+            throw LocalTypeException();
+        }
+        if (!l_type->is_int() && !l_type->is_float()) {
+            ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply operator '" + expr->op.lexeme + "' to type " + l_type->to_string() + ". Expected int or float.");
+            throw LocalTypeException();
+        }
+        expr->type_annotation = std::make_shared<Annotation::Segmented>("f64");
+    } else if (check_token(op, {TOK_EQ_EQ, TOK_BANG_EQ, TOK_LT, TOK_LE, TOK_GT, TOK_GE})) {
+        // For EQ_EQ, BANG_EQ, LT, LE, GT, GE the operands must be equal and must be of type `int` or `float` and the result is of type `bool`
+        if (!l_type->is_compatible_with(r_type)) {
+            ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply operator '" + expr->op.lexeme + "' to types " + l_type->to_string() + " and " + r_type->to_string() + ".");
+            throw LocalTypeException();
+        }
+        if (!l_type->is_int() && !l_type->is_float()) {
+            ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply operator '" + expr->op.lexeme + "' to type " + l_type->to_string() + ". Expected int or float.");
+            throw LocalTypeException();
+        }
+        expr->type_annotation = std::make_shared<Annotation::Segmented>("bool");
+    } else {
+        // Unreachable
+        ErrorLogger::inst().log_error(expr->location, E_UNREACHABLE, "Unknown binary operator.");
+    }
+
+    return expr->type_annotation;
 }
 
 std::any LocalChecker::visit_unary_expr(Expr::Unary* expr) {
-    // There are four unary operators: `!`, `-`, `*`, and `&`
+    // There are 4 unary operators: `!`, `-`, `*`, and `&`
 
     std::shared_ptr<Annotation> operand_type = std::any_cast<std::shared_ptr<Annotation>>(expr->right->accept(this));
 
@@ -256,7 +333,7 @@ std::any LocalChecker::visit_unary_expr(Expr::Unary* expr) {
         if (operand_type->is_int() || operand_type->is_float()) {
             expr->type_annotation = operand_type;
         } else {
-            ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply unary operator '-' to type " + operand_type->to_string() + ". Expected type 'int' or 'float'.");
+            ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply unary operator '-' to type " + operand_type->to_string() + ". Expected int or float.");
             throw LocalTypeException();
         }
     } else if (expr->op.tok_type == TOK_STAR) {

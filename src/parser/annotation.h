@@ -51,7 +51,7 @@ public:
 
     bool is_int() {
         if (
-            to_string() == "i8" || to_string() == "i16" || to_string() == "i32" || to_string() == "i64"
+            to_string() == "i8" || to_string() == "i16" || to_string() == "i32" || to_string() == "i64" || to_string() == "char"
         ) {
             return true;
         }
