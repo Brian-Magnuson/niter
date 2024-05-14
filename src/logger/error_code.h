@@ -154,6 +154,12 @@ enum ErrorCode {
     E_INDEX_ON_NON_ARRAY,
     // A struct member could not be found
     E_INVALID_STRUCT_MEMBER,
+    // A function call was found on a non-function type
+    E_CALL_ON_NON_FUN,
+    // A function call was found with an incorrect number of arguments
+    E_INVALID_ARITY,
+    // The unary operator '&' was found on a non-lvalue
+    E_INVALID_ADDRESS_OF,
 
     // Code generation errors
     E_CODEGEN = 6000,

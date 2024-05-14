@@ -240,17 +240,79 @@ std::any LocalChecker::visit_binary_expr(Expr::Binary* expr) {
 }
 
 std::any LocalChecker::visit_unary_expr(Expr::Unary* expr) {
-    // Log error with location
-    // TODO: Implement unary expressions
-    ErrorLogger::inst().log_error(expr->location, E_UNIMPLEMENTED, "Unary expressions are not yet implemented.");
-    return std::any();
+    // There are four unary operators: `!`, `-`, `*`, and `&`
+
+    std::shared_ptr<Annotation> operand_type = std::any_cast<std::shared_ptr<Annotation>>(expr->right->accept(this));
+
+    if (expr->op.tok_type == TOK_BANG) {
+        // The operand must be of type `bool`
+        if (operand_type->to_string() != "bool") {
+            ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply unary operator '!' to type " + operand_type->to_string() + ". Expected type 'bool'.");
+            throw LocalTypeException();
+        }
+        expr->type_annotation = operand_type;
+    } else if (expr->op.tok_type == TOK_MINUS) {
+        // The operand must be of type `int` or `float`
+        if (operand_type->is_int() || operand_type->is_float()) {
+            expr->type_annotation = operand_type;
+        } else {
+            ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply unary operator '-' to type " + operand_type->to_string() + ". Expected type 'int' or 'float'.");
+            throw LocalTypeException();
+        }
+    } else if (expr->op.tok_type == TOK_STAR) {
+        // The operand must be a pointer type
+        auto operand_ptr_type = std::dynamic_pointer_cast<Annotation::Pointer>(operand_type);
+        if (operand_ptr_type == nullptr) {
+            ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot dereference non-pointer type " + operand_type->to_string() + ".");
+            throw LocalTypeException();
+        }
+        // The type of the expression is the type of the pointer
+        expr->type_annotation = operand_ptr_type->name;
+    } else if (expr->op.tok_type == TOK_AMP) {
+        // Only Expr::Access and Expr::Identifier are allowed as operands
+        auto operand_access = std::dynamic_pointer_cast<Expr::Access>(expr->right);
+        auto operand_ident = std::dynamic_pointer_cast<Expr::Identifier>(expr->right);
+        if (operand_access == nullptr && operand_ident == nullptr) {
+            ErrorLogger::inst().log_error(expr->location, E_INVALID_ADDRESS_OF, "Cannot take the address of a non-lvalue.");
+            throw LocalTypeException();
+        }
+        // The type of the expression is a pointer to the type of the operand
+        expr->type_annotation = std::make_shared<Annotation::Pointer>(operand_type);
+
+    } else {
+        // Unreachable
+        ErrorLogger::inst().log_error(expr->location, E_UNREACHABLE, "Unknown unary operator.");
+    }
+
+    return expr->type_annotation;
 }
 
 std::any LocalChecker::visit_call_expr(Expr::Call* expr) {
-    // Log error with location
-    // TODO: Implement call expressions
-    ErrorLogger::inst().log_error(expr->location, E_UNIMPLEMENTED, "Call expressions are not yet implemented.");
-    return std::any();
+    // The left side of the call expression must be callable; i.e. a function pointer type
+    std::shared_ptr<Annotation> left_type = std::any_cast<std::shared_ptr<Annotation>>(expr->callee->accept(this));
+    if (!IS_TYPE(left_type, Annotation::Function)) {
+        ErrorLogger::inst().log_error(expr->location, E_CALL_ON_NON_FUN, "Expression is not callable.");
+        throw LocalTypeException();
+    }
+    auto fun_type = std::dynamic_pointer_cast<Annotation::Function>(left_type);
+
+    // First, the number of arguments must match the number of parameters
+    if (expr->arguments.size() != fun_type->params.size()) {
+        ErrorLogger::inst().log_error(expr->location, E_INVALID_ARITY, "Expected " + std::to_string(fun_type->params.size()) + " arguments, found " + std::to_string(expr->arguments.size()) + ".");
+        throw LocalTypeException();
+    }
+    // Then, the types of the arguments must match the types of the parameters
+    for (unsigned i = 0; i < expr->arguments.size(); i++) {
+        std::shared_ptr<Annotation> arg_type = std::any_cast<std::shared_ptr<Annotation>>(expr->arguments[i]->accept(this));
+        if (!fun_type->params[i].second->is_compatible_with(arg_type)) {
+            ErrorLogger::inst().log_error(expr->arguments[i]->location, E_INCOMPATIBLE_TYPES, "Cannot convert from " + arg_type->to_string() + " to " + fun_type->params[i].second->to_string() + ".");
+            throw LocalTypeException();
+        }
+    }
+
+    // The type of the call expression is the return type of the function
+    expr->type_annotation = fun_type->ret;
+    return expr->type_annotation;
 }
 
 std::any LocalChecker::visit_access_expr(Expr::Access* expr) {

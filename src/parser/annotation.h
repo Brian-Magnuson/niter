@@ -48,6 +48,22 @@ public:
      * @return false If the annotations are not compatible.
      */
     virtual bool is_compatible_with(std::shared_ptr<Annotation>& other) = 0;
+
+    bool is_int() {
+        if (
+            to_string() == "i8" || to_string() == "i16" || to_string() == "i32" || to_string() == "i64"
+        ) {
+            return true;
+        }
+        return false;
+    }
+
+    bool is_float() {
+        if (to_string() == "f32" || to_string() == "f64") {
+            return true;
+        }
+        return false;
+    }
 };
 
 /**
