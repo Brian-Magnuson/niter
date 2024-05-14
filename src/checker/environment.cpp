@@ -187,21 +187,20 @@ std::shared_ptr<Annotation> Environment::get_instance_member_type(std::shared_pt
     for (auto& class_ : instance_type->classes) {
         path.push_back(class_->name);
     }
-    path.push_back(member_name);
 
     auto found_node = current_scope->downward_lookup(path);
-
     if (found_node == nullptr) {
         return nullptr;
     }
-
-    auto found_var = std::dynamic_pointer_cast<Node::Variable>(found_node);
-
-    if (found_var != nullptr) {
-        return found_var->annotation;
-    } else {
+    auto found_struct = std::dynamic_pointer_cast<Node::StructScope>(found_node);
+    if (found_struct == nullptr) {
         return nullptr;
     }
+    auto found_var_iter = found_struct->instance_members.find(member_name);
+    if (found_var_iter == found_struct->instance_members.end()) {
+        return nullptr;
+    }
+    return found_var_iter->second;
 }
 
 bool Environment::verify_deferred_types() {
