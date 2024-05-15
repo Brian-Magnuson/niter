@@ -1,6 +1,7 @@
 #ifndef EXPR_H
 #define EXPR_H
 
+#include "../checker/type.h"
 #include "../scanner/token.h"
 #include "annotation.h"
 #include <any>
@@ -26,7 +27,11 @@ public:
     class Tuple;
 
     // An annotation representing the type of the expression. Set to nullptr, to be filled in by the type checker.
-    std::shared_ptr<Annotation> type_annotation = nullptr;
+    // std::shared_ptr<Annotation> type_annotation = nullptr;
+
+    // The type of the expression. Set to nullptr, to be filled in by the type checker.
+    std::shared_ptr<Type> type = nullptr;
+
     // A location useful for error messages.
     Location location;
 

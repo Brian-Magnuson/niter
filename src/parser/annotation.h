@@ -39,31 +39,31 @@ public:
      */
     virtual std::string to_string() const = 0;
 
-    /**
-     * @brief Determine if this annotation is compatible with another annotation.
-     * If one annotation is `auto`, its classes are replaced with the classes of the other annotation.
-     *
-     * @param other The other annotation to compare with.
-     * @return true If the annotations are compatible.
-     * @return false If the annotations are not compatible.
-     */
-    virtual bool is_compatible_with(std::shared_ptr<Annotation>& other) = 0;
+    // /**
+    //  * @brief Determine if this annotation is compatible with another annotation.
+    //  * If one annotation is `auto`, its classes are replaced with the classes of the other annotation.
+    //  *
+    //  * @param other The other annotation to compare with.
+    //  * @return true If the annotations are compatible.
+    //  * @return false If the annotations are not compatible.
+    //  */
+    // virtual bool is_compatible_with(std::shared_ptr<Annotation>& other) = 0;
 
-    bool is_int() {
-        if (
-            to_string() == "i8" || to_string() == "i16" || to_string() == "i32" || to_string() == "i64" || to_string() == "char"
-        ) {
-            return true;
-        }
-        return false;
-    }
+    // bool is_int() {
+    //     if (
+    //         to_string() == "i8" || to_string() == "i16" || to_string() == "i32" || to_string() == "i64" || to_string() == "char"
+    //     ) {
+    //         return true;
+    //     }
+    //     return false;
+    // }
 
-    bool is_float() {
-        if (to_string() == "f32" || to_string() == "f64") {
-            return true;
-        }
-        return false;
-    }
+    // bool is_float() {
+    //     if (to_string() == "f32" || to_string() == "f64") {
+    //         return true;
+    //     }
+    //     return false;
+    // }
 };
 
 /**
@@ -114,20 +114,20 @@ public:
         return result;
     }
 
-    bool is_compatible_with(std::shared_ptr<Annotation>& other) override {
-        if (!IS_TYPE(other, Segmented)) {
-            return false;
-        }
-        if (this->to_string() == "auto") {
-            this->classes = std::static_pointer_cast<Segmented>(other)->classes;
-            return true;
-        }
-        if (std::static_pointer_cast<Segmented>(other)->to_string() == "auto") {
-            std::static_pointer_cast<Segmented>(other)->classes = this->classes;
-            return true;
-        }
-        return this->to_string() == std::static_pointer_cast<Segmented>(other)->to_string();
-    }
+    // bool is_compatible_with(std::shared_ptr<Annotation>& other) override {
+    //     if (!IS_TYPE(other, Segmented)) {
+    //         return false;
+    //     }
+    //     if (this->to_string() == "auto") {
+    //         this->classes = std::static_pointer_cast<Segmented>(other)->classes;
+    //         return true;
+    //     }
+    //     if (std::static_pointer_cast<Segmented>(other)->to_string() == "auto") {
+    //         std::static_pointer_cast<Segmented>(other)->classes = this->classes;
+    //         return true;
+    //     }
+    //     return this->to_string() == std::static_pointer_cast<Segmented>(other)->to_string();
+    // }
 };
 
 /**
@@ -165,17 +165,17 @@ public:
         return result;
     }
 
-    bool is_compatible_with(std::shared_ptr<Annotation>& other) override {
-        if (!IS_TYPE(other, Function)) {
-            return false;
-        }
-        for (size_t i = 0; i < params.size(); i++) {
-            if (!params[i].second->is_compatible_with(std::static_pointer_cast<Function>(other)->params[i].second)) {
-                return false;
-            }
-        }
-        return ret->is_compatible_with(std::static_pointer_cast<Function>(other)->ret);
-    }
+    // bool is_compatible_with(std::shared_ptr<Annotation>& other) override {
+    //     if (!IS_TYPE(other, Function)) {
+    //         return false;
+    //     }
+    //     for (size_t i = 0; i < params.size(); i++) {
+    //         if (!params[i].second->is_compatible_with(std::static_pointer_cast<Function>(other)->params[i].second)) {
+    //             return false;
+    //         }
+    //     }
+    //     return ret->is_compatible_with(std::static_pointer_cast<Function>(other)->ret);
+    // }
 };
 
 /**
@@ -194,12 +194,12 @@ public:
         return name->to_string() + "[]";
     }
 
-    bool is_compatible_with(std::shared_ptr<Annotation>& other) override {
-        if (!IS_TYPE(other, Array)) {
-            return false;
-        }
-        return name->is_compatible_with(std::static_pointer_cast<Array>(other)->name);
-    }
+    // bool is_compatible_with(std::shared_ptr<Annotation>& other) override {
+    //     if (!IS_TYPE(other, Array)) {
+    //         return false;
+    //     }
+    //     return name->is_compatible_with(std::static_pointer_cast<Array>(other)->name);
+    // }
 };
 
 /**
@@ -218,12 +218,12 @@ public:
         return name->to_string() + "*";
     }
 
-    bool is_compatible_with(std::shared_ptr<Annotation>& other) override {
-        if (!IS_TYPE(other, Pointer)) {
-            return false;
-        }
-        return name->is_compatible_with(std::static_pointer_cast<Pointer>(other)->name);
-    }
+    // bool is_compatible_with(std::shared_ptr<Annotation>& other) override {
+    //     if (!IS_TYPE(other, Pointer)) {
+    //         return false;
+    //     }
+    //     return name->is_compatible_with(std::static_pointer_cast<Pointer>(other)->name);
+    // }
 };
 
 /**
@@ -250,17 +250,17 @@ public:
         return result;
     }
 
-    bool is_compatible_with(std::shared_ptr<Annotation>& other) override {
-        if (!IS_TYPE(other, Tuple)) {
-            return false;
-        }
-        for (size_t i = 0; i < elements.size(); i++) {
-            if (!elements[i]->is_compatible_with(std::static_pointer_cast<Tuple>(other)->elements[i])) {
-                return false;
-            }
-        }
-        return true;
-    }
+    // bool is_compatible_with(std::shared_ptr<Annotation>& other) override {
+    //     if (!IS_TYPE(other, Tuple)) {
+    //         return false;
+    //     }
+    //     for (size_t i = 0; i < elements.size(); i++) {
+    //         if (!elements[i]->is_compatible_with(std::static_pointer_cast<Tuple>(other)->elements[i])) {
+    //             return false;
+    //         }
+    //     }
+    //     return true;
+    // }
 };
 
 #endif // ANNOTATION_H

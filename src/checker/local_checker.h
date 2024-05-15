@@ -231,7 +231,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      * @brief Visits a tuple expression and determines if the tuple expression is valid.
      *
      * @param expr The tuple expression to visit.
-     * @return std::any The empty std::any value always.
+     * @return std::any An std::shared_ptr<Type> representing the type of the tuple.
      */
     std::any visit_tuple_expr(Expr::Tuple* expr) override;
 

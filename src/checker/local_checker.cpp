@@ -1,6 +1,7 @@
 #include "local_checker.h"
 #include "../logger/logger.h"
 #include "../utility/utils.h"
+#include "type.h"
 #include <iostream>
 
 bool LocalChecker::check_token(TokenType token, const std::vector<TokenType>& types) const {
@@ -205,7 +206,7 @@ std::any LocalChecker::visit_fun_decl(Decl::Fun* decl) {
                 ErrorLogger::inst().log_error(stmt->location, E_RETURN_IN_VOID_FUN, "Function with return type 'void' cannot return a value.");
                 throw LocalTypeException();
             } else {
-                std::shared_ptr<Annotation> ret_type = std::any_cast<std::shared_ptr<Annotation>>(stmt_type);
+                auto ret_type = std::any_cast<std::shared_ptr<Type>>(stmt_type);
                 if (!fun_type->ret->is_compatible_with(ret_type)) {
                     ErrorLogger::inst().log_error(stmt->location, E_RETURN_INCOMPATIBLE, "Cannot convert from " + ret_type->to_string() + " to return type " + fun_type->ret->to_string() + ".");
                     throw LocalTypeException();
@@ -213,7 +214,7 @@ std::any LocalChecker::visit_fun_decl(Decl::Fun* decl) {
             }
         }
     }
-    if (!has_return && fun_type->ret->to_string() != "void") {
+    if (!has_return && fun_type->ret->to_string() != "__void") {
         ErrorLogger::inst().log_error(decl->name.location, E_NO_RETURN_IN_NON_VOID_FUN, "Function with non-void return type must return a value.");
         throw LocalTypeException();
     }
@@ -225,19 +226,21 @@ std::any LocalChecker::visit_fun_decl(Decl::Fun* decl) {
     return std::any();
 }
 
+// FIXME: Fix the above functions to use the new Type class.
+
 std::any LocalChecker::visit_assign_expr(Expr::Assign* expr) {
     // The left side of the assignment must be an lvalue
     // Currently, lvalues can be Expr::Identifier or Expr::Access
     // Visit the left and right sides of the assignment
-    auto l_type = std::any_cast<std::shared_ptr<Annotation>>(expr->left->accept(this));
-    auto r_type = std::any_cast<std::shared_ptr<Annotation>>(expr->right->accept(this));
+    auto l_type = std::any_cast<std::shared_ptr<Type>>(expr->left->accept(this));
+    auto r_type = std::any_cast<std::shared_ptr<Type>>(expr->right->accept(this));
 
     auto l_access = std::dynamic_pointer_cast<Expr::Access>(expr->left);
     auto l_ident = std::dynamic_pointer_cast<Expr::Identifier>(expr->left);
     if (l_access != nullptr) {
         // Get the struct type
         // We already visited the left side, so we know it's a valid access
-        auto l_struct_type = std::dynamic_pointer_cast<Annotation::Segmented>(l_access->left->type_annotation);
+        auto l_struct_type = std::dynamic_pointer_cast<Type::Struct>(l_access->left->type);
         // Get the member name
         auto member_name = std::dynamic_pointer_cast<Expr::Identifier>(l_access->right)->to_string();
         // Get the member node
@@ -260,49 +263,53 @@ std::any LocalChecker::visit_assign_expr(Expr::Assign* expr) {
     }
 
     // The types of the left and right sides must match
-    if (!l_type->is_compatible_with(r_type)) {
+    if (!Type::are_compatible(l_type, r_type)) {
         ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot convert from " + r_type->to_string() + " to " + l_type->to_string() + ".");
         throw LocalTypeException();
     }
 
     // The type of the expression is the type of the left side
-    expr->type_annotation = l_type;
-    return expr->type_annotation;
+    expr->type = l_type;
+    return expr->type;
 }
 
 std::any LocalChecker::visit_logical_expr(Expr::Logical* expr) {
     // There are 2 logical operators: `&&` and `||`
     // In both cases, the operands must be of type `bool` and the result is of type `bool`
 
-    auto l_type = std::any_cast<std::shared_ptr<Annotation>>(expr->left->accept(this));
-    auto r_type = std::any_cast<std::shared_ptr<Annotation>>(expr->right->accept(this));
+    auto l_type = std::any_cast<std::shared_ptr<Type>>(expr->left->accept(this));
+    auto r_type = std::any_cast<std::shared_ptr<Type>>(expr->right->accept(this));
 
-    if (l_type->to_string() != "bool") {
-        ErrorLogger::inst().log_error(expr->left->location, E_INCOMPATIBLE_TYPES, "Cannot apply logical operator '" + expr->op.lexeme + "' to type " + l_type->to_string() + ". Expected type 'bool'.");
-        throw LocalTypeException();
-    }
-    if (r_type->to_string() != "bool") {
-        ErrorLogger::inst().log_error(expr->right->location, E_INCOMPATIBLE_TYPES, "Cannot apply logical operator '" + expr->op.lexeme + "' to type " + r_type->to_string() + ". Expected type 'bool'.");
+    if (!Type::are_compatible(l_type, r_type)) {
+        ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply operator '" + expr->op.lexeme + "' to types " + l_type->to_string() + " and " + r_type->to_string() + ".");
         throw LocalTypeException();
     }
 
-    expr->type_annotation = std::make_shared<Annotation::Segmented>("bool");
-    return expr->type_annotation;
+    auto l_struct_type = std::dynamic_pointer_cast<Type::Struct>(l_type);
+    auto r_struct_type = std::dynamic_pointer_cast<Type::Struct>(r_type);
+
+    if (l_struct_type != nullptr && l_struct_type->struct_scope != Environment::inst().get_struct("bool")) {
+        ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply operator '" + expr->op.lexeme + "' to type " + l_type->to_string() + ". Expected type 'bool'.");
+        throw LocalTypeException();
+    }
+
+    expr->type = l_type;
+    return expr->type;
 }
 
 std::any LocalChecker::visit_binary_expr(Expr::Binary* expr) {
     // There are 12 binary operators: `+`, `-`, `*`, `/`, `%`, `^`, `==`, `!=`, `<`, `<=`, `>`, `>=`
 
     // For now, we require that operands have the exact required types (no implicit conversions)
-    auto l_type = std::any_cast<std::shared_ptr<Annotation>>(expr->left->accept(this));
-    auto r_type = std::any_cast<std::shared_ptr<Annotation>>(expr->right->accept(this));
+    auto l_type = std::any_cast<std::shared_ptr<Type>>(expr->left->accept(this));
+    auto r_type = std::any_cast<std::shared_ptr<Type>>(expr->right->accept(this));
 
     TokenType op = expr->op.tok_type;
 
     if (check_token(op, {TOK_PLUS, TOK_MINUS, TOK_STAR, TOK_SLASH, TOK_CARET})) {
         // For PLUS, MINUS, STAR, SLASH the operands must be equal and must be of type `int` or `float` and the result is of the same type
 
-        if (!l_type->is_compatible_with(r_type)) {
+        if (!Type::are_compatible(l_type, r_type)) {
             ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply operator '" + expr->op.lexeme + "' to types " + l_type->to_string() + " and " + r_type->to_string() + ".");
             throw LocalTypeException();
         }
@@ -310,10 +317,10 @@ std::any LocalChecker::visit_binary_expr(Expr::Binary* expr) {
             ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply operator '" + expr->op.lexeme + "' to type " + l_type->to_string() + ". Expected int or float.");
             throw LocalTypeException();
         }
-        expr->type_annotation = l_type;
+        expr->type = l_type;
     } else if (check_token(op, {TOK_PERCENT})) {
         // For PERCENT, the operands must be equal and must be of type `int` and the result is of type `int`
-        if (!l_type->is_compatible_with(r_type)) {
+        if (!Type::are_compatible(l_type, r_type)) {
             ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply operator '" + expr->op.lexeme + "' to types " + l_type->to_string() + " and " + r_type->to_string() + ".");
             throw LocalTypeException();
         }
@@ -321,10 +328,10 @@ std::any LocalChecker::visit_binary_expr(Expr::Binary* expr) {
             ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply operator '" + expr->op.lexeme + "' to type " + l_type->to_string() + ". Expected int.");
             throw LocalTypeException();
         }
-        expr->type_annotation = l_type;
+        expr->type = l_type;
     } else if (check_token(op, {TOK_CARET})) {
         // For CARET, the operands must be equal and must be either `int` or `float`. Unlike the other operators, the result is always of type `f64`
-        if (!l_type->is_compatible_with(r_type)) {
+        if (!Type::are_compatible(l_type, r_type)) {
             ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply operator '" + expr->op.lexeme + "' to types " + l_type->to_string() + " and " + r_type->to_string() + ".");
             throw LocalTypeException();
         }
@@ -332,10 +339,10 @@ std::any LocalChecker::visit_binary_expr(Expr::Binary* expr) {
             ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply operator '" + expr->op.lexeme + "' to type " + l_type->to_string() + ". Expected int or float.");
             throw LocalTypeException();
         }
-        expr->type_annotation = std::make_shared<Annotation::Segmented>("f64");
+        expr->type = std::make_shared<Type::Struct>(Environment::inst().get_struct("f64"));
     } else if (check_token(op, {TOK_EQ_EQ, TOK_BANG_EQ, TOK_LT, TOK_LE, TOK_GT, TOK_GE})) {
         // For EQ_EQ, BANG_EQ, LT, LE, GT, GE the operands must be equal and must be of type `int` or `float` and the result is of type `bool`
-        if (!l_type->is_compatible_with(r_type)) {
+        if (!Type::are_compatible(l_type, r_type)) {
             ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply operator '" + expr->op.lexeme + "' to types " + l_type->to_string() + " and " + r_type->to_string() + ".");
             throw LocalTypeException();
         }
@@ -343,44 +350,45 @@ std::any LocalChecker::visit_binary_expr(Expr::Binary* expr) {
             ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply operator '" + expr->op.lexeme + "' to type " + l_type->to_string() + ". Expected int or float.");
             throw LocalTypeException();
         }
-        expr->type_annotation = std::make_shared<Annotation::Segmented>("bool");
+        expr->type = std::make_shared<Type::Struct>(Environment::inst().get_struct("bool"));
     } else {
         // Unreachable
         ErrorLogger::inst().log_error(expr->location, E_UNREACHABLE, "Unknown binary operator.");
     }
 
-    return expr->type_annotation;
+    return expr->type;
 }
 
 std::any LocalChecker::visit_unary_expr(Expr::Unary* expr) {
     // There are 4 unary operators: `!`, `-`, `*`, and `&`
 
-    std::shared_ptr<Annotation> operand_type = std::any_cast<std::shared_ptr<Annotation>>(expr->right->accept(this));
+    auto operand_type = std::any_cast<std::shared_ptr<Type>>(expr->right->accept(this));
 
     if (expr->op.tok_type == TOK_BANG) {
         // The operand must be of type `bool`
-        if (operand_type->to_string() != "bool") {
+        auto op_struct_type = std::dynamic_pointer_cast<Type::Struct>(operand_type);
+        if (op_struct_type != nullptr && op_struct_type->struct_scope == Environment::inst().get_struct("bool")) {
             ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply unary operator '!' to type " + operand_type->to_string() + ". Expected type 'bool'.");
             throw LocalTypeException();
         }
-        expr->type_annotation = operand_type;
+        expr->type = operand_type;
     } else if (expr->op.tok_type == TOK_MINUS) {
         // The operand must be of type `int` or `float`
         if (operand_type->is_int() || operand_type->is_float()) {
-            expr->type_annotation = operand_type;
+            expr->type = operand_type;
         } else {
             ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply unary operator '-' to type " + operand_type->to_string() + ". Expected int or float.");
             throw LocalTypeException();
         }
     } else if (expr->op.tok_type == TOK_STAR) {
         // The operand must be a pointer type
-        auto operand_ptr_type = std::dynamic_pointer_cast<Annotation::Pointer>(operand_type);
+        auto operand_ptr_type = std::dynamic_pointer_cast<Type::Pointer>(operand_type);
         if (operand_ptr_type == nullptr) {
             ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot dereference non-pointer type " + operand_type->to_string() + ".");
             throw LocalTypeException();
         }
         // The type of the expression is the type of the pointer
-        expr->type_annotation = operand_ptr_type->name;
+        expr->type = operand_ptr_type->inner_type;
     } else if (expr->op.tok_type == TOK_AMP) {
         // Only Expr::Access and Expr::Identifier are allowed as operands
         auto operand_access = std::dynamic_pointer_cast<Expr::Access>(expr->right);
@@ -390,24 +398,24 @@ std::any LocalChecker::visit_unary_expr(Expr::Unary* expr) {
             throw LocalTypeException();
         }
         // The type of the expression is a pointer to the type of the operand
-        expr->type_annotation = std::make_shared<Annotation::Pointer>(operand_type);
+        expr->type = std::make_shared<Type::Pointer>(operand_type);
 
     } else {
         // Unreachable
         ErrorLogger::inst().log_error(expr->location, E_UNREACHABLE, "Unknown unary operator.");
     }
 
-    return expr->type_annotation;
+    return expr->type;
 }
 
 std::any LocalChecker::visit_call_expr(Expr::Call* expr) {
     // The left side of the call expression must be callable; i.e. a function pointer type
-    std::shared_ptr<Annotation> left_type = std::any_cast<std::shared_ptr<Annotation>>(expr->callee->accept(this));
-    if (!IS_TYPE(left_type, Annotation::Function)) {
+    std::shared_ptr<Type> left_type = std::any_cast<std::shared_ptr<Type>>(expr->callee->accept(this));
+    if (!IS_TYPE(left_type, Type::Function)) {
         ErrorLogger::inst().log_error(expr->location, E_CALL_ON_NON_FUN, "Expression is not callable.");
         throw LocalTypeException();
     }
-    auto fun_type = std::dynamic_pointer_cast<Annotation::Function>(left_type);
+    auto fun_type = std::dynamic_pointer_cast<Type::Function>(left_type);
 
     // First, the number of arguments must match the number of parameters
     if (expr->arguments.size() != fun_type->params.size()) {
@@ -416,20 +424,20 @@ std::any LocalChecker::visit_call_expr(Expr::Call* expr) {
     }
     // Then, the types of the arguments must match the types of the parameters
     for (unsigned i = 0; i < expr->arguments.size(); i++) {
-        std::shared_ptr<Annotation> arg_type = std::any_cast<std::shared_ptr<Annotation>>(expr->arguments[i]->accept(this));
-        if (!fun_type->params[i].second->is_compatible_with(arg_type)) {
+        auto arg_type = std::any_cast<std::shared_ptr<Type>>(expr->arguments[i]->accept(this));
+        if (!Type::are_compatible(arg_type, fun_type->params[i].second)) {
             ErrorLogger::inst().log_error(expr->arguments[i]->location, E_INCOMPATIBLE_TYPES, "Cannot convert from " + arg_type->to_string() + " to " + fun_type->params[i].second->to_string() + ".");
             throw LocalTypeException();
         }
     }
 
     // The type of the call expression is the return type of the function
-    expr->type_annotation = fun_type->ret;
-    return expr->type_annotation;
+    expr->type = fun_type->return_type;
+    return expr->type;
 }
 
 std::any LocalChecker::visit_access_expr(Expr::Access* expr) {
-    auto left_type = std::any_cast<std::shared_ptr<Annotation>>(expr->left->accept(this));
+    auto left_type = std::any_cast<std::shared_ptr<Type>>(expr->left->accept(this));
 
     if (expr->op.tok_type == TOK_DOT) {
         std::shared_ptr<Expr::Identifier> right = std::dynamic_pointer_cast<Expr::Identifier>(expr->right);
@@ -438,9 +446,9 @@ std::any LocalChecker::visit_access_expr(Expr::Access* expr) {
             ErrorLogger::inst().log_error(expr->location, E_NO_IDENT_AFTER_DOT, "Expected identifier after '.'.");
             throw LocalTypeException();
         }
-        auto left_seg_type = std::dynamic_pointer_cast<Annotation::Segmented>(left_type);
+        auto left_seg_type = std::dynamic_pointer_cast<Type::Struct>(left_type);
         if (left_seg_type == nullptr) {
-            if (IS_TYPE(left_type, Annotation::Pointer)) {
+            if (IS_TYPE(left_type, Type::Pointer)) {
                 // This is still an error, but we can give a more specific error message
                 ErrorLogger::inst().log_error(expr->location, E_ACCESS_ON_NON_STRUCT, "Cannot access member of non-struct type. Did you mean to use '->' instead of '.'?");
                 throw LocalTypeException();
@@ -449,22 +457,22 @@ std::any LocalChecker::visit_access_expr(Expr::Access* expr) {
             throw LocalTypeException();
         }
 
-        expr->type_annotation = Environment::inst().get_instance_variable(left_seg_type, right->to_string())->annotation;
+        expr->type = Environment::inst().get_instance_variable(left_seg_type, right->to_string())->type;
         // If this returns nullptr, the member was not found
-        if (expr->type_annotation == nullptr) {
+        if (expr->type == nullptr) {
             ErrorLogger::inst().log_error(expr->location, E_INVALID_STRUCT_MEMBER, "Struct type " + left_seg_type->to_string() + " does not have member " + right->to_string() + ".");
             throw LocalTypeException();
         }
 
-        return expr->type_annotation;
+        return expr->type;
     } else if (expr->op.tok_type == TOK_ARROW) {
         // Pretty much the same as the dot operator, but the left side is dereferenced first
-        auto left_ptr_type = std::dynamic_pointer_cast<Annotation::Pointer>(left_type);
+        auto left_ptr_type = std::dynamic_pointer_cast<Type::Pointer>(left_type);
         if (left_ptr_type == nullptr) {
             ErrorLogger::inst().log_error(expr->location, E_ACCESS_ON_NON_STRUCT, "Cannot access member of non-struct type.");
             throw LocalTypeException();
         }
-        auto left_seg_type = std::dynamic_pointer_cast<Annotation::Segmented>(left_ptr_type->name);
+        auto left_seg_type = std::dynamic_pointer_cast<Type::Struct>(left_ptr_type->inner_type);
         if (left_seg_type == nullptr) {
             ErrorLogger::inst().log_error(expr->location, E_ACCESS_ON_NON_STRUCT, "Cannot access member of non-struct type.");
             throw LocalTypeException();
@@ -476,32 +484,32 @@ std::any LocalChecker::visit_access_expr(Expr::Access* expr) {
             throw LocalTypeException();
         }
 
-        expr->type_annotation = Environment::inst().get_instance_variable(left_seg_type, right->to_string())->annotation;
+        expr->type = Environment::inst().get_instance_variable(left_seg_type, right->to_string())->type;
         // If this returns nullptr, the member was not found
-        if (expr->type_annotation == nullptr) {
+        if (expr->type == nullptr) {
             ErrorLogger::inst().log_error(expr->location, E_INVALID_STRUCT_MEMBER, "Struct type " + left_seg_type->to_string() + " does not have member " + right->to_string() + ".");
             throw LocalTypeException();
         }
 
-        return expr->type_annotation;
+        return expr->type;
     } else if (expr->op.tok_type == TOK_LEFT_SQUARE) {
         // Right now, this only works with arrays
-        auto left_arr_type = std::dynamic_pointer_cast<Annotation::Array>(left_type);
+        auto left_arr_type = std::dynamic_pointer_cast<Type::Array>(left_type);
         if (left_arr_type == nullptr) {
             ErrorLogger::inst().log_error(expr->location, E_INDEX_ON_NON_ARRAY, "Cannot index non-array type.");
             throw LocalTypeException();
         }
 
         // The index must be an integer
-        auto index_type = std::any_cast<std::shared_ptr<Annotation>>(expr->right->accept(this));
-        if (index_type->to_string() != "i32") {
+        auto index_type = std::any_cast<std::shared_ptr<Type::Struct>>(expr->right->accept(this));
+        if (index_type != nullptr && index_type->struct_scope == Environment::inst().get_struct("i32")) {
             ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot index array with type " + index_type->to_string() + ". Expected type 'i32'.");
             throw LocalTypeException();
         }
 
         // The type of the expression is the type of the array elements
-        expr->type_annotation = left_arr_type->name;
-        return expr->type_annotation;
+        expr->type = left_arr_type->inner_type;
+        return expr->type;
     } else {
         // Unreachable
         ErrorLogger::inst().log_error(expr->location, E_UNREACHABLE, "Unknown access operator.");
@@ -510,44 +518,49 @@ std::any LocalChecker::visit_access_expr(Expr::Access* expr) {
 }
 
 std::any LocalChecker::visit_grouping_expr(Expr::Grouping* expr) {
-    expr->type_annotation = std::any_cast<std::shared_ptr<Annotation>>(expr->expression->accept(this));
-    return expr->type_annotation;
+    expr->type = std::any_cast<std::shared_ptr<Type>>(expr->expression->accept(this));
+    return expr->type;
 }
 
 std::any LocalChecker::visit_identifier_expr(Expr::Identifier* expr) {
-    expr->type_annotation = Environment::inst().get_variable(expr)->annotation;
-    if (expr->type_annotation == nullptr) {
+    expr->type = Environment::inst().get_variable(expr)->type;
+    if (expr->type == nullptr) {
         ErrorLogger::inst().log_error(expr->location, E_UNKNOWN_TYPE, "Could not resolve type annotation.");
         throw LocalTypeException();
     }
-    return expr->type_annotation;
+    return expr->type;
 }
 
 std::any LocalChecker::visit_literal_expr(Expr::Literal* expr) {
 
-    std::shared_ptr<Annotation> type = nullptr;
+    std::shared_ptr<Node::StructScope> node = nullptr;
+    std::shared_ptr<Type> type = nullptr;
 
     switch (expr->token.tok_type) {
     case TOK_INT:
-        type = std::make_shared<Annotation::Segmented>("i32");
+        node = Environment::inst().get_struct("i32");
+        type = std::make_shared<Type::Struct>(node);
         break;
     case TOK_FLOAT:
-        type = std::make_shared<Annotation::Segmented>("f64");
+        node = Environment::inst().get_struct("f64");
+        type = std::make_shared<Type::Struct>(node);
         break;
     case TOK_CHAR:
-        type = std::make_shared<Annotation::Segmented>("char");
+        node = Environment::inst().get_struct("char");
+        type = std::make_shared<Type::Struct>(node);
         break;
     case TOK_STR:
-        type = std::make_shared<Annotation::Segmented>("char");
-        type = std::make_shared<Annotation::Pointer>(type);
-        // Creates type `char*`
+        node = Environment::inst().get_struct("char");
+        type = std::make_shared<Type::Struct>(node);
+        type = std::make_shared<Type::Pointer>(type);
         break;
     case TOK_BOOL:
-        type = std::make_shared<Annotation::Segmented>("bool");
+        node = Environment::inst().get_struct("bool");
+        type = std::make_shared<Type::Struct>(node);
         break;
     case TOK_NIL:
-        type = std::make_shared<Annotation::Segmented>("auto");
-        type = std::make_shared<Annotation::Pointer>(type);
+        type = std::make_shared<Type::Blank>();
+        type = std::make_shared<Type::Pointer>(type);
         // Creates type `auto*`
         // Note: `auto` is not a primitive type, so this is not a valid type.
         // However, when later checked for type compatibility, the type will be updated to the correct type.
@@ -557,42 +570,47 @@ std::any LocalChecker::visit_literal_expr(Expr::Literal* expr) {
         throw LocalTypeException();
     }
 
-    expr->type_annotation = type;
+    if (type == nullptr) {
+        ErrorLogger::inst().log_error(expr->location, E_IMPOSSIBLE, "Could not resolve primitive type annotation.");
+        throw LocalTypeException();
+    }
+
+    expr->type = type;
     return type;
 }
 
 std::any LocalChecker::visit_array_expr(Expr::Array* expr) {
     // Handle the case where the array is empty
     if (expr->elements.empty()) {
-        expr->type_annotation = std::make_shared<Annotation::Segmented>("auto");
-        expr->type_annotation = std::make_shared<Annotation::Array>(expr->type_annotation);
-        return expr->type_annotation;
+        expr->type = std::make_shared<Type::Blank>();
+        expr->type = std::make_shared<Type::Array>(expr->type, 0);
+        return expr->type;
     } else {
         // Ensure all elements have the same type
-        std::shared_ptr<Annotation> type = std::any_cast<std::shared_ptr<Annotation>>(expr->elements[0]->accept(this));
+        std::shared_ptr<Type> type = std::any_cast<std::shared_ptr<Type>>(expr->elements[0]->accept(this));
         // In the case that this element is an `auto` type, the repeated compatibility checks in the following loop will build the type until it is complete.
         for (auto& elem : expr->elements) {
-            std::shared_ptr<Annotation> elem_type = std::any_cast<std::shared_ptr<Annotation>>(elem->accept(this));
-            if (!type->is_compatible_with(elem_type)) {
+            auto elem_type = std::any_cast<std::shared_ptr<Type>>(elem->accept(this));
+            if (Type::are_compatible(type, elem_type) == false) {
                 ErrorLogger::inst().log_error(elem->location, E_INCONSISTENT_ARRAY_TYPES, "Array elements must have the same type. Expected " + type->to_string() + ", found " + elem_type->to_string() + ".");
                 throw LocalTypeException();
             }
         }
         // If, after this loop, the type still contains `auto`, it will later be checked against the type annotation on the left-hand side of the assignment
-        type = std::make_shared<Annotation::Array>(type);
-        expr->type_annotation = type;
+        type = std::make_shared<Type::Array>(type);
+        expr->type = type;
         return type;
     }
 }
 
 std::any LocalChecker::visit_tuple_expr(Expr::Tuple* expr) {
-    std::vector<std::shared_ptr<Annotation>> types;
+    std::vector<std::shared_ptr<Type>> types;
     for (auto& elem : expr->elements) {
-        std::shared_ptr<Annotation> elem_type = std::any_cast<std::shared_ptr<Annotation>>(elem->accept(this));
+        std::shared_ptr<Type> elem_type = std::any_cast<std::shared_ptr<Type>>(elem->accept(this));
         types.push_back(elem_type);
     }
-    expr->type_annotation = std::make_shared<Annotation::Tuple>(types);
-    return expr->type_annotation;
+    expr->type = std::make_shared<Type>(types);
+    return expr->type;
 }
 
 void LocalChecker::type_check(std::vector<std::shared_ptr<Stmt>> stmts) {

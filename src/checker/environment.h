@@ -165,7 +165,24 @@ public:
      * @param member_name The name of the member to retrieve.
      * @return std::shared_ptr<Node::Variable> A pointer to the variable node.
      */
-    std::shared_ptr<Node::Variable> get_instance_variable(std::shared_ptr<Annotation::Segmented> instance_type, const std::string& member_name);
+    std::shared_ptr<Node::Variable> get_instance_variable(std::shared_ptr<Type::Struct> instance_type, const std::string& member_name);
+
+    /**
+     * @brief Get the struct object for a given segmented annotation.
+     *
+     * @param type The segmented annotation to get the struct for.
+     * @return std::shared_ptr<Node::StructScope> A pointer to the struct scope node in the global tree.
+     */
+    std::shared_ptr<Node::StructScope> get_struct(std::shared_ptr<Annotation::Segmented> type);
+
+    /**
+     * @brief Get the struct object for a given name.
+     * Use this function when the struct name is a single string segment.
+     *
+     * @param name The short name of the struct to get.
+     * @return std::shared_ptr<Node::StructScope> A pointer to the struct scope node in the global tree.
+     */
+    std::shared_ptr<Node::StructScope> get_struct(const std::string& name);
 
     /**
      * @brief Iterates through the list of deferred types and verifies them.

@@ -171,28 +171,28 @@ std::shared_ptr<Node::Variable> Environment::get_variable(const Expr::Identifier
     return std::dynamic_pointer_cast<Node::Variable>(found_node);
 }
 
-std::shared_ptr<Node::Variable> Environment::get_instance_variable(std::shared_ptr<Annotation::Segmented> instance_type, const std::string& member_name) {
+std::shared_ptr<Node::Variable> Environment::get_instance_variable(std::shared_ptr<Type::Struct> instance_type, const std::string& member_name) {
+    auto struct_node = instance_type->struct_scope;
+    auto found_node_iter = struct_node->children.find(member_name);
+    if (found_node_iter != struct_node->children.end()) {
+        return std::dynamic_pointer_cast<Node::Variable>(found_node_iter->second);
+    } else {
+        return nullptr;
+    }
+}
+
+std::shared_ptr<Node::StructScope> Environment::get_struct(std::shared_ptr<Annotation::Segmented> type) {
     std::vector<std::string> path;
-    for (auto& class_ : instance_type->classes) {
+    for (auto& class_ : type->classes) {
         path.push_back(class_->name);
     }
     auto found_node = current_scope->downward_lookup(path);
-    if (found_node == nullptr) {
-        return nullptr;
-    }
-    auto found_struct = std::dynamic_pointer_cast<Node::StructScope>(found_node);
-    if (found_struct == nullptr) {
-        return nullptr;
-    }
-    auto found_var_iter = found_struct->instance_members.find(member_name);
-    if (found_var_iter == found_struct->instance_members.end()) {
-        found_var_iter = found_struct->children.find(member_name);
-    }
-    if (found_var_iter == found_struct->instance_members.end()) {
-        return nullptr;
-    }
-    // If this isn't a variable, we'd return nullptr anyway.
-    return std::dynamic_pointer_cast<Node::Variable>(found_var_iter->second);
+    return std::dynamic_pointer_cast<Node::StructScope>(found_node);
+}
+
+std::shared_ptr<Node::StructScope> Environment::get_struct(const std::string& name) {
+    auto found_node = current_scope->upward_lookup(name);
+    return std::dynamic_pointer_cast<Node::StructScope>(found_node);
 }
 
 bool Environment::verify_deferred_types() {

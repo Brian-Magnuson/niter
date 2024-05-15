@@ -47,6 +47,24 @@ public:
         }
         return false;
     }
+
+    bool is_int() {
+        if (
+            to_string() == "__i8" || to_string() == "__i16" || to_string() == "__i32" || to_string() == "__i64" || to_string() == "__char"
+        ) {
+            return true;
+        }
+        return false;
+    }
+
+    bool is_float() {
+        if (
+            to_string() == "__f32" || to_string() == "__f64"
+        ) {
+            return true;
+        }
+        return false;
+    }
 };
 
 /**
@@ -72,7 +90,7 @@ public:
  */
 class Type::Function : public Type {
 public:
-    std::vector<std::pair<TokenType, std::shared_ptr<Type>>> parameters;
+    std::vector<std::pair<TokenType, std::shared_ptr<Type>>> params;
     TokenType return_declarer;
     std::shared_ptr<Type> return_type = nullptr;
 
@@ -80,7 +98,7 @@ public:
     TypeKind kind() const override { return TypeKind::FUNCTION; }
     std::string to_string() const override {
         std::string str = "fun(";
-        for (auto& param : parameters) {
+        for (auto& param : params) {
             if (param.first == KW_VAR) {
                 str += "var ";
             }
@@ -95,11 +113,11 @@ public:
     }
 
     Function(
-        std::vector<std::pair<TokenType, std::shared_ptr<Type>>>& parameters,
+        std::vector<std::pair<TokenType, std::shared_ptr<Type>>>& params,
         TokenType return_declarer,
         std::shared_ptr<Type> return_type
     )
-        : parameters(parameters), return_declarer(return_declarer), return_type(return_type) {}
+        : params(params), return_declarer(return_declarer), return_type(return_type) {}
 };
 
 /**
