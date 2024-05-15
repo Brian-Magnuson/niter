@@ -152,9 +152,9 @@ bool Environment::verify_type(const std::shared_ptr<Annotation>& type, bool allo
     return false;
 }
 
-std::shared_ptr<Annotation> Environment::get_type(const Expr::Identifier* identifier) {
+std::shared_ptr<Node::Variable> Environment::get_variable(const Expr::Identifier* identifier) {
     std::shared_ptr<Node> found_node = nullptr;
-    // If the identifier is a single token, we can look up the type in the global scope.
+    // If the identifier is a single token, we can look up the variable in the global scope.
     if (identifier->tokens.size() == 1) {
         found_node = current_scope->upward_lookup(identifier->tokens[0].lexeme);
     }
@@ -168,26 +168,14 @@ std::shared_ptr<Annotation> Environment::get_type(const Expr::Identifier* identi
         found_node = current_scope->downward_lookup(path);
     }
 
-    if (found_node == nullptr) {
-        return nullptr;
-    }
-
-    auto found_var = std::dynamic_pointer_cast<Node::Variable>(found_node);
-
-    if (found_var != nullptr) {
-        return found_var->annotation;
-    } else {
-        return nullptr;
-    }
+    return std::dynamic_pointer_cast<Node::Variable>(found_node);
 }
 
-std::shared_ptr<Annotation> Environment::get_instance_member_type(std::shared_ptr<Annotation::Segmented> instance_type, const std::string& member_name) {
-
+std::shared_ptr<Node::Variable> Environment::get_instance_variable(std::shared_ptr<Annotation::Segmented> instance_type, const std::string& member_name) {
     std::vector<std::string> path;
     for (auto& class_ : instance_type->classes) {
         path.push_back(class_->name);
     }
-
     auto found_node = current_scope->downward_lookup(path);
     if (found_node == nullptr) {
         return nullptr;
@@ -198,9 +186,13 @@ std::shared_ptr<Annotation> Environment::get_instance_member_type(std::shared_pt
     }
     auto found_var_iter = found_struct->instance_members.find(member_name);
     if (found_var_iter == found_struct->instance_members.end()) {
+        found_var_iter = found_struct->children.find(member_name);
+    }
+    if (found_var_iter == found_struct->instance_members.end()) {
         return nullptr;
     }
-    return found_var_iter->second;
+    // If this isn't a variable, we'd return nullptr anyway.
+    return std::dynamic_pointer_cast<Node::Variable>(found_var_iter->second);
 }
 
 bool Environment::verify_deferred_types() {

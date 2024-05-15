@@ -130,7 +130,7 @@ public:
  */
 class Node::StructScope : public Node::Scope {
 public:
-    std::unordered_map<std::string, std::shared_ptr<Annotation>> instance_members;
+    std::unordered_map<std::string, std::shared_ptr<Node>> instance_members;
 
     StructScope(std::shared_ptr<Scope> parent) {
         this->parent = parent;

@@ -144,26 +144,28 @@ public:
     );
 
     /**
-     * @brief Retrieves the type of a variable in the current scope.
-     * If the symbol has namespaces, downward lookup will be used.
-     * If the symbol is only one token long, upward lookup will be used, then downward lookup if the symbol is not found.
-     * If the symbol happens to be of type `void` or `nil`, an annotation representing the type will be returned (not nullptr).
+     * @brief Retrieves the variable node from the current scope.
+     * If the identifier has namespaces, downward lookup will be used.
+     * If the identifier is only one token long, upward lookup will be used, then downward lookup if the symbol is not found.
+     * If the symbol is not found, nullptr will be returned.
      *
      * @param identifier The identifier of the variable to retrieve.
-     * @return std::shared_ptr<Annotation> The type of the symbol. If the symbol is not found (or the symbol does not name a variable), nullptr will be returned.
+     * @return std::shared_ptr<Node::Variable> A pointer to the variable node.
      */
-    std::shared_ptr<Annotation> get_type(const Expr::Identifier* identifier);
+    std::shared_ptr<Node::Variable> get_variable(const Expr::Identifier* identifier);
 
     /**
-     * @brief Get the instance member type object for a given instance type and member name.
+     * @brief Get the instance variable object for a given instance type and member name.
      * The instance type must be a segmented annotation.
      * If it is a pointer, it must be dereferenced first.
+     * If the instance_type references a valid struct, but the member is not found, the static members of the struct will be checked.
+     * If the member is not found in the struct, nullptr will be returned.
      *
      * @param instance_type The type of the instance. Must reference a struct scope in the global tree.
      * @param member_name The name of the member to retrieve.
-     * @return std::shared_ptr<Annotation> The type of the member. If the member is not found, nullptr will be returned.
+     * @return std::shared_ptr<Node::Variable> A pointer to the variable node.
      */
-    std::shared_ptr<Annotation> get_instance_member_type(std::shared_ptr<Annotation::Segmented> instance_type, const std::string& member_name);
+    std::shared_ptr<Node::Variable> get_instance_variable(std::shared_ptr<Annotation::Segmented> instance_type, const std::string& member_name);
 
     /**
      * @brief Iterates through the list of deferred types and verifies them.

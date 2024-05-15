@@ -413,7 +413,7 @@ std::any LocalChecker::visit_access_expr(Expr::Access* expr) {
             throw LocalTypeException();
         }
 
-        expr->type_annotation = Environment::inst().get_instance_member_type(left_seg_type, right->to_string());
+        expr->type_annotation = Environment::inst().get_instance_variable(left_seg_type, right->to_string())->annotation;
         // If this returns nullptr, the member was not found
         if (expr->type_annotation == nullptr) {
             ErrorLogger::inst().log_error(expr->location, E_INVALID_STRUCT_MEMBER, "Struct type " + left_seg_type->to_string() + " does not have member " + right->to_string() + ".");
@@ -440,7 +440,7 @@ std::any LocalChecker::visit_access_expr(Expr::Access* expr) {
             throw LocalTypeException();
         }
 
-        expr->type_annotation = Environment::inst().get_instance_member_type(left_seg_type, right->to_string());
+        expr->type_annotation = Environment::inst().get_instance_variable(left_seg_type, right->to_string())->annotation;
         // If this returns nullptr, the member was not found
         if (expr->type_annotation == nullptr) {
             ErrorLogger::inst().log_error(expr->location, E_INVALID_STRUCT_MEMBER, "Struct type " + left_seg_type->to_string() + " does not have member " + right->to_string() + ".");
@@ -479,7 +479,7 @@ std::any LocalChecker::visit_grouping_expr(Expr::Grouping* expr) {
 }
 
 std::any LocalChecker::visit_identifier_expr(Expr::Identifier* expr) {
-    expr->type_annotation = Environment::inst().get_type(expr);
+    expr->type_annotation = Environment::inst().get_variable(expr)->annotation;
     if (expr->type_annotation == nullptr) {
         ErrorLogger::inst().log_error(expr->location, E_UNKNOWN_TYPE, "Could not resolve type annotation.");
         throw LocalTypeException();
