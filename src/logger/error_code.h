@@ -160,6 +160,10 @@ enum ErrorCode {
     E_INVALID_ARITY,
     // The unary operator '&' was found on a non-lvalue
     E_INVALID_ADDRESS_OF,
+    // An assignment was found to a non-lvalue
+    E_ASSIGN_TO_NON_LVALUE,
+    // An assignment was found to a constant
+    E_ASSIGN_TO_CONST,
 
     // Code generation errors
     E_CODEGEN = 6000,

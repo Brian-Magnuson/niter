@@ -228,10 +228,48 @@ std::any LocalChecker::visit_fun_decl(Decl::Fun* decl) {
 }
 
 std::any LocalChecker::visit_assign_expr(Expr::Assign* expr) {
-    // Log error with location
-    // TODO: Implement assignment expressions
-    ErrorLogger::inst().log_error(expr->location, E_UNIMPLEMENTED, "Assignment expressions are not yet implemented.");
-    return std::any();
+    // The left side of the assignment must be an lvalue
+    // Currently, lvalues can be Expr::Identifier or Expr::Access
+    // Visit the left and right sides of the assignment
+    auto l_type = std::any_cast<std::shared_ptr<Annotation>>(expr->left->accept(this));
+    auto r_type = std::any_cast<std::shared_ptr<Annotation>>(expr->right->accept(this));
+
+    auto l_access = std::dynamic_pointer_cast<Expr::Access>(expr->left);
+    auto l_ident = std::dynamic_pointer_cast<Expr::Identifier>(expr->left);
+    if (l_access != nullptr) {
+        // Get the struct type
+        // We already visited the left side, so we know it's a valid access
+        auto l_struct_type = std::dynamic_pointer_cast<Annotation::Segmented>(l_access->left->type_annotation);
+        // Get the member name
+        auto member_name = std::dynamic_pointer_cast<Expr::Identifier>(l_access->right)->to_string();
+        // Get the member node
+        auto member_node = Environment::inst().get_instance_variable(l_struct_type, member_name);
+        // Ensure the member declarer is not const
+        if (member_node->declarer == KW_CONST) {
+            ErrorLogger::inst().log_error(l_access->location, E_ASSIGN_TO_CONST, "Cannot assign to a constant member.");
+            throw LocalTypeException();
+        }
+    } else if (l_ident != nullptr) {
+        // Ensure the variable is not const
+        auto var_node = Environment::inst().get_variable(l_ident.get());
+        if (var_node->declarer == KW_CONST) {
+            ErrorLogger::inst().log_error(l_ident->location, E_ASSIGN_TO_CONST, "Cannot assign to a constant variable.");
+            throw LocalTypeException();
+        }
+    } else {
+        ErrorLogger::inst().log_error(expr->location, E_ASSIGN_TO_NON_LVALUE, "Left side of assignment is not an lvalue.");
+        throw LocalTypeException();
+    }
+
+    // The types of the left and right sides must match
+    if (!l_type->is_compatible_with(r_type)) {
+        ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot convert from " + r_type->to_string() + " to " + l_type->to_string() + ".");
+        throw LocalTypeException();
+    }
+
+    // The type of the expression is the type of the left side
+    expr->type_annotation = l_type;
+    return expr->type_annotation;
 }
 
 std::any LocalChecker::visit_logical_expr(Expr::Logical* expr) {
