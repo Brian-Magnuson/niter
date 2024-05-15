@@ -70,9 +70,9 @@ public:
  */
 class Type::Function : public Type {
 public:
-    std::vector<std::pair<TokenType, std::shared_ptr<Node::StructScope>>> parameters;
+    std::vector<std::pair<TokenType, std::shared_ptr<Type>>> parameters;
     TokenType return_declarer;
-    std::shared_ptr<Node::StructScope> return_type = nullptr;
+    std::shared_ptr<Type> return_type = nullptr;
 
     virtual ~Function() = default;
     TypeKind kind() const override { return TypeKind::FUNCTION; }
@@ -82,13 +82,13 @@ public:
             if (param.first == KW_VAR) {
                 str += "var ";
             }
-            str += param.second->unique_name + ", ";
+            str += param.second->to_string() + ", ";
         }
         str += ") => ";
         if (return_declarer == KW_VAR) {
             str += "var ";
         }
-        str += return_type->unique_name;
+        str += return_type->to_string();
         return str;
     }
 };
@@ -100,12 +100,12 @@ public:
  */
 class Type::Array : public Type {
 public:
-    std::shared_ptr<Node::StructScope> inner_type = nullptr;
+    std::shared_ptr<Type> inner_type = nullptr;
     unsigned size;
 
     virtual ~Array() = default;
     TypeKind kind() const override { return TypeKind::ARRAY; }
-    std::string to_string() const override { return inner_type->unique_name + "[" + std::to_string(size) + "]"; }
+    std::string to_string() const override { return inner_type->to_string() + "[" + std::to_string(size) + "]"; }
 };
 
 /**
@@ -115,11 +115,11 @@ public:
  */
 class Type::Pointer : public Type {
 public:
-    std::shared_ptr<Node::StructScope> inner_type = nullptr;
+    std::shared_ptr<Type> inner_type = nullptr;
 
     virtual ~Pointer() = default;
     TypeKind kind() const override { return TypeKind::POINTER; }
-    std::string to_string() const override { return inner_type->unique_name + "*"; }
+    std::string to_string() const override { return inner_type->to_string() + "*"; }
 };
 
 /**
@@ -129,14 +129,14 @@ public:
  */
 class Type::Tuple : public Type {
 public:
-    std::vector<std::shared_ptr<Node::StructScope>> elements;
+    std::vector<std::shared_ptr<Type>> elements;
 
     virtual ~Tuple() = default;
     TypeKind kind() const override { return TypeKind::TUPLE; }
     std::string to_string() const override {
         std::string str = "(";
         for (auto& elem : elements) {
-            str += elem->unique_name + ", ";
+            str += elem->to_string() + ", ";
         }
         str += ")";
         return str;
