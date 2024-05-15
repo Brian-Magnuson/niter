@@ -23,6 +23,10 @@ public:
 
     virtual ~Node() = default;
 
+    // static int local_scope_count;
+
+    // A unique name for this node. Used for type comparison and LLVM IR generation.
+    std::string unique_name;
     // The parent scope of this node. This is never a variable since variables do not have children.
     std::shared_ptr<Scope> parent = nullptr;
 };
@@ -106,7 +110,10 @@ public:
  */
 class Node::RootScope : public Node::Scope {
 public:
-    RootScope() = default;
+    RootScope() {
+        parent = nullptr;
+        unique_name = "__";
+    }
 };
 
 /**
@@ -116,8 +123,9 @@ public:
  */
 class Node::NamespaceScope : public Node::Scope {
 public:
-    NamespaceScope(std::shared_ptr<Scope> parent) {
+    NamespaceScope(std::shared_ptr<Scope> parent, const std::string& name) {
         this->parent = parent;
+        unique_name = parent->unique_name + name + "__";
     }
 };
 
@@ -132,8 +140,9 @@ class Node::StructScope : public Node::Scope {
 public:
     std::unordered_map<std::string, std::shared_ptr<Node>> instance_members;
 
-    StructScope(std::shared_ptr<Scope> parent) {
+    StructScope(std::shared_ptr<Scope> parent, const std::string& name) {
         this->parent = parent;
+        unique_name = parent->unique_name + name + "__";
     }
 };
 
@@ -150,6 +159,8 @@ class Node::LocalScope : public Node::Scope {
 public:
     LocalScope(std::shared_ptr<Scope> parent) {
         this->parent = parent;
+        // unique_name = parent->unique_name + std::to_string(local_scope_count++) + "__";
+        unique_name = parent->unique_name + "local__";
     }
 };
 
@@ -168,9 +179,11 @@ public:
     Variable(
         std::shared_ptr<Scope> parent,
         TokenType declarer,
-        std::shared_ptr<Annotation> annotation
+        std::shared_ptr<Annotation> annotation,
+        const std::string& name
     ) : declarer(declarer), annotation(annotation) {
         this->parent = parent;
+        unique_name = parent->unique_name + name;
     }
 };
 

@@ -6,7 +6,7 @@ ErrorCode Environment::add_namespace(const std::string& name) {
     auto namespace_scope = std::dynamic_pointer_cast<Node::NamespaceScope>(current_scope);
 
     if (namespace_scope != nullptr) {
-        auto new_scope = std::make_shared<Node::NamespaceScope>(namespace_scope);
+        auto new_scope = std::make_shared<Node::NamespaceScope>(namespace_scope, name);
         namespace_scope->children[name] = new_scope;
         current_scope = new_scope;
         return (ErrorCode)0;
@@ -24,7 +24,7 @@ ErrorCode Environment::add_struct(const std::string& name) {
         if (HAS_KEY(current_scope->children, name)) {
             return E_STRUCT_ALREADY_DECLARED;
         } else {
-            auto new_scope = std::make_shared<Node::StructScope>(current_scope);
+            auto new_scope = std::make_shared<Node::StructScope>(current_scope, name);
             current_scope->children[name] = new_scope;
             current_scope = new_scope;
             return (ErrorCode)0;
@@ -41,7 +41,7 @@ void Environment::install_primitive_types() {
         "void",
     };
     for (auto& type : primitive_types) {
-        global_tree->children[type] = std::make_shared<Node::StructScope>(global_tree);
+        global_tree->children[type] = std::make_shared<Node::StructScope>(global_tree, type);
     }
 }
 
@@ -73,7 +73,7 @@ ErrorCode Environment::declare_variable(const std::string& name, TokenType decla
     if (HAS_KEY(current_scope->children, name)) {
         return E_SYMBOL_ALREADY_DECLARED;
     } else {
-        current_scope->children[name] = std::make_shared<Node::Variable>(current_scope, declarer, type);
+        current_scope->children[name] = std::make_shared<Node::Variable>(current_scope, declarer, type, name);
         return (ErrorCode)0;
     }
 }
