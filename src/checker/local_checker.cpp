@@ -26,21 +26,21 @@ std::any LocalChecker::visit_expression_stmt(Stmt::Expression* stmt) {
     }
     return std::any();
 }
-std::any LocalChecker::visit_block_stmt(Stmt::Block* stmt) {
+std::any LocalChecker::visit_block_stmt(Stmt::Block* /* stmt */) {
     // Not yet implemented
     // TODO: Implement block statements
     // ErrorLogger::inst().log_error(stmt->location, E_UNIMPLEMENTED, "Block statements are not yet implemented.");
     return std::any();
 }
 
-std::any LocalChecker::visit_conditional_stmt(Stmt::Conditional* stmt) {
+std::any LocalChecker::visit_conditional_stmt(Stmt::Conditional* /* stmt */) {
     // Log error with location
     // TODO: Implement conditional statements
     // ErrorLogger::inst().log_error(stmt->location, E_UNIMPLEMENTED, "Conditional statements are not yet implemented.");
     return std::any();
 }
 
-std::any LocalChecker::visit_loop_stmt(Stmt::Loop* stmt) {
+std::any LocalChecker::visit_loop_stmt(Stmt::Loop* /* stmt */) {
     // Log error with location
     // TODO: Implement loop statements
     // ErrorLogger::inst().log_error(stmt->location, E_UNIMPLEMENTED, "Loop statements are not yet implemented.");
@@ -59,14 +59,14 @@ std::any LocalChecker::visit_return_stmt(Stmt::Return* stmt) {
     return ret_type;
 }
 
-std::any LocalChecker::visit_break_stmt(Stmt::Break* stmt) {
+std::any LocalChecker::visit_break_stmt(Stmt::Break* /* stmt */) {
     // Log error with location
     // TODO: Implement break statements
     // ErrorLogger::inst().log_error(stmt->location, E_UNIMPLEMENTED, "Break statements are not yet implemented.");
     return std::any();
 }
 
-std::any LocalChecker::visit_continue_stmt(Stmt::Continue* stmt) {
+std::any LocalChecker::visit_continue_stmt(Stmt::Continue* /* stmt */) {
     // Log error with location
     // TODO: Implement continue statements
     // ErrorLogger::inst().log_error(stmt->location, E_UNIMPLEMENTED, "Continue statements are not yet implemented.");
@@ -83,10 +83,8 @@ std::any LocalChecker::visit_print_stmt(Stmt::Print* stmt) {
     return std::any();
 }
 
-std::any LocalChecker::visit_eof_stmt(Stmt::EndOfFile* stmt) {
-    // Log error with location
-    // TODO: Implement end of file statements
-    ErrorLogger::inst().log_error(stmt->location, E_UNIMPLEMENTED, "End of file statements are not yet implemented.");
+std::any LocalChecker::visit_eof_stmt(Stmt::EndOfFile* /* stmt */) {
+    // Does nothing (for now)
     return std::any();
 }
 

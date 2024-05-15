@@ -139,7 +139,7 @@ class GlobalChecker : public Stmt::Visitor, public Decl::Visitor {
     std::any visit_struct_decl(Decl::Struct* decl) override;
 
 public:
-    GlobalChecker(std::shared_ptr<Environment> environment) : environment(environment) {}
+    GlobalChecker() = default;
 
     /**
      * @brief Runs the global type checker on a list of statements.
