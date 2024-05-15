@@ -61,6 +61,8 @@ public:
     virtual ~Struct() = default;
     TypeKind kind() const override { return TypeKind::STRUCT; }
     std::string to_string() const override { return struct_scope->unique_name; }
+
+    Struct(std::shared_ptr<Node::StructScope> struct_scope) : struct_scope(struct_scope) {}
 };
 
 /**
@@ -91,6 +93,13 @@ public:
         str += return_type->to_string();
         return str;
     }
+
+    Function(
+        std::vector<std::pair<TokenType, std::shared_ptr<Type>>>& parameters,
+        TokenType return_declarer,
+        std::shared_ptr<Type> return_type
+    )
+        : parameters(parameters), return_declarer(return_declarer), return_type(return_type) {}
 };
 
 /**
@@ -106,6 +115,8 @@ public:
     virtual ~Array() = default;
     TypeKind kind() const override { return TypeKind::ARRAY; }
     std::string to_string() const override { return inner_type->to_string() + "[" + std::to_string(size) + "]"; }
+
+    Array(std::shared_ptr<Type> inner_type, unsigned size) : inner_type(inner_type), size(size) {}
 };
 
 /**
@@ -120,6 +131,8 @@ public:
     virtual ~Pointer() = default;
     TypeKind kind() const override { return TypeKind::POINTER; }
     std::string to_string() const override { return inner_type->to_string() + "*"; }
+
+    Pointer(std::shared_ptr<Type> inner_type) : inner_type(inner_type) {}
 };
 
 /**
@@ -141,6 +154,8 @@ public:
         str += ")";
         return str;
     }
+
+    Tuple(std::vector<std::shared_ptr<Type>>& elements) : elements(elements) {}
 };
 
 /**
@@ -154,6 +169,8 @@ public:
     virtual ~Blank() = default;
     TypeKind kind() const override { return TypeKind::BLANK; }
     std::string to_string() const override { return ""; }
+
+    Blank() {}
 };
 
 #endif // TYPE_H
