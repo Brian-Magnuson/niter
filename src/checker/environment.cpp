@@ -219,12 +219,21 @@ std::shared_ptr<Type> Environment::get_type(const std::string& name) {
 }
 
 bool Environment::verify_deferred_types() {
+    // Save the current scope to restore it later.
+    auto previous_scope = current_scope;
+
     for (auto& deferred_variable : deferred_variables) {
+        // Set the current scope to the scope of the deferred variable.
+        current_scope = deferred_variable.scope;
+        // This is like jumping to a different part of the tree and declaring the variable there.
         auto [variable, error] = declare_variable(deferred_variable.name, deferred_variable.declarer, deferred_variable.annotation, false);
         if (error != 0) {
             return false;
         }
     }
+    // Restore the previous scope (not that we need it anymore since this function is called at the end of the global checker).
+    current_scope = previous_scope;
+
     return true;
 }
 
