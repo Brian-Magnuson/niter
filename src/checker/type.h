@@ -37,7 +37,19 @@ public:
     class Blank;
 
     virtual ~Type() = default;
+
+    /**
+     * @brief Get the kind of the type.
+     *
+     * @return TypeKind An enum representing the kind of the type.
+     */
     virtual TypeKind kind() const = 0;
+
+    /**
+     * @brief Get the string representation of the type.
+     *
+     * @return std::string The string representation of the type.
+     */
     virtual std::string to_string() const = 0;
 
     /**
@@ -62,6 +74,14 @@ public:
         return false;
     }
 
+    /**
+     * @brief Checks if the type is a primitive integer type.
+     * One of these: `::i8`, `::i16`, `::i32`, `::i64`, `::char`.
+     * Uses the unique type name to determine if the type is an integer.
+     *
+     * @return true If the type is a primitive integer type.
+     * @return false Otherwise.
+     */
     bool is_int() {
         if (
             to_string() == "::i8" || to_string() == "::i16" || to_string() == "::i32" || to_string() == "::i64" || to_string() == "::char"
@@ -71,6 +91,14 @@ public:
         return false;
     }
 
+    /**
+     * @brief Checks if the type is a primitive floating point type.
+     * One of these: `::f32`, `::f64`.
+     * Uses the unique type name to determine if the type is a floating point type.
+     *
+     * @return true If the type is a primitive floating point type.
+     * @return false Otherwise.
+     */
     bool is_float() {
         if (
             to_string() == "::f32" || to_string() == "::f64"
@@ -88,6 +116,7 @@ public:
  */
 class Type::Struct : public Type {
 public:
+    // The node representing the struct in the namespace tree. Note: if two struct types are the same, they will point to the same node.
     std::shared_ptr<Node::StructScope> struct_scope = nullptr;
 
     virtual ~Struct() = default;
@@ -104,8 +133,11 @@ public:
  */
 class Type::Function : public Type {
 public:
+    // A list of pairs containing the parameter declarer and the parameter type.
     std::vector<std::pair<TokenType, std::shared_ptr<Type>>> params;
+    // The return type declarer.
     TokenType return_declarer;
+    // The return type.
     std::shared_ptr<Type> return_type = nullptr;
 
     virtual ~Function() = default;
@@ -141,14 +173,16 @@ public:
  */
 class Type::Array : public Type {
 public:
+    // The element type of the array.
     std::shared_ptr<Type> inner_type = nullptr;
-    unsigned size;
+    // The size of the array. We might not use this.
+    int size = -1;
 
     virtual ~Array() = default;
     TypeKind kind() const override { return TypeKind::ARRAY; }
-    std::string to_string() const override { return inner_type->to_string() + "[" + std::to_string(size) + "]"; }
+    std::string to_string() const override { return inner_type->to_string() + "[]"; }
 
-    Array(std::shared_ptr<Type> inner_type, unsigned size) : inner_type(inner_type), size(size) {}
+    Array(std::shared_ptr<Type> inner_type) : inner_type(inner_type) {}
 };
 
 /**
@@ -158,7 +192,9 @@ public:
  */
 class Type::Pointer : public Type {
 public:
+    // The declarer of the pointer type. Use to determine if the object can be mutated through this pointer.
     TokenType declarer = KW_CONST;
+    // The element type of the pointer.
     std::shared_ptr<Type> inner_type = nullptr;
 
     virtual ~Pointer() = default;
@@ -175,6 +211,7 @@ public:
  */
 class Type::Tuple : public Type {
 public:
+    // A list of element types in the tuple.
     std::vector<std::shared_ptr<Type>> elements;
 
     virtual ~Tuple() = default;

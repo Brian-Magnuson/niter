@@ -606,8 +606,8 @@ std::any LocalChecker::visit_array_expr(Expr::Array* expr) {
             }
         }
         // If, after this loop, the type still contains `auto`, it will later be checked against the type annotation on the left-hand side of the assignment
-        type = std::make_shared<Type::Array>(type);
-        expr->type = type;
+        auto arr_type = std::make_shared<Type::Array>(type);
+        expr->type = arr_type;
         return type;
     }
 }
