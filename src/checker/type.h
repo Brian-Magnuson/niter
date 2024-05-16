@@ -50,7 +50,7 @@ public:
 
     bool is_int() {
         if (
-            to_string() == "__i8" || to_string() == "__i16" || to_string() == "__i32" || to_string() == "__i64" || to_string() == "__char"
+            to_string() == "::i8" || to_string() == "::i16" || to_string() == "::i32" || to_string() == "::i64" || to_string() == "::char"
         ) {
             return true;
         }
@@ -59,7 +59,7 @@ public:
 
     bool is_float() {
         if (
-            to_string() == "__f32" || to_string() == "__f64"
+            to_string() == "::f32" || to_string() == "::f64"
         ) {
             return true;
         }

@@ -113,7 +113,7 @@ class Node::RootScope : public Node::Scope {
 public:
     RootScope() {
         parent = nullptr;
-        unique_name = "__";
+        unique_name = "";
     }
 };
 
@@ -126,7 +126,7 @@ class Node::NamespaceScope : public Node::Scope {
 public:
     NamespaceScope(std::shared_ptr<Scope> parent, const std::string& name) {
         this->parent = parent;
-        unique_name = parent->unique_name + name + "__";
+        unique_name = parent->unique_name + "::" + name;
     }
 };
 
@@ -143,7 +143,7 @@ public:
 
     StructScope(std::shared_ptr<Scope> parent, const std::string& name) {
         this->parent = parent;
-        unique_name = parent->unique_name + name + "__";
+        unique_name = parent->unique_name + "::" + name;
     }
 };
 
@@ -161,7 +161,7 @@ public:
     LocalScope(std::shared_ptr<Scope> parent) {
         this->parent = parent;
         // unique_name = parent->unique_name + std::to_string(local_scope_count++) + "__";
-        unique_name = parent->unique_name + "local__";
+        unique_name = parent->unique_name + "::local";
     }
 };
 
@@ -184,7 +184,7 @@ public:
         const std::string& name
     ) : declarer(declarer), type(type) {
         this->parent = parent;
-        unique_name = parent->unique_name + name;
+        unique_name = parent->unique_name + "::" + name;
     }
 };
 

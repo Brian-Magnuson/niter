@@ -16,20 +16,24 @@ std::any GlobalChecker::visit_eof_stmt(Stmt::EndOfFile* /* stmt */) {
 
 std::any GlobalChecker::visit_var_decl(Decl::Var* decl) {
 
-    // Verify the type of the variable, defer if necessary
-    Environment::inst().verify_type(decl->type_annotation, true);
-    // Declare the variable
-    ErrorCode result = Environment::inst().declare_variable(decl->name.lexeme, decl->declarer, decl->type_annotation);
+    // Declare the variable, defer if necessary
+    auto [_, result] = Environment::inst().declare_variable(decl->name.lexeme, decl->declarer, decl->type_annotation, true);
+
     if (result == E_SYMBOL_ALREADY_DECLARED) {
         ErrorLogger::inst().log_error(decl->name.location, result, "A symbol with the same name has already been declared in this scope.");
     } else if (result != 0) {
-        ErrorLogger::inst().log_error(decl->name.location, result, "An error occurred while declaring the variable.");
+        ErrorLogger::inst().log_error(decl->name.location, E_IMPOSSIBLE, "Function `declare_variable` issued error " + std::to_string(result) + " in global type checking.");
     }
+    // E_UNKNOWN_TYPE is not handled here since variables with unknown types are deferred here.
 
     return std::any();
 }
 
 std::any GlobalChecker::visit_fun_decl(Decl::Fun* decl) {
+
+    // Declare the function, defer if necessary
+    auto [variable, result] = Environment::inst().declare_variable(decl->name.lexeme, decl->declarer, decl->type_annotation, true);
+
     if (decl->name.lexeme == "main") {
         // The function declarer must be "fun"
         if (decl->declarer != KW_FUN) {
@@ -38,16 +42,12 @@ std::any GlobalChecker::visit_fun_decl(Decl::Fun* decl) {
 
         // The function type must be either fun() => i32 or fun(int, char**) => i32
         auto type_annotation = decl->type_annotation->to_string();
+        auto type_string = variable != nullptr ? variable->type->to_string() : "";
 
-        if (type_annotation != "fun() => i32" && type_annotation != "fun(int, char**) => i32") {
+        if (type_annotation != "fun() => ::i32" && type_annotation != "fun(::int, ::char**) => ::i32") {
             ErrorLogger::inst().log_error(decl->name.location, E_INVALID_MAIN_SIGNATURE, "The main function must have the signature 'fun() => i32' or 'fun(int, char**) => i32'.");
         }
     }
-
-    // Verify the return type of the function, defer if necessary
-    Environment::inst().verify_type(decl->type_annotation, true);
-
-    ErrorCode result = Environment::inst().declare_variable(decl->name.lexeme, decl->declarer, decl->type_annotation);
 
     if (result == E_SYMBOL_ALREADY_DECLARED) {
         ErrorLogger::inst().log_error(decl->name.location, result, "A symbol with the same name has already been declared in this scope.");

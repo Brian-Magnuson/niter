@@ -13,6 +13,13 @@
 #include <utility>
 #include <vector>
 
+struct DeferredVariable {
+    std::shared_ptr<Annotation> annotation;
+    std::shared_ptr<Node::Scope> scope;
+    std::string name;
+    TokenType declarer;
+};
+
 /**
  * @brief A singleton class to store environment information for the type checkers.
  * Uses a namespace tree to store scopes.
@@ -26,7 +33,10 @@ class Environment {
     std::shared_ptr<Node::Scope> current_scope;
 
     // A list of deferred types to be resolved later.
-    std::vector<std::pair<std::shared_ptr<Annotation>, std::shared_ptr<Node::Scope>>> deferred_types;
+    // std::vector<std::pair<std::shared_ptr<Annotation>, std::shared_ptr<Node::Scope>>> deferred_types;
+
+    // A list of deferred variables to be resolved later.
+    std::vector<DeferredVariable> deferred_variables;
 
     Environment() {
         reset();
@@ -115,33 +125,20 @@ public:
      * If the symbol already exists in the current scope, it will not be declared.
      * If the current scope is a local scope, this information will be removed when the local scope is exited.
      * If the current scope is a global scope, this information will be kept until the program ends or the environment is reset.
+     * If the type annotation is not valid, the variable will not be declared.
+     * If allow_deferral is true, the variable declaration will be deferred until the type is verified.
      *
      * @param name The name of the symbol to declare.
      * @param declarer The type of the token that declared the variable.
-     * @param type The type of the variable to declare.
-     * @return ErrorCode 0 if the variable was declared successfully.
-     * E_SYMBOL_ALREADY_DECLARED if the symbol already exists in the current scope.
-     */
-    ErrorCode declare_variable(const std::string& name, TokenType declarer, std::shared_ptr<Annotation> type);
-
-    /**
-     * @brief Verifies that a type is valid.
-     * That is, the type is either a primitive or references a struct that has been declared.
-     * Can be set to allow types to be deferred.
-     * When a type is deferred, a pointer to the type and scope will be saved for later resolution.
-     * Only the global checker should be deferring types.
-     *
-     * @param type The type to verify.
+     * @param annotation The type annotation of the variable to declare.
      * @param allow_deferral Whether or not to allow the type to be deferred. Default is false.
-     * @param from_scope The scope from which the type is being verified. If nullptr, the current global scope will be used. Default is nullptr.
-     * @return true If the type is valid.
-     * @return false If the type is invalid.
+     * @return std::pair<std::shared_ptr<Node::Variable>, ErrorCode> A pair containing a pointer to the variable node and an error code.
+     * If the variable was not declared, the pointer will be nullptr.
+     * The error code will be 0 if the variable was declared successfully or if it was deferred.
+     * E_SYMBOL_ALREADY_DECLARED if the symbol already exists in the current scope.
+     * E_UNKNOWN_TYPE if the type annotation could not be resolved and allow_deferral is false.
      */
-    bool verify_type(
-        const std::shared_ptr<Annotation>& type,
-        bool allow_deferral = false,
-        std::shared_ptr<Node::Scope> from_scope = nullptr
-    );
+    std::pair<std::shared_ptr<Node::Variable>, ErrorCode> declare_variable(const std::string& name, TokenType declarer, std::shared_ptr<Annotation> annotation, bool allow_deferral = false);
 
     /**
      * @brief Retrieves the variable node from the current scope.
@@ -168,21 +165,30 @@ public:
     std::shared_ptr<Node::Variable> get_instance_variable(std::shared_ptr<Type::Struct> instance_type, const std::string& member_name);
 
     /**
-     * @brief Get the struct object for a given segmented annotation.
+     * @brief Creates a type object from an annotation.
      *
-     * @param type The segmented annotation to get the struct for.
-     * @return std::shared_ptr<Node::StructScope> A pointer to the struct scope node in the global tree.
+     * @param annotation The annotation to get the type for.
+     * @param from_scope The scope to start looking for the type in. Default is nullptr, meaning the current scope.
+     * @return std::shared_ptr<Type> A pointer to the type object. nullptr if the type cannot be resolved.
      */
-    std::shared_ptr<Node::StructScope> get_struct(std::shared_ptr<Annotation::Segmented> type);
+    std::shared_ptr<Type> get_type(const std::shared_ptr<Annotation>& annotation, std::shared_ptr<Node::Scope> from_scope = nullptr);
 
-    /**
-     * @brief Get the struct object for a given name.
-     * Use this function when the struct name is a single string segment.
-     *
-     * @param name The short name of the struct to get.
-     * @return std::shared_ptr<Node::StructScope> A pointer to the struct scope node in the global tree.
-     */
-    std::shared_ptr<Node::StructScope> get_struct(const std::string& name);
+    // /**
+    //  * @brief Get the struct object for a given segmented annotation.
+    //  *
+    //  * @param type The segmented annotation to get the struct for.
+    //  * @return std::shared_ptr<Node::StructScope> A pointer to the struct scope node in the global tree.
+    //  */
+    // std::shared_ptr<Node::StructScope> get_struct(std::shared_ptr<Annotation::Segmented> type);
+
+    // /**
+    //  * @brief Get the struct object for a given name.
+    //  * Use this function when the struct name is a single string segment.
+    //  *
+    //  * @param name The short name of the struct to get.
+    //  * @return std::shared_ptr<Node::StructScope> A pointer to the struct scope node in the global tree.
+    //  */
+    // std::shared_ptr<Node::StructScope> get_struct(const std::string& name);
 
     /**
      * @brief Iterates through the list of deferred types and verifies them.
