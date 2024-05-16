@@ -43,8 +43,8 @@ std::any GlobalChecker::visit_fun_decl(Decl::Fun* decl) {
         auto type_annotation = decl->type_annotation->to_string();
         auto type_string = variable != nullptr ? variable->type->to_string() : "";
 
-        if (type_annotation != "fun() => ::i32" && type_annotation != "fun(::int, ::char**) => ::i32") {
-            ErrorLogger::inst().log_error(decl->name.location, E_INVALID_MAIN_SIGNATURE, "The main function must have the signature 'fun() => i32' or 'fun(int, char**) => i32'.");
+        if (type_string != "fun() => ::i32" && type_string != "fun(::int, ::char**) => ::i32") {
+            ErrorLogger::inst().log_error(decl->name.location, E_INVALID_MAIN_SIGNATURE, "The main function must have the signature 'fun() => i32' or 'fun(int, char**) => i32'. Found type: " + type_string);
         }
     }
 

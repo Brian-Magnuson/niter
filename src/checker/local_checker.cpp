@@ -4,6 +4,7 @@
 #include "../utility/utils.h"
 #include "type.h"
 #include <iostream>
+#include <tuple>
 
 bool LocalChecker::check_token(TokenType token, const std::vector<TokenType>& types) const {
     for (auto type : types) {
@@ -54,6 +55,9 @@ std::any LocalChecker::visit_return_stmt(Stmt::Return* stmt) {
     if (Environment::inst().in_global_scope()) {
         ErrorLogger::inst().log_error(stmt->location, E_GLOBAL_RETURN, "Return statements are not allowed in global scope.");
         throw LocalTypeException();
+    }
+    if (stmt->value == nullptr) {
+        return std::any();
     }
 
     std::shared_ptr<Type> ret_type = std::any_cast<std::shared_ptr<Type>>(stmt->value->accept(this));
@@ -106,8 +110,17 @@ std::any LocalChecker::visit_var_decl(Decl::Var* decl) {
 
     // Get the type of the initializer
     auto init_type = std::any_cast<std::shared_ptr<Type>>(decl->initializer->accept(this));
-    // Declare the variable
-    auto [variable, result] = Environment::inst().declare_variable(decl->name.lexeme, decl->declarer, decl->type_annotation);
+
+    std::shared_ptr<Node::Variable> variable;
+    ErrorCode result = (ErrorCode)0;
+
+    // If we are in global scope, the variable is already declared
+    if (Environment::inst().in_global_scope()) {
+        variable = Environment::inst().get_variable({decl->name});
+    } else {
+        // Declare the variable, defer if necessary
+        std::tie(variable, result) = Environment::inst().declare_variable(decl->name.lexeme, decl->declarer, decl->type_annotation, true);
+    }
 
     // Verify that the variable was declared successfully
     if (result == E_SYMBOL_ALREADY_DECLARED) {
@@ -149,26 +162,12 @@ std::any LocalChecker::visit_fun_decl(Decl::Fun* decl) {
         throw LocalTypeException();
     }
 
-    // Declare the function
-    auto [variable, result] = Environment::inst().declare_variable(decl->name.lexeme, decl->declarer, decl->type_annotation);
-    // Declaring the function early can be useful for recursive functions
-    // It's possible this will fail, but we'll check for this in the next step
-    if (result == E_SYMBOL_ALREADY_DECLARED) {
-        ErrorLogger::inst().log_error(decl->name.location, result, "A symbol with the same name has already been declared in this scope.");
-        throw LocalTypeException();
-    } else if (result != 0 && result != E_UNKNOWN_TYPE) {
-        ErrorLogger::inst().log_error(decl->name.location, E_IMPOSSIBLE, "Function `declare_variable` issued error " + std::to_string(result) + " in LocalChecker::visit_fun_decl.");
-        throw LocalTypeException();
-    }
+    // No need to declare the function; we've already done that in the global checker
+    auto variable = Environment::inst().get_variable({decl->name});
 
     // We could verify the entire function pointer, but then we'd get less specific error messages
     // So we'll just verify the return type and the parameter types separately
     auto fun_annotation = std::dynamic_pointer_cast<Annotation::Function>(decl->type_annotation);
-    // std::shared_ptr<Annotation> ret_type = fun_type->ret;
-    // if (!Environment::inst().verify_type(ret_type)) {
-    //     ErrorLogger::inst().log_error(decl->name.location, E_UNKNOWN_TYPE, "Could not resolve return type annotation.");
-    //     throw LocalTypeException();
-    // }
 
     // Increase the local scope for the parameters and return variable
     Environment::inst().increase_local_scope();
@@ -271,7 +270,7 @@ std::any LocalChecker::visit_assign_expr(Expr::Assign* expr) {
         }
     } else if (l_ident != nullptr) {
         // Ensure the variable is not const
-        auto var_node = Environment::inst().get_variable(l_ident.get());
+        auto var_node = Environment::inst().get_variable(l_ident->tokens);
         if (var_node->declarer == KW_CONST) {
             ErrorLogger::inst().log_error(l_ident->location, E_ASSIGN_TO_CONST, "Cannot assign to a constant variable.");
             throw LocalTypeException();
@@ -538,7 +537,7 @@ std::any LocalChecker::visit_grouping_expr(Expr::Grouping* expr) {
 }
 
 std::any LocalChecker::visit_identifier_expr(Expr::Identifier* expr) {
-    expr->type = Environment::inst().get_variable(expr)->type;
+    expr->type = Environment::inst().get_variable(expr->tokens)->type;
     if (expr->type == nullptr) {
         ErrorLogger::inst().log_error(expr->location, E_UNKNOWN_TYPE, "Could not resolve type annotation.");
         throw LocalTypeException();

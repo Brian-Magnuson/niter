@@ -147,10 +147,10 @@ public:
      * If the identifier is only one token long, upward lookup will be used, then downward lookup if the symbol is not found.
      * If the symbol is not found, nullptr will be returned.
      *
-     * @param identifier The identifier of the variable to retrieve.
+     * @param ident_tokens The list of tokens that make up the identifier.
      * @return std::shared_ptr<Node::Variable> A pointer to the variable node.
      */
-    std::shared_ptr<Node::Variable> get_variable(const Expr::Identifier* identifier);
+    std::shared_ptr<Node::Variable> get_variable(const std::vector<Token>& ident_tokens);
 
     /**
      * @brief Get the instance variable object for a given instance type and member name.

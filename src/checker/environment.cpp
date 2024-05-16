@@ -98,17 +98,17 @@ std::pair<std::shared_ptr<Node::Variable>, ErrorCode> Environment::declare_varia
     }
 }
 
-std::shared_ptr<Node::Variable> Environment::get_variable(const Expr::Identifier* identifier) {
+std::shared_ptr<Node::Variable> Environment::get_variable(const std::vector<Token>& ident_tokens) {
     std::shared_ptr<Node> found_node = nullptr;
     // If the identifier is a single token, we can look up the variable in the global scope.
-    if (identifier->tokens.size() == 1) {
-        found_node = current_scope->upward_lookup(identifier->tokens[0].lexeme);
+    if (ident_tokens.size() == 1) {
+        found_node = current_scope->upward_lookup(ident_tokens[0].lexeme);
     }
     // If the first lookup failed or was not attempted, we perform a downward lookup.
     if (found_node == nullptr) {
         // TODO: Check later to see if this works. If it doesn't, this function will return nullptr and it'll appear as if the symbol was not found.
         std::vector<std::string> path;
-        for (auto& token : identifier->tokens) {
+        for (auto& token : ident_tokens) {
             path.push_back(token.lexeme);
         }
         found_node = current_scope->downward_lookup(path);
