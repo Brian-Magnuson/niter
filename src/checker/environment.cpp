@@ -85,6 +85,12 @@ std::pair<std::shared_ptr<Node::Variable>, ErrorCode> Environment::declare_varia
         } else if (type == nullptr) {
             return {nullptr, E_UNKNOWN_TYPE};
         } else {
+            // If the type is a pointer, set the declarer to the token type that declared the variable.
+            auto ptr_type = std::dynamic_pointer_cast<Type::Pointer>(type);
+            if (ptr_type != nullptr) {
+                // This is to prevent users from mutating the object that the pointer points to.
+                ptr_type->declarer = declarer;
+            }
             auto new_variable = std::make_shared<Node::Variable>(current_scope, declarer, type, name);
             current_scope->children[name] = new_variable;
             return {new_variable, (ErrorCode)0};
@@ -199,6 +205,11 @@ std::shared_ptr<Type> Environment::get_type(const std::shared_ptr<Annotation>& a
     if (from_scope == nullptr) {
         from_scope = current_scope;
     }
+    // If the annotation is "auto", return a blank type.
+    if (annotation->to_string() == "auto") {
+        return std::make_shared<Type::Blank>();
+    }
+
     if (IS_TYPE(annotation, Annotation::Segmented)) {
         // Annotations of the form `t<t>::t<t>`
         auto segmented_type = std::dynamic_pointer_cast<Annotation::Segmented>(annotation);
@@ -276,6 +287,11 @@ std::shared_ptr<Type> Environment::get_type(const std::shared_ptr<Annotation>& a
     }
 }
 
+std::shared_ptr<Type> Environment::get_type(const std::string& name) {
+    auto annotation = std::make_shared<Annotation::Segmented>(name);
+    return get_type(annotation);
+}
+
 // std::shared_ptr<Node::StructScope> Environment::get_struct(std::shared_ptr<Annotation::Segmented> type) {
 //     std::vector<std::string> path;
 //     for (auto& class_ : type->classes) {
@@ -298,6 +314,16 @@ std::shared_ptr<Type> Environment::get_type(const std::shared_ptr<Annotation>& a
 //     }
 //     return true;
 // }
+
+bool Environment::verify_deferred_types() {
+    for (auto& deferred_variable : deferred_variables) {
+        auto [variable, error] = declare_variable(deferred_variable.name, deferred_variable.declarer, deferred_variable.annotation, false);
+        if (error != 0) {
+            return false;
+        }
+    }
+    return true;
+}
 
 void Environment::reset() {
     global_tree = std::make_shared<Node::RootScope>();

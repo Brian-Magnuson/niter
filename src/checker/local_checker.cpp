@@ -76,8 +76,8 @@ std::any LocalChecker::visit_continue_stmt(Stmt::Continue* /* stmt */) {
 
 std::any LocalChecker::visit_print_stmt(Stmt::Print* stmt) {
     // Currently, print statements are only allowed to print objects of type `char*`
-    std::shared_ptr<Annotation> print_type = std::any_cast<std::shared_ptr<Annotation>>(stmt->value->accept(this));
-    if (print_type->to_string() != "char*") {
+    std::shared_ptr<Type> print_type = std::any_cast<std::shared_ptr<Type>>(stmt->value->accept(this));
+    if (print_type->to_string() != "::char*") {
         ErrorLogger::inst().log_error(stmt->location, E_PUTS_WITHOUT_STRING, "Print statements are only allowed to print objects of type `char*`.");
         throw LocalTypeException();
     }
@@ -101,33 +101,40 @@ std::any LocalChecker::visit_var_decl(Decl::Var* decl) {
             ErrorLogger::inst().log_error(decl->name.location, E_UNINITIALIZED_CONST, "Cannot declare a constant without an initializer.");
             throw LocalTypeException();
         }
-    } else {
-        // Get the type of the initializer
-        std::shared_ptr<Annotation> init_type = std::any_cast<std::shared_ptr<Annotation>>(decl->initializer->accept(this));
-
-        // Verify that the type of the initializer matches the type annotation
-        if (!decl->type_annotation->is_compatible_with(init_type)) {
-            ErrorLogger::inst().log_error(decl->name.location, E_INCOMPATIBLE_TYPES, "Cannot convert from " + init_type->to_string() + " to " + decl->type_annotation->to_string() + ".");
-            throw LocalTypeException();
-        }
     }
 
-    // Verify the type of the variable, do not defer
-    // Note that `auto` not installed as a primitive type. If any part of the type is `auto`, verification will fail.
-    bool type_verified = Environment::inst().verify_type(decl->type_annotation);
-    if (!type_verified) {
-        ErrorLogger::inst().log_error(decl->name.location, E_UNKNOWN_TYPE, "Could not resolve type annotation.");
-        throw LocalTypeException();
-    }
-
+    // Get the type of the initializer
+    std::shared_ptr<Type> init_type = std::any_cast<std::shared_ptr<Type>>(decl->initializer->accept(this));
     // Declare the variable
-    ErrorCode result = Environment::inst().declare_variable(decl->name.lexeme, decl->declarer, decl->type_annotation);
+    auto [variable, result] = Environment::inst().declare_variable(decl->name.lexeme, decl->declarer, decl->type_annotation);
 
+    // Verify that the variable was declared successfully
     if (result == E_SYMBOL_ALREADY_DECLARED) {
         ErrorLogger::inst().log_error(decl->name.location, result, "A symbol with the same name has already been declared in this scope.");
         throw LocalTypeException();
+    } else if (result == E_UNKNOWN_TYPE) {
+        ErrorLogger::inst().log_error(decl->name.location, result, "Could not resolve type annotation");
+        throw LocalTypeException();
     } else if (result != 0) {
-        ErrorLogger::inst().log_error(decl->name.location, result, "An error occurred while declaring the variable.");
+        ErrorLogger::inst().log_error(decl->name.location, E_IMPOSSIBLE, "Function `declare_variable` issued error " + std::to_string(result) + " in LocalChecker::visit_var_decl.");
+        throw LocalTypeException();
+    }
+    // Neither variable->type nor init_type should be nullptr at this point.
+
+    // Verify that the type of the initializer matches the type annotation
+    if (Type::are_compatible(init_type, variable->type)) {
+        ErrorLogger::inst().log_error(decl->name.location, E_INCOMPATIBLE_TYPES, "Cannot convert from " + init_type->to_string() + " to " + variable->type->to_string() + ".");
+        throw LocalTypeException();
+    }
+    // Verify that none of the types are blank
+    if (variable->type->kind() == TypeKind::BLANK || init_type->kind() == TypeKind::BLANK) {
+        ErrorLogger::inst().log_error(decl->name.location, E_UNKNOWN_TYPE, "Could not resolve type annotation.");
+        throw LocalTypeException();
+    }
+    // Verify that the right side is not a const pointer being assigned to a non-const pointer
+    auto init_ptr_type = std::dynamic_pointer_cast<Type::Pointer>(init_type);
+    if (init_ptr_type != nullptr && init_ptr_type->declarer == KW_CONST && variable->declarer != KW_CONST) {
+        ErrorLogger::inst().log_error(decl->name.location, E_ASSIGN_TO_CONST, "Cannot assign a const pointer to a non-const pointer.");
         throw LocalTypeException();
     }
 
@@ -142,79 +149,92 @@ std::any LocalChecker::visit_fun_decl(Decl::Fun* decl) {
     }
 
     // Declare the function
-    ErrorCode result = Environment::inst().declare_variable(decl->name.lexeme, decl->declarer, decl->type_annotation);
+    auto [variable, result] = Environment::inst().declare_variable(decl->name.lexeme, decl->declarer, decl->type_annotation);
+    // Declaring the function early can be useful for recursive functions
+    // It's possible this will fail, but we'll check for this in the next step
     if (result == E_SYMBOL_ALREADY_DECLARED) {
         ErrorLogger::inst().log_error(decl->name.location, result, "A symbol with the same name has already been declared in this scope.");
         throw LocalTypeException();
-    } else if (result != 0) {
-        ErrorLogger::inst().log_error(decl->name.location, result, "An error occurred while declaring the function.");
+    } else if (result != 0 && result != E_UNKNOWN_TYPE) {
+        ErrorLogger::inst().log_error(decl->name.location, E_IMPOSSIBLE, "Function `declare_variable` issued error " + std::to_string(result) + " in LocalChecker::visit_fun_decl.");
         throw LocalTypeException();
     }
 
     // We could verify the entire function pointer, but then we'd get less specific error messages
     // So we'll just verify the return type and the parameter types separately
     auto fun_type = std::dynamic_pointer_cast<Annotation::Function>(decl->type_annotation);
+    // std::shared_ptr<Annotation> ret_type = fun_type->ret;
+    // if (!Environment::inst().verify_type(ret_type)) {
+    //     ErrorLogger::inst().log_error(decl->name.location, E_UNKNOWN_TYPE, "Could not resolve return type annotation.");
+    //     throw LocalTypeException();
+    // }
 
-    std::shared_ptr<Annotation> ret_type = fun_type->ret;
-    if (!Environment::inst().verify_type(ret_type)) {
-        ErrorLogger::inst().log_error(decl->name.location, E_UNKNOWN_TYPE, "Could not resolve return type annotation.");
-        throw LocalTypeException();
-    }
-
-    // Increase the local scope
+    // Increase the local scope for the parameters and return variable
     Environment::inst().increase_local_scope();
 
-    for (unsigned i = 0; i < decl->parameters.size(); i++) {
-        // Verify the type of the parameter, do not defer
-        bool type_verified = Environment::inst().verify_type(decl->parameters[i]->type_annotation);
-        if (!type_verified) {
-            ErrorLogger::inst().log_error(decl->name.location, E_UNKNOWN_TYPE, "Could not resolve type annotation.");
-            throw LocalTypeException();
-        }
-        // The type annotation won't be `auto` by the way; the parser already checks for that
+    // Declare the return variable
+    auto [ret_var, ret_result] = Environment::inst().declare_variable("___return", fun_type->is_ret_mutable ? KW_VAR : KW_CONST, fun_type->ret);
+    ret_var->declarer = KW_VAR;
+    // We change the declarer to var because we assign to the return variable in the function body
+    // Using a return variable makes it more convenient for LLVM code generation later
+    // Reassigning the declarer in this way allows us to keep the original type (which could be a const pointer)
 
-        // Declare the parameter
-        ErrorCode result = Environment::inst().declare_variable(
+    for (unsigned i = 0; i < decl->parameters.size(); i++) {
+        auto [param_var, param_result] = Environment::inst().declare_variable(
             decl->parameters[i]->name.lexeme,
             decl->parameters[i]->declarer,
             decl->parameters[i]->type_annotation
         );
-
-        if (result == E_SYMBOL_ALREADY_DECLARED) {
-            // We just increased the local scope, so the only way this could happen is if there are multiple parameters with the same name
+        if (param_result == E_SYMBOL_ALREADY_DECLARED) {
             ErrorLogger::inst().log_error(decl->parameters[i]->name.location, E_DUPLICATE_PARAM_NAME, "A parameter with the same name has already been declared here.");
             throw LocalTypeException();
-        } else if (result != 0) {
-            ErrorLogger::inst().log_error(decl->parameters[i]->name.location, result, "An error occurred while declaring the parameter.");
+        } else if (param_result == E_UNKNOWN_TYPE) {
+            ErrorLogger::inst().log_error(decl->parameters[i]->name.location, param_result, "Could not resolve type annotation.");
+            throw LocalTypeException();
+        } else if (param_result != 0) {
+            ErrorLogger::inst().log_error(decl->parameters[i]->name.location, E_IMPOSSIBLE, "Function `declare_variable` issued error " + std::to_string(param_result) + " in LocalChecker::visit_fun_decl.");
             throw LocalTypeException();
         }
+        // Verify that the parameter type is not blank
+        if (param_var->type->kind() == TypeKind::BLANK) {
+            ErrorLogger::inst().log_error(decl->parameters[i]->name.location, E_AUTO_IN_PARAMS, "Cannot infer types for function parameters.");
+            throw LocalTypeException();
+        }
+        // We don't worry about initializers for parameters; this is just a type checker
     }
 
-    // Increase the local scope
+    // At this point, the function type should be fully resolved
+    if (variable == nullptr) {
+        ErrorLogger::inst().log_error(decl->name.location, E_IMPOSSIBLE, "Function pointer variable is nullptr in LocalChecker::visit_fun_decl.");
+        throw LocalTypeException();
+    }
+    auto variable_fun_type = std::dynamic_pointer_cast<Type::Function>(variable->type);
+
+    // Increase the local scope for the function body
     Environment::inst().increase_local_scope();
 
     // Verify the body of the function
     // If any statement returns a non-empty any, either the statement is a return statement or is a block containing one
     // Verify the return statement types and log the appropriate error messages
-
     bool has_return = false;
     for (auto& stmt : decl->body) {
         std::any stmt_type = stmt->accept(this);
         if (stmt_type.has_value()) {
             has_return = true;
-            if (fun_type->ret->to_string() == "void") {
+            if (variable->type->to_string() == "::void") {
                 ErrorLogger::inst().log_error(stmt->location, E_RETURN_IN_VOID_FUN, "Function with return type 'void' cannot return a value.");
                 throw LocalTypeException();
             } else {
                 auto ret_type = std::any_cast<std::shared_ptr<Type>>(stmt_type);
-                if (!fun_type->ret->is_compatible_with(ret_type)) {
+
+                if (!Type::are_compatible(ret_type, variable_fun_type->return_type)) {
                     ErrorLogger::inst().log_error(stmt->location, E_RETURN_INCOMPATIBLE, "Cannot convert from " + ret_type->to_string() + " to return type " + fun_type->ret->to_string() + ".");
                     throw LocalTypeException();
                 }
             }
         }
     }
-    if (!has_return && fun_type->ret->to_string() != "__void") {
+    if (!has_return && variable_fun_type->return_type->to_string() != "::void") {
         ErrorLogger::inst().log_error(decl->name.location, E_NO_RETURN_IN_NON_VOID_FUN, "Function with non-void return type must return a value.");
         throw LocalTypeException();
     }
@@ -225,8 +245,6 @@ std::any LocalChecker::visit_fun_decl(Decl::Fun* decl) {
 
     return std::any();
 }
-
-// FIXME: Fix the above functions to use the new Type class.
 
 std::any LocalChecker::visit_assign_expr(Expr::Assign* expr) {
     // The left side of the assignment must be an lvalue
@@ -285,10 +303,7 @@ std::any LocalChecker::visit_logical_expr(Expr::Logical* expr) {
         throw LocalTypeException();
     }
 
-    auto l_struct_type = std::dynamic_pointer_cast<Type::Struct>(l_type);
-    auto r_struct_type = std::dynamic_pointer_cast<Type::Struct>(r_type);
-
-    if (l_struct_type != nullptr && l_struct_type->struct_scope != Environment::inst().get_struct("bool")) {
+    if (l_type->to_string() != "::bool") {
         ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply operator '" + expr->op.lexeme + "' to type " + l_type->to_string() + ". Expected type 'bool'.");
         throw LocalTypeException();
     }
@@ -339,7 +354,7 @@ std::any LocalChecker::visit_binary_expr(Expr::Binary* expr) {
             ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply operator '" + expr->op.lexeme + "' to type " + l_type->to_string() + ". Expected int or float.");
             throw LocalTypeException();
         }
-        expr->type = std::make_shared<Type::Struct>(Environment::inst().get_struct("f64"));
+        expr->type = Environment::inst().get_type("f64");
     } else if (check_token(op, {TOK_EQ_EQ, TOK_BANG_EQ, TOK_LT, TOK_LE, TOK_GT, TOK_GE})) {
         // For EQ_EQ, BANG_EQ, LT, LE, GT, GE the operands must be equal and must be of type `int` or `float` and the result is of type `bool`
         if (!Type::are_compatible(l_type, r_type)) {
@@ -350,7 +365,7 @@ std::any LocalChecker::visit_binary_expr(Expr::Binary* expr) {
             ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply operator '" + expr->op.lexeme + "' to type " + l_type->to_string() + ". Expected int or float.");
             throw LocalTypeException();
         }
-        expr->type = std::make_shared<Type::Struct>(Environment::inst().get_struct("bool"));
+        expr->type = Environment::inst().get_type("bool");
     } else {
         // Unreachable
         ErrorLogger::inst().log_error(expr->location, E_UNREACHABLE, "Unknown binary operator.");
@@ -366,8 +381,7 @@ std::any LocalChecker::visit_unary_expr(Expr::Unary* expr) {
 
     if (expr->op.tok_type == TOK_BANG) {
         // The operand must be of type `bool`
-        auto op_struct_type = std::dynamic_pointer_cast<Type::Struct>(operand_type);
-        if (op_struct_type != nullptr && op_struct_type->struct_scope == Environment::inst().get_struct("bool")) {
+        if (operand_type->to_string() != "::bool") {
             ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply unary operator '!' to type " + operand_type->to_string() + ". Expected type 'bool'.");
             throw LocalTypeException();
         }
@@ -501,8 +515,8 @@ std::any LocalChecker::visit_access_expr(Expr::Access* expr) {
         }
 
         // The index must be an integer
-        auto index_type = std::any_cast<std::shared_ptr<Type::Struct>>(expr->right->accept(this));
-        if (index_type != nullptr && index_type->struct_scope == Environment::inst().get_struct("i32")) {
+        auto index_type = std::any_cast<std::shared_ptr<Type>>(expr->right->accept(this));
+        if (index_type != nullptr && index_type->to_string() != "::i32") {
             ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot index array with type " + index_type->to_string() + ". Expected type 'i32'.");
             throw LocalTypeException();
         }
@@ -538,25 +552,20 @@ std::any LocalChecker::visit_literal_expr(Expr::Literal* expr) {
 
     switch (expr->token.tok_type) {
     case TOK_INT:
-        node = Environment::inst().get_struct("i32");
-        type = std::make_shared<Type::Struct>(node);
+        type = Environment::inst().get_type("i32");
         break;
     case TOK_FLOAT:
-        node = Environment::inst().get_struct("f64");
-        type = std::make_shared<Type::Struct>(node);
+        type = Environment::inst().get_type("f64");
         break;
     case TOK_CHAR:
-        node = Environment::inst().get_struct("char");
-        type = std::make_shared<Type::Struct>(node);
+        type = Environment::inst().get_type("char");
         break;
     case TOK_STR:
-        node = Environment::inst().get_struct("char");
-        type = std::make_shared<Type::Struct>(node);
+        type = Environment::inst().get_type("char");
         type = std::make_shared<Type::Pointer>(type);
         break;
     case TOK_BOOL:
-        node = Environment::inst().get_struct("bool");
-        type = std::make_shared<Type::Struct>(node);
+        type = Environment::inst().get_type("bool");
         break;
     case TOK_NIL:
         type = std::make_shared<Type::Blank>();

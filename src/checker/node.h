@@ -1,6 +1,9 @@
 #ifndef NODE_H
 #define NODE_H
 
+class Node;
+// Forward declaration of Node to avoid circular dependency with Type
+
 #include "../parser/annotation.h"
 #include "../scanner/token.h"
 #include "type.h"

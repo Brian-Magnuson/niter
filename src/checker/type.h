@@ -1,6 +1,9 @@
 #ifndef TYPE_H
 #define TYPE_H
 
+class Type;
+// Forward declaration of Type to avoid circular dependency with Node
+
 #include "../scanner/token.h"
 #include "node.h"
 #include <memory>
@@ -35,6 +38,15 @@ public:
     virtual TypeKind kind() const = 0;
     virtual std::string to_string() const = 0;
 
+    /**
+     * @brief Determines if two types are compatible.
+     * If one of the types is a blank type, that type will be mutated to match the other type.
+     *
+     * @param a A shared ptr reference to the first type. Should not be nullptr.
+     * @param b A shared ptr reference to the second type. Should not be nullptr.
+     * @return true If the types are compatible.
+     * @return false If the types are not compatible.
+     */
     static bool are_compatible(std::shared_ptr<Type>& a, std::shared_ptr<Type>& b) {
         if (a->kind() == b->kind()) {
             return a->to_string() == b->to_string();
@@ -144,6 +156,7 @@ public:
  */
 class Type::Pointer : public Type {
 public:
+    TokenType declarer = KW_CONST;
     std::shared_ptr<Type> inner_type = nullptr;
 
     virtual ~Pointer() = default;

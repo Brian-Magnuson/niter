@@ -173,6 +173,16 @@ public:
      */
     std::shared_ptr<Type> get_type(const std::shared_ptr<Annotation>& annotation, std::shared_ptr<Node::Scope> from_scope = nullptr);
 
+    /**
+     * @brief Get the type object for a single string type name.
+     * Effectively creates a temporary segmented annotation with a single segment performs the lookup within the current scope.
+     * Useful for retrieving primitive types such as `i32` or `f64`.
+     *
+     * @param name The name of the type to get.
+     * @return std::shared_ptr<Type> A pointer to the type object. nullptr if the type cannot be resolved.
+     */
+    std::shared_ptr<Type> get_type(const std::string& name);
+
     // /**
     //  * @brief Get the struct object for a given segmented annotation.
     //  *

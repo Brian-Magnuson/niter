@@ -138,6 +138,8 @@ enum ErrorCode {
     E_INCONSISTENT_ARRAY_TYPES,
     // A function was found to have multiple parameters with the same name
     E_DUPLICATE_PARAM_NAME,
+    // A function was found with a parameter without a type annotation
+    E_AUTO_IN_PARAMS,
     // A function was found with a return statement with an incompatible type
     E_RETURN_INCOMPATIBLE,
     // A return statement with a value was found in a void function
