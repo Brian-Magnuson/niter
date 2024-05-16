@@ -113,7 +113,7 @@ public:
     std::string to_string() const override {
         std::string result = "fun(";
         for (size_t i = 0; i < params.size(); i++) {
-            result += params[i].first ? "var " : "";
+            result += params[i].first == KW_VAR ? "var " : "";
             result += params[i].second->to_string();
             if (i < params.size() - 1) {
                 result += ", ";
