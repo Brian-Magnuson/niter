@@ -69,7 +69,7 @@ bool Environment::in_global_scope() {
     return !IS_TYPE(current_scope, Node::LocalScope);
 }
 
-std::pair<std::shared_ptr<Node::Variable>, ErrorCode> Environment::declare_variable(const std::string& name, TokenType declarer, std::shared_ptr<Annotation> annotation, bool allow_deferral = false) {
+std::pair<std::shared_ptr<Node::Variable>, ErrorCode> Environment::declare_variable(const std::string& name, TokenType declarer, std::shared_ptr<Annotation> annotation, bool allow_deferral) {
     if (HAS_KEY(current_scope->children, name)) {
         return {nullptr, E_SYMBOL_ALREADY_DECLARED};
     } else {

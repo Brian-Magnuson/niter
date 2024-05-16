@@ -592,7 +592,7 @@ std::any LocalChecker::visit_array_expr(Expr::Array* expr) {
     // Handle the case where the array is empty
     if (expr->elements.empty()) {
         expr->type = std::make_shared<Type::Blank>();
-        expr->type = std::make_shared<Type::Array>(expr->type, 0);
+        expr->type = std::make_shared<Type::Array>(expr->type);
         return expr->type;
     } else {
         // Ensure all elements have the same type
@@ -618,7 +618,7 @@ std::any LocalChecker::visit_tuple_expr(Expr::Tuple* expr) {
         std::shared_ptr<Type> elem_type = std::any_cast<std::shared_ptr<Type>>(elem->accept(this));
         types.push_back(elem_type);
     }
-    expr->type = std::make_shared<Type>(types);
+    expr->type = std::make_shared<Type::Tuple>(types);
     return expr->type;
 }
 

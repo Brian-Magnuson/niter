@@ -194,7 +194,7 @@ std::shared_ptr<Decl> Parser::fun_decl() {
 
     // Start building the type annotation
     auto type_annotation = std::make_shared<Annotation::Function>(
-        std::vector<std::pair<bool, std::shared_ptr<Annotation>>>(),
+        std::vector<std::pair<TokenType, std::shared_ptr<Annotation>>>(),
         std::make_shared<Annotation::Segmented>("void"),
         KW_CONST
     );
@@ -542,7 +542,7 @@ std::shared_ptr<Annotation> Parser::segmented_annotation() {
 }
 
 std::shared_ptr<Annotation::Function> Parser::function_annotation() {
-    std::vector<std::pair<bool, std::shared_ptr<Annotation>>> params;
+    std::vector<std::pair<TokenType, std::shared_ptr<Annotation>>> params;
     std::shared_ptr<Annotation> ret;
 
     consume(TOK_LEFT_PAREN, E_NO_LPAREN_IN_FUN_TYPE, "Expected '(' after 'fun' in type annotation.");
@@ -550,10 +550,10 @@ std::shared_ptr<Annotation::Function> Parser::function_annotation() {
     grouping_tokens.push(TOK_RIGHT_PAREN);
     if (!check({TOK_RIGHT_PAREN})) {
         if (match({KW_VAR})) {
-            auto param = std::make_pair(true, annotation());
+            auto param = std::make_pair(KW_VAR, annotation());
             params.push_back(param);
         } else {
-            auto param = std::make_pair(false, annotation());
+            auto param = std::make_pair(KW_CONST, annotation());
             params.push_back(param);
         }
         while (match({TOK_COMMA})) {
@@ -561,10 +561,10 @@ std::shared_ptr<Annotation::Function> Parser::function_annotation() {
                 break;
             }
             if (match({KW_VAR})) {
-                auto param = std::make_pair(true, annotation());
+                auto param = std::make_pair(KW_VAR, annotation());
                 params.push_back(param);
             } else {
-                auto param = std::make_pair(false, annotation());
+                auto param = std::make_pair(KW_CONST, annotation());
                 params.push_back(param);
             }
         }
@@ -573,11 +573,11 @@ std::shared_ptr<Annotation::Function> Parser::function_annotation() {
     consume(TOK_RIGHT_PAREN, E_UNMATCHED_PAREN_IN_TYPE, "Expected ')' after function parameters.");
     consume(TOK_DOUBLE_ARROW, E_NO_ARROW_IN_FUN_TYPE, "Expected '=>' after function parameters.");
 
-    bool is_ret_mutable = match({KW_VAR});
+    TokenType return_declarer = match({KW_VAR}) ? KW_VAR : KW_CONST;
 
     ret = annotation();
 
-    return std::make_shared<Annotation::Function>(params, ret, is_ret_mutable);
+    return std::make_shared<Annotation::Function>(params, ret, return_declarer);
 }
 
 std::shared_ptr<Annotation::Tuple> Parser::tuple_annotation() {
