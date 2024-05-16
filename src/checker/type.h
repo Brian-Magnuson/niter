@@ -8,6 +8,8 @@ class Type;
 #include "node.h"
 #include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
 enum class TypeKind {
     STRUCT,

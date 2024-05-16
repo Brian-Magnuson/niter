@@ -103,10 +103,10 @@ enum ErrorCode {
 
     // Global type errors
     E_GLOBAL_TYPE = 4000,
-    // The main function was found with the wrong signature
-    E_INVALID_MAIN_SIGNATURE,
     // A symbol was declared with the same name in the same scope
     E_SYMBOL_ALREADY_DECLARED,
+    // The main function was found with the wrong signature
+    E_INVALID_MAIN_SIGNATURE,
     // A namespace was introduced in a struct
     E_NAMESPACE_IN_STRUCT,
     // A struct was declared with the same name in the same scope
@@ -130,10 +130,14 @@ enum ErrorCode {
     E_AUTO_WITHOUT_INITIALIZER,
     // A constant was declared without an initializer
     E_UNINITIALIZED_CONST,
+    // A local variable was declared with the same name in the same scope
+    E_LOCAL_ALREADY_DECLARED,
     // A type annotation could not be resolved
     E_UNKNOWN_TYPE,
     // An assignment was found with incompatible types
     E_INCOMPATIBLE_TYPES,
+    // An attempt was made to assign const pointer to a non-const pointer
+    E_INVALID_PTR_DECLARER,
     // An array was found with inconsistent types
     E_INCONSISTENT_ARRAY_TYPES,
     // A function was found to have multiple parameters with the same name
@@ -146,8 +150,6 @@ enum ErrorCode {
     E_RETURN_IN_VOID_FUN,
     // A return statement was not found in a non-void function
     E_NO_RETURN_IN_NON_VOID_FUN,
-    // An expression was interpreted as a literal, but the literal was not recognized
-    E_UNRECOGNIZED_LITERAL,
     // A dot-access expression was found without an identifier after the dot
     E_NO_IDENT_AFTER_DOT,
     // A dot-access expression was found on a non-struct type
@@ -191,6 +193,8 @@ enum ErrorCode {
     E_TEST_ERROR,
     // The compiler attempted to exit the root scope
     E_EXITED_ROOT_SCOPE,
+    // An expression was interpreted as a literal, but the literal was not recognized
+    E_UNRECOGNIZED_LITERAL,
 };
 
 #endif // ERROR_CODE_H

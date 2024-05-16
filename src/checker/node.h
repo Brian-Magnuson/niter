@@ -4,7 +4,6 @@
 class Node;
 // Forward declaration of Node to avoid circular dependency with Type
 
-#include "../parser/annotation.h"
 #include "../scanner/token.h"
 #include "type.h"
 #include <memory>

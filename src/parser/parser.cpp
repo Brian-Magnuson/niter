@@ -196,7 +196,7 @@ std::shared_ptr<Decl> Parser::fun_decl() {
     auto type_annotation = std::make_shared<Annotation::Function>(
         std::vector<std::pair<bool, std::shared_ptr<Annotation>>>(),
         std::make_shared<Annotation::Segmented>("void"),
-        false
+        KW_CONST
     );
 
     // Next, the parameters
@@ -210,7 +210,7 @@ std::shared_ptr<Decl> Parser::fun_decl() {
             throw ParserException();
         }
         parameters.push_back(variable);
-        type_annotation->params.push_back({declarer == KW_VAR, variable->type_annotation});
+        type_annotation->params.push_back({declarer, variable->type_annotation});
         while (match({TOK_COMMA})) {
             if (check({TOK_RIGHT_PAREN})) {
                 break;
@@ -226,13 +226,17 @@ std::shared_ptr<Decl> Parser::fun_decl() {
                 throw ParserException();
             }
             parameters.push_back(std::dynamic_pointer_cast<Decl::Var>(variable));
-            type_annotation->params.push_back({declarer == KW_VAR, variable->type_annotation});
+            type_annotation->params.push_back({declarer, variable->type_annotation});
         }
     }
     consume(TOK_RIGHT_PAREN, E_UNMATCHED_PAREN_IN_PARAMS, "Expected ')' after function parameters.");
 
     if (match({TOK_COLON})) {
-        type_annotation->ret = annotation();
+        bool var_found = match({KW_VAR});
+        type_annotation->return_annotation = annotation();
+        if (var_found) {
+            type_annotation->return_declarer = KW_VAR;
+        }
     }
 
     std::vector<std::shared_ptr<Stmt>> body;

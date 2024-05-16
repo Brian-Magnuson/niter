@@ -1,7 +1,6 @@
 #include "global_checker.h"
 #include "../logger/error_code.h"
 #include "../logger/logger.h"
-#include "environment.h"
 #include <iostream>
 
 std::any GlobalChecker::visit_declaration_stmt(Stmt::Declaration* stmt) {

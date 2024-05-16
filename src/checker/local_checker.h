@@ -8,6 +8,7 @@
 #include <any>
 #include <exception>
 #include <memory>
+#include <vector>
 
 /**
  * @brief An exception for local type errors.

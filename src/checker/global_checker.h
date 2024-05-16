@@ -7,6 +7,7 @@
 #include <any>
 #include <exception>
 #include <memory>
+#include <vector>
 
 /**
  * @brief An exception for global type errors.

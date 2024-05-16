@@ -1,5 +1,6 @@
 #include "local_checker.h"
 #include "../logger/logger.h"
+#include "../scanner/token.h"
 #include "../utility/utils.h"
 #include "type.h"
 #include <iostream>
@@ -55,7 +56,7 @@ std::any LocalChecker::visit_return_stmt(Stmt::Return* stmt) {
         throw LocalTypeException();
     }
 
-    std::shared_ptr<Annotation> ret_type = std::any_cast<std::shared_ptr<Annotation>>(stmt->value->accept(this));
+    std::shared_ptr<Type> ret_type = std::any_cast<std::shared_ptr<Type>>(stmt->value->accept(this));
 
     return ret_type;
 }
@@ -76,7 +77,7 @@ std::any LocalChecker::visit_continue_stmt(Stmt::Continue* /* stmt */) {
 
 std::any LocalChecker::visit_print_stmt(Stmt::Print* stmt) {
     // Currently, print statements are only allowed to print objects of type `char*`
-    std::shared_ptr<Type> print_type = std::any_cast<std::shared_ptr<Type>>(stmt->value->accept(this));
+    auto print_type = std::any_cast<std::shared_ptr<Type>>(stmt->value->accept(this));
     if (print_type->to_string() != "::char*") {
         ErrorLogger::inst().log_error(stmt->location, E_PUTS_WITHOUT_STRING, "Print statements are only allowed to print objects of type `char*`.");
         throw LocalTypeException();
@@ -104,13 +105,13 @@ std::any LocalChecker::visit_var_decl(Decl::Var* decl) {
     }
 
     // Get the type of the initializer
-    std::shared_ptr<Type> init_type = std::any_cast<std::shared_ptr<Type>>(decl->initializer->accept(this));
+    auto init_type = std::any_cast<std::shared_ptr<Type>>(decl->initializer->accept(this));
     // Declare the variable
     auto [variable, result] = Environment::inst().declare_variable(decl->name.lexeme, decl->declarer, decl->type_annotation);
 
     // Verify that the variable was declared successfully
     if (result == E_SYMBOL_ALREADY_DECLARED) {
-        ErrorLogger::inst().log_error(decl->name.location, result, "A symbol with the same name has already been declared in this scope.");
+        ErrorLogger::inst().log_error(decl->name.location, E_LOCAL_ALREADY_DECLARED, "A symbol with the same name has already been declared in this scope.");
         throw LocalTypeException();
     } else if (result == E_UNKNOWN_TYPE) {
         ErrorLogger::inst().log_error(decl->name.location, result, "Could not resolve type annotation");
@@ -134,7 +135,7 @@ std::any LocalChecker::visit_var_decl(Decl::Var* decl) {
     // Verify that the right side is not a const pointer being assigned to a non-const pointer
     auto init_ptr_type = std::dynamic_pointer_cast<Type::Pointer>(init_type);
     if (init_ptr_type != nullptr && init_ptr_type->declarer == KW_CONST && variable->declarer != KW_CONST) {
-        ErrorLogger::inst().log_error(decl->name.location, E_ASSIGN_TO_CONST, "Cannot assign a const pointer to a non-const pointer.");
+        ErrorLogger::inst().log_error(decl->name.location, E_INVALID_PTR_DECLARER, "Cannot assign a const pointer to a non-const pointer.");
         throw LocalTypeException();
     }
 
@@ -162,7 +163,7 @@ std::any LocalChecker::visit_fun_decl(Decl::Fun* decl) {
 
     // We could verify the entire function pointer, but then we'd get less specific error messages
     // So we'll just verify the return type and the parameter types separately
-    auto fun_type = std::dynamic_pointer_cast<Annotation::Function>(decl->type_annotation);
+    auto fun_annotation = std::dynamic_pointer_cast<Annotation::Function>(decl->type_annotation);
     // std::shared_ptr<Annotation> ret_type = fun_type->ret;
     // if (!Environment::inst().verify_type(ret_type)) {
     //     ErrorLogger::inst().log_error(decl->name.location, E_UNKNOWN_TYPE, "Could not resolve return type annotation.");
@@ -173,7 +174,7 @@ std::any LocalChecker::visit_fun_decl(Decl::Fun* decl) {
     Environment::inst().increase_local_scope();
 
     // Declare the return variable
-    auto [ret_var, ret_result] = Environment::inst().declare_variable("___return", fun_type->is_ret_mutable ? KW_VAR : KW_CONST, fun_type->ret);
+    auto [ret_var, ret_result] = Environment::inst().declare_variable("___return", fun_annotation->return_declarer, fun_annotation->return_annotation);
     ret_var->declarer = KW_VAR;
     // We change the declarer to var because we assign to the return variable in the function body
     // Using a return variable makes it more convenient for LLVM code generation later
@@ -228,7 +229,7 @@ std::any LocalChecker::visit_fun_decl(Decl::Fun* decl) {
                 auto ret_type = std::any_cast<std::shared_ptr<Type>>(stmt_type);
 
                 if (!Type::are_compatible(ret_type, variable_fun_type->return_type)) {
-                    ErrorLogger::inst().log_error(stmt->location, E_RETURN_INCOMPATIBLE, "Cannot convert from " + ret_type->to_string() + " to return type " + fun_type->ret->to_string() + ".");
+                    ErrorLogger::inst().log_error(stmt->location, E_RETURN_INCOMPATIBLE, "Cannot convert from " + ret_type->to_string() + " to return type " + fun_annotation->return_annotation->to_string() + ".");
                     throw LocalTypeException();
                 }
             }
@@ -424,7 +425,7 @@ std::any LocalChecker::visit_unary_expr(Expr::Unary* expr) {
 
 std::any LocalChecker::visit_call_expr(Expr::Call* expr) {
     // The left side of the call expression must be callable; i.e. a function pointer type
-    std::shared_ptr<Type> left_type = std::any_cast<std::shared_ptr<Type>>(expr->callee->accept(this));
+    auto left_type = std::any_cast<std::shared_ptr<Type>>(expr->callee->accept(this));
     if (!IS_TYPE(left_type, Type::Function)) {
         ErrorLogger::inst().log_error(expr->location, E_CALL_ON_NON_FUN, "Expression is not callable.");
         throw LocalTypeException();
@@ -547,7 +548,6 @@ std::any LocalChecker::visit_identifier_expr(Expr::Identifier* expr) {
 
 std::any LocalChecker::visit_literal_expr(Expr::Literal* expr) {
 
-    std::shared_ptr<Node::StructScope> node = nullptr;
     std::shared_ptr<Type> type = nullptr;
 
     switch (expr->token.tok_type) {
