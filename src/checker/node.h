@@ -99,7 +99,7 @@ public:
         }
         // If we didn't find 'A' or 'B', or 'A::B' does not contain 'c', then try again from the parent scope.
         if (!found || current->children.find(path.back()) == current->children.end()) {
-            return parent->downward_lookup(path);
+            return parent != nullptr ? parent->downward_lookup(path) : nullptr;
         }
         // If we found 'A::B::c', return it.
         return current->children[path.back()];

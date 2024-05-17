@@ -118,8 +118,8 @@ std::any LocalChecker::visit_var_decl(Decl::Var* decl) {
     if (Environment::inst().in_global_scope()) {
         variable = Environment::inst().get_variable({decl->name});
     } else {
-        // Declare the variable, defer if necessary
-        std::tie(variable, result) = Environment::inst().declare_variable(decl->name.lexeme, decl->declarer, decl->type_annotation, true);
+        // Declare the variable, do not defer
+        std::tie(variable, result) = Environment::inst().declare_variable(decl->name.lexeme, decl->declarer, decl->type_annotation);
     }
 
     // Verify that the variable was declared successfully
@@ -150,6 +150,9 @@ std::any LocalChecker::visit_var_decl(Decl::Var* decl) {
     if (init_ptr_type != nullptr && init_ptr_type->declarer == KW_CONST && variable->declarer != KW_CONST) {
         ErrorLogger::inst().log_error(decl->name.location, E_INVALID_PTR_DECLARER, "Cannot assign a const pointer to a non-const pointer.");
         throw LocalTypeException();
+    } else if (init_ptr_type != nullptr && variable->declarer == KW_CONST) {
+        // If the variable is const, the pointer must be const as well
+        init_ptr_type->declarer = KW_CONST;
     }
 
     return std::any();
@@ -200,6 +203,12 @@ std::any LocalChecker::visit_fun_decl(Decl::Fun* decl) {
             ErrorLogger::inst().log_error(decl->parameters[i]->name.location, E_AUTO_IN_PARAMS, "Cannot infer types for function parameters.");
             throw LocalTypeException();
         }
+        // If the parameter is a pointer, make the declarer in the pointer type match the declarer of the parameter
+        auto param_ptr_type = std::dynamic_pointer_cast<Type::Pointer>(param_var->type);
+        if (param_ptr_type != nullptr) {
+            param_ptr_type->declarer = param_var->declarer;
+        }
+
         // We don't worry about initializers for parameters; this is just a type checker
     }
 

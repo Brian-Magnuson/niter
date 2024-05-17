@@ -192,8 +192,9 @@ public:
  */
 class Type::Pointer : public Type {
 public:
-    // The declarer of the pointer type. Use to determine if the object can be mutated through this pointer.
-    TokenType declarer = KW_CONST;
+    // The declarer of the pointer type. Use to determine if the object can be mutated through this pointer. Default is KW_VAR.
+    TokenType declarer = KW_VAR;
+
     // The element type of the pointer.
     std::shared_ptr<Type> inner_type = nullptr;
 
