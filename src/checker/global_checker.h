@@ -30,17 +30,19 @@ class GlobalChecker : public Stmt::Visitor, public Decl::Visitor {
      *
      * @param stmt The statement to check
      * @return std::any The empty any object always.
+     * @throw GlobalTypeException If an error occurs; will be caught by the type_check function.
      */
     std::any visit_declaration_stmt(Stmt::Declaration* stmt) override;
 
     /**
-     * @brief Returns the empty any object always.
-     * This type checker does not concern itself with expression statements.
+     * @brief Throws an exception for global expression statements.
+     * No global expression statements are allowed.
      *
      * @param stmt The statement to check
-     * @return std::any The empty any object always.
+     * @return This function never returns.
+     * @throw GlobalTypeException Always thrown. Will be caught by the type_check function.
      */
-    std::any visit_expression_stmt(Stmt::Expression* /*stmt*/) override { return std::any(); }
+    std::any visit_expression_stmt(Stmt::Expression* stmt) override;
 
     /**
      * @brief Returns the empty any object always.
@@ -52,58 +54,64 @@ class GlobalChecker : public Stmt::Visitor, public Decl::Visitor {
     std::any visit_block_stmt(Stmt::Block* /*stmt*/) override { return std::any(); }
 
     /**
-     * @brief Returns the empty any object always.
-     * This type checker does not concern itself with conditional statements.
+     * @brief Throws an exception for global conditional statements.
+     * No global conditional statements are allowed.
      *
      * @param stmt The statement to check
-     * @return std::any The empty any object always.
+     * @return This function never returns.
+     * @throw GlobalTypeException Always thrown. Will be caught by the type_check function.
      */
-    std::any visit_conditional_stmt(Stmt::Conditional* /*stmt*/) override { return std::any(); }
+    std::any visit_conditional_stmt(Stmt::Conditional* stmt) override;
 
     /**
-     * @brief Returns the empty any object always.
-     * This type checker does not concern itself with loop statements.
+     * @brief Throws an exception for global loop statements.
+     * No global loop statements are allowed.
      *
      * @param stmt The statement to check
-     * @return std::any The empty any object always.
+     * @return This function never returns.
+     * @throw GlobalTypeException Always thrown. Will be caught by the type_check function.
      */
-    std::any visit_loop_stmt(Stmt::Loop* /*stmt*/) override { return std::any(); }
+    std::any visit_loop_stmt(Stmt::Loop* stmt) override;
 
     /**
-     * @brief Returns the empty any object always.
-     * This type checker does not concern itself with return statements.
+     * @brief Throws an exception for global return statements.
+     * No global return statements are allowed.
      *
      * @param stmt The statement to check
-     * @return std::any The empty any object always.
+     * @return This function never returns.
+     * @throw GlobalTypeException Always thrown. Will be caught by the type_check function.
      */
-    std::any visit_return_stmt(Stmt::Return* /*stmt*/) override { return std::any(); }
+    std::any visit_return_stmt(Stmt::Return* stmt) override;
 
     /**
-     * @brief Returns the empty any object always.
-     * This type checker does not concern itself with break statements.
+     * @brief Throws an exception for global break statements.
+     * No global break statements are allowed.
      *
      * @param stmt The statement to check
-     * @return std::any The empty any object always.
+     * @return This function never returns.
+     * @throw GlobalTypeException Always thrown. Will be caught by the type_check function.
      */
-    std::any visit_break_stmt(Stmt::Break* /*stmt*/) override { return std::any(); }
+    std::any visit_break_stmt(Stmt::Break* stmt) override;
 
     /**
-     * @brief Returns the empty any object always.
-     * This type checker does not concern itself with continue statements.
+     * @brief Throws an exception for global continue statements.
+     * No global continue statements are allowed.
      *
      * @param stmt The statement to check
-     * @return std::any The empty any object always.
+     * @return This function never returns.
+     * @throw GlobalTypeException Always thrown. Will be caught by the type_check function.
      */
-    std::any visit_continue_stmt(Stmt::Continue* /*stmt*/) override { return std::any(); }
+    std::any visit_continue_stmt(Stmt::Continue* stmt) override;
 
     /**
-     * @brief Returns the empty any object always.
-     * This type checker does not concern itself with print statements.
+     * @brief Throws an exception for global print statements.
+     * No global print statements are allowed.
      *
      * @param stmt The statement to check
-     * @return std::any The empty any object always.
+     * @return This function never returns.
+     * @throw GlobalTypeException Always thrown. Will be caught by the type_check function.
      */
-    std::any visit_print_stmt(Stmt::Print* /*stmt*/) override { return std::any(); }
+    std::any visit_print_stmt(Stmt::Print* stmt) override;
 
     /**
      * @brief Checks the end of file statement. May alter the environment accordingly.

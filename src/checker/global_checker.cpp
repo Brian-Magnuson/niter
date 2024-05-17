@@ -8,6 +8,48 @@ std::any GlobalChecker::visit_declaration_stmt(Stmt::Declaration* stmt) {
     return stmt->declaration->accept(this);
 }
 
+std::any GlobalChecker::visit_expression_stmt(Stmt::Expression* stmt) {
+    // Global expression statements are not allowed
+    ErrorLogger::inst().log_error(stmt->location, E_GLOBAL_EXPRESSION, "Global expression statements are not allowed.");
+    throw GlobalTypeException();
+}
+
+std::any GlobalChecker::visit_conditional_stmt(Stmt::Conditional* /* stmt */) {
+    // Global conditional statements are not allowed
+    // ErrorLogger::inst().log_error(stmt->location, E_GLOBAL_EXPRESSION, "Global conditional statements are not allowed.");
+    throw GlobalTypeException();
+}
+
+std::any GlobalChecker::visit_loop_stmt(Stmt::Loop* /* stmt */) {
+    // Global loop statements are not allowed
+    // ErrorLogger::inst().log_error(stmt->location, E_GLOBAL_EXPRESSION, "Global loop statements are not allowed.");
+    throw GlobalTypeException();
+}
+
+std::any GlobalChecker::visit_return_stmt(Stmt::Return* stmt) {
+    // Global return statements are not allowed
+    ErrorLogger::inst().log_error(stmt->location, E_GLOBAL_RETURN, "Global return statements are not allowed.");
+    throw GlobalTypeException();
+}
+
+std::any GlobalChecker::visit_break_stmt(Stmt::Break* /* stmt */) {
+    // Global break statements are not allowed
+    // ErrorLogger::inst().log_error(stmt->location, E_GLOBAL_BREAK, "Global break statements are not allowed.");
+    throw GlobalTypeException();
+}
+
+std::any GlobalChecker::visit_continue_stmt(Stmt::Continue* /* stmt */) {
+    // Global continue statements are not allowed
+    // ErrorLogger::inst().log_error(stmt->location, E_GLOBAL_CONTINUE, "Global continue statements are not allowed.");
+    throw GlobalTypeException();
+}
+
+std::any GlobalChecker::visit_print_stmt(Stmt::Print* stmt) {
+    // Global print statements are not allowed
+    ErrorLogger::inst().log_error(stmt->location, E_GLOBAL_PRINT, "Global print statements are not allowed.");
+    throw GlobalTypeException();
+}
+
 std::any GlobalChecker::visit_eof_stmt(Stmt::EndOfFile* /* stmt */) {
     // TODO: This doesn't really do anything right now. This becomes more useful when `using` is implemented.
     return std::any();

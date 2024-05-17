@@ -22,11 +22,10 @@ std::any LocalChecker::visit_declaration_stmt(Stmt::Declaration* stmt) {
 }
 
 std::any LocalChecker::visit_expression_stmt(Stmt::Expression* stmt) {
-    // Expression statements are not allowed in global scope
-    if (Environment::inst().in_global_scope()) {
-        ErrorLogger::inst().log_error(stmt->location, E_GLOBAL_EXPRESSION, "Expression statements are not allowed in global scope.");
-        throw LocalTypeException();
-    }
+    // This is a local expression statement. Any global expression statements should have been caught by the global checker.
+    // Visit the expression.
+    stmt->expression->accept(this);
+    // Expression statements do not produce any value.
     return std::any();
 }
 std::any LocalChecker::visit_block_stmt(Stmt::Block* /* stmt */) {
@@ -52,10 +51,8 @@ std::any LocalChecker::visit_loop_stmt(Stmt::Loop* /* stmt */) {
 
 std::any LocalChecker::visit_return_stmt(Stmt::Return* stmt) {
     // Return statements are not allowed in global scope
-    if (Environment::inst().in_global_scope()) {
-        ErrorLogger::inst().log_error(stmt->location, E_GLOBAL_RETURN, "Return statements are not allowed in global scope.");
-        throw LocalTypeException();
-    }
+    // We already checked for this in the global checker
+
     if (stmt->value == nullptr) {
         return std::any();
     }

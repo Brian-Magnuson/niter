@@ -111,6 +111,12 @@ enum ErrorCode {
     E_NAMESPACE_IN_STRUCT,
     // A struct was declared with the same name in the same scope
     E_STRUCT_ALREADY_DECLARED,
+    // An expression statement was found in global space
+    E_GLOBAL_EXPRESSION,
+    // A return statement was found outside of a function
+    E_GLOBAL_RETURN,
+    // A print statement was found outside of a function
+    E_GLOBAL_PRINT,
 
     // Local type errors
     E_LOCAL_TYPE = 5000,
@@ -120,10 +126,6 @@ enum ErrorCode {
     E_STRUCT_IN_LOCAL_SCOPE,
     // A function was introduced in a non-global scope
     E_FUN_IN_LOCAL_SCOPE,
-    // An expression statement was found in global space
-    E_GLOBAL_EXPRESSION,
-    // A return statement was found outside of a function
-    E_GLOBAL_RETURN,
     // A print statement was found with a non-string argument
     E_PUTS_WITHOUT_STRING,
     // A variable was declared without an initializer
