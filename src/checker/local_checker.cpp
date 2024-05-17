@@ -106,7 +106,10 @@ std::any LocalChecker::visit_var_decl(Decl::Var* decl) {
     }
 
     // Get the type of the initializer
-    auto init_type = std::any_cast<std::shared_ptr<Type>>(decl->initializer->accept(this));
+    std::shared_ptr<Type> init_type = std::make_shared<Type::Blank>();
+    if (decl->initializer != nullptr) {
+        init_type = std::any_cast<std::shared_ptr<Type>>(decl->initializer->accept(this));
+    }
 
     std::shared_ptr<Node::Variable> variable;
     ErrorCode result = (ErrorCode)0;
@@ -133,7 +136,7 @@ std::any LocalChecker::visit_var_decl(Decl::Var* decl) {
     // Neither variable->type nor init_type should be nullptr at this point.
 
     // Verify that the type of the initializer matches the type annotation
-    if (Type::are_compatible(init_type, variable->type)) {
+    if (!Type::are_compatible(init_type, variable->type)) {
         ErrorLogger::inst().log_error(decl->name.location, E_INCOMPATIBLE_TYPES, "Cannot convert from " + init_type->to_string() + " to " + variable->type->to_string() + ".");
         throw LocalTypeException();
     }
