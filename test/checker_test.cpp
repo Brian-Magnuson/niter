@@ -34,6 +34,59 @@ TEST_CASE("Global checker bad main", "[checker]") {
     env.reset();
 }
 
+TEST_CASE("Global checker symbol already declared", "[checker]") {
+    std::string source_code = "var x: i32; var x: i32;";
+    auto file_name = std::make_shared<std::string>("test_files/symbol_already_declared.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    auto stmts = parser.parse();
+
+    Environment& env = Environment::inst();
+
+    GlobalChecker global_checker;
+    global_checker.type_check(stmts);
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_SYMBOL_ALREADY_DECLARED);
+
+    logger.reset();
+    env.reset();
+}
+
+TEST_CASE("Global checker expr in global", "[checker]") {
+    std::string source_code = "var x: i32 = 0; x = 1;";
+    auto file_name = std::make_shared<std::string>("test_files/expr_in_global.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    auto stmts = parser.parse();
+
+    Environment& env = Environment::inst();
+
+    GlobalChecker global_checker;
+    global_checker.type_check(stmts);
+
+    LocalChecker local_checker;
+    local_checker.type_check(stmts);
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_GLOBAL_EXPRESSION);
+
+    logger.reset();
+    env.reset();
+}
+
 // MARK: Local checker tests
 
 TEST_CASE("Local checker no return in non-void", "[checker]") {
@@ -86,6 +139,34 @@ TEST_CASE("Local checker good main", "[checker]") {
     local_checker.type_check(stmts);
 
     REQUIRE(logger.get_errors().size() >= 0);
+
+    logger.reset();
+    env.reset();
+}
+
+TEST_CASE("Local checker fun in local", "[checker]") {
+    std::string source_code = "fun main(): i32 { fun foo(): i32 { return 0; } return 0; }";
+    auto file_name = std::make_shared<std::string>("test_files/fun_in_local.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    auto stmts = parser.parse();
+
+    Environment& env = Environment::inst();
+
+    GlobalChecker global_checker;
+    global_checker.type_check(stmts);
+
+    LocalChecker local_checker;
+    local_checker.type_check(stmts);
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_FUN_IN_LOCAL_SCOPE);
 
     logger.reset();
     env.reset();
