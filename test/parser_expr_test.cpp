@@ -264,6 +264,22 @@ TEST_CASE("Parser chained access with grouping", "[parser]") {
     CHECK(printer.print(stmts.at(3)) == "(stmt:eof)");
 }
 
+TEST_CASE("Parser chained access exprs 2", "[parser]") {
+    std::string source_code = "one.two->three[four].five[six]->seven;";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/chained_access_exprs_2_test.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 2);
+    CHECK(printer.print(stmts.at(0)) == "(-> ([] (. ([] (-> (. one two) three) four) five) six) seven)");
+    CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
+}
+
 TEST_CASE("Parser unary exprs", "[parser]") {
     std::string source_code = "-5; !true; *foo; &bar; -&foo; !*bar;";
     std::shared_ptr file_name = std::make_shared<std::string>("test_files/unary_exprs_test.nit");
