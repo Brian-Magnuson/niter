@@ -201,8 +201,8 @@ std::shared_ptr<Decl> Parser::fun_decl() {
 
     // Next, the parameters
     std::vector<std::shared_ptr<Decl::Var>> parameters;
-    consume(TOK_LEFT_PAREN, E_NO_LPAREN_IN_FUN_DECL, "Expected '(' after function name.");
     grouping_tokens.push(TOK_RIGHT_PAREN);
+    consume(TOK_LEFT_PAREN, E_NO_LPAREN_IN_FUN_DECL, "Expected '(' after function name.");
     if (!check({TOK_RIGHT_PAREN})) {
         auto variable = std::dynamic_pointer_cast<Decl::Var>(var_decl());
         if (variable == nullptr) {
@@ -241,8 +241,12 @@ std::shared_ptr<Decl> Parser::fun_decl() {
 
     std::vector<std::shared_ptr<Stmt>> body;
     consume(TOK_LEFT_BRACE, E_NO_LBRACE_IN_FUN_DECL, "Expected '{' before function body.");
+    while (match({TOK_NEWLINE}))
+        ; // Skip over newlines
     while (!check({TOK_RIGHT_BRACE}) && !is_at_end()) {
         body.push_back(statement());
+        while (match({TOK_NEWLINE}))
+            ; // Skip over newlines
     }
     consume(TOK_RIGHT_BRACE, E_UNMATCHED_BRACE_IN_FUN_DECL, "Expected '}' after function body.");
     return std::make_shared<Decl::Fun>(declarer, name, parameters, type_annotation, body);
@@ -362,6 +366,8 @@ std::shared_ptr<Expr> Parser::access_expr() {
         std::shared_ptr<Expr> right;
         if (op.tok_type == TOK_LEFT_SQUARE) {
             grouping_tokens.push(TOK_RIGHT_SQUARE);
+            while (match({TOK_NEWLINE}))
+                ; // Skip over newlines
             // If we have [] access, any expression is allowed
             right = expression();
             consume(TOK_RIGHT_SQUARE, E_UNMATCHED_LEFT_SQUARE, "Expected ']' after expression.");
@@ -383,8 +389,9 @@ std::shared_ptr<Expr> Parser::call_expr() {
     FUNC(ARG1,)
     FUNC(ARG1, ARG2,)
     */
-    while (match({TOK_LEFT_PAREN})) {
+    while (check({TOK_LEFT_PAREN})) {
         grouping_tokens.push(TOK_RIGHT_PAREN);
+        advance();
         Token& paren = previous();
         std::vector<std::shared_ptr<Expr>> arguments;
         // If there are no arguments, we can just return the call expression
@@ -438,9 +445,10 @@ std::shared_ptr<Expr> Parser::primary_expr() {
         }
         return expr;
     }
-    if (match({TOK_LEFT_SQUARE})) {
-        Token& bracket = previous();
+    if (check({TOK_LEFT_SQUARE})) {
+        Token& bracket = peek();
         grouping_tokens.push(TOK_RIGHT_SQUARE);
+        advance();
         std::vector<std::shared_ptr<Expr>> elements;
         if (!check({TOK_RIGHT_SQUARE})) {
             elements.push_back(expression());
@@ -456,9 +464,10 @@ std::shared_ptr<Expr> Parser::primary_expr() {
         return std::make_shared<Expr::Array>(elements, bracket);
     }
 
-    if (match({TOK_LEFT_PAREN})) {
-        Token& paren = previous();
+    if (check({TOK_LEFT_PAREN})) {
+        Token& paren = peek();
         grouping_tokens.push(TOK_RIGHT_PAREN);
+        advance();
         std::vector<std::shared_ptr<Expr>> expressions;
         if (match({TOK_RIGHT_PAREN})) {
             // Empty tuple
@@ -510,8 +519,9 @@ std::shared_ptr<Annotation> Parser::segmented_annotation() {
     do {
         Token name = consume(TOK_IDENT, E_MISSING_IDENT_IN_TYPE, "Expected identifier in type annotation.");
         auto temp = std::make_shared<Annotation::Segmented::Class>(name.lexeme, std::vector<std::shared_ptr<Annotation>>());
-        if (match({TOK_LT})) {
+        if (check({TOK_LT})) {
             grouping_tokens.push(TOK_GT);
+            advance();
             if (!check({TOK_GT})) {
                 temp->type_args.push_back(annotation());
                 while (match({TOK_COMMA})) {
@@ -546,8 +556,10 @@ std::shared_ptr<Annotation::Function> Parser::function_annotation() {
     std::shared_ptr<Annotation> ret;
 
     consume(TOK_LEFT_PAREN, E_NO_LPAREN_IN_FUN_TYPE, "Expected '(' after 'fun' in type annotation.");
-
     grouping_tokens.push(TOK_RIGHT_PAREN);
+    while (match({TOK_NEWLINE}))
+        ; // Skip over newlines
+
     if (!check({TOK_RIGHT_PAREN})) {
         if (match({KW_VAR})) {
             auto param = std::make_pair(KW_VAR, annotation());
@@ -619,8 +631,12 @@ std::vector<std::shared_ptr<Stmt>> Parser::parse() {
     std::vector<std::shared_ptr<Stmt>> statements;
 
     while (current != tokens.size()) {
+        while (match({TOK_NEWLINE}))
+            ; // Skip over newlines
         while (!is_at_end()) {
             statements.push_back(statement());
+            while (match({TOK_NEWLINE}))
+                ; // Skip over newlines
         }
         current++;
         statements.push_back(std::make_shared<Stmt::EndOfFile>());

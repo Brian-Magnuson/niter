@@ -256,6 +256,41 @@ TEST_CASE("Local checker valid vars", "[checker]") {
     env.reset();
 }
 
+TEST_CASE("Local checker valid initializers", "[checker]") {
+    std::string source_code = R"(
+fun main(): i32 {
+    var _1: i32 = 3
+    var _2: char = 'a'
+    var _3: bool = true
+    var _4: f64 = 2.0
+    return 0
+}
+)";
+    auto file_name = std::make_shared<std::string>("test_files/valid_initializers.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(true);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    auto stmts = parser.parse();
+
+    Environment& env = Environment::inst();
+
+    GlobalChecker global_checker;
+    global_checker.type_check(stmts);
+
+    LocalChecker local_checker;
+    local_checker.type_check(stmts);
+
+    REQUIRE(logger.get_errors().size() == 0);
+
+    logger.reset();
+    env.reset();
+}
+
 TEST_CASE("Local checker unknown type", "[checker]") {
     std::string source_code = "fun main(): i32 { var a: strange_type = 1; return 0; }";
     auto file_name = std::make_shared<std::string>("test_files/unknown_type.nit");

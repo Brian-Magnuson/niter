@@ -664,3 +664,73 @@ TEST_CASE("Logger insignificant newlines 3", "[logger]") {
 
     logger.reset();
 }
+
+TEST_CASE("Logger significant newlines", "[logger]") {
+    std::string source_code = R"(
+var a = 1
+
+var b = 2
+var c = 3
+
+a = b + c
+
+)";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/significant_newlines_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+
+    REQUIRE(logger.get_errors().size() == 0);
+    REQUIRE(stmts.size() == 5);
+    CHECK(printer.print(stmts.at(0)) == "(decl:var a auto 1)");
+    CHECK(printer.print(stmts.at(1)) == "(decl:var b auto 2)");
+    CHECK(printer.print(stmts.at(2)) == "(decl:var c auto 3)");
+    CHECK(printer.print(stmts.at(3)) == "(= a (+ b c))");
+    CHECK(printer.print(stmts.at(4)) == "(stmt:eof)");
+
+    logger.reset();
+}
+
+TEST_CASE("Logger significant newlines 2", "[logger]") {
+    std::string source_code = R"(
+var a = 1
+var b = [
+    1,
+    2,
+    3,
+]
+
+var c = b[a]
+return c
+)";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/significant_newlines_test_2.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(true);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+
+    REQUIRE(logger.get_errors().size() == 0);
+    REQUIRE(stmts.size() == 5);
+    CHECK(printer.print(stmts.at(0)) == "(decl:var a auto 1)");
+    CHECK(printer.print(stmts.at(1)) == "(decl:var b auto (array 1 2 3))");
+    CHECK(printer.print(stmts.at(2)) == "(decl:var c auto ([] b a))");
+    CHECK(printer.print(stmts.at(3)) == "(stmt:return c)");
+    CHECK(printer.print(stmts.at(4)) == "(stmt:eof)");
+
+    logger.reset();
+}
