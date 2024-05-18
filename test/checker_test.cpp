@@ -320,7 +320,13 @@ TEST_CASE("Local checker unknown type", "[checker]") {
 }
 
 TEST_CASE("Local checker types incompatible", "[checker]") {
-    std::string source_code = "fun main(): i32 { var a: i32 = 1; a = true; return 0; }";
+    std::string source_code = R"(
+fun main(): i32 { 
+    var a: i32 = 1; 
+    a = true; 
+    return 0;
+}
+)";
     auto file_name = std::make_shared<std::string>("test_files/types_incompatible.nit");
 
     ErrorLogger& logger = ErrorLogger::inst();

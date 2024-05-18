@@ -29,11 +29,15 @@ void ErrorLogger::print_pretty_error(const Location& location, const std::string
     *out << *location.file_name << ":" << location.line << ":"
          << location.column << std::endl;
 
-    *out << colorize(Color::RED) << "Error "
-         << errors.size() << ": "
-         << colorize(Color::RESET)
-         << display_text << std::endl;
-    std::string err_line = location.source_code->substr(location.line_index, location.source_code->find('\n', location.line_index));
+    // Print out all parts of the location because there's a bug here and I want to see what's going on
+    // *out << "Newline location: " << location.source_code->find('\n', location.line_index) << std::endl;
+
+    *out
+        << colorize(Color::RED) << "Error "
+        << errors.size() << ": "
+        << colorize(Color::RESET)
+        << display_text << std::endl;
+    std::string err_line = location.source_code->substr(location.line_index, location.source_code->find('\n', location.line_index) - location.line_index);
 
     // Pad the line number with spaces so that the caret lines up with the error
     // 4 spaces should be good enough for 5 digits
