@@ -1,12 +1,12 @@
 #include "environment.h"
 #include "../utility/utils.h"
 
-ErrorCode Environment::add_namespace(const std::string& name) {
+ErrorCode Environment::add_namespace(const Location& location, const std::string& name) {
 
     auto namespace_scope = std::dynamic_pointer_cast<Node::NamespaceScope>(current_scope);
 
     if (namespace_scope != nullptr) {
-        auto new_scope = std::make_shared<Node::NamespaceScope>(namespace_scope, name);
+        auto new_scope = std::make_shared<Node::NamespaceScope>(location, namespace_scope, name);
         namespace_scope->children[name] = new_scope;
         current_scope = new_scope;
         return (ErrorCode)0;
@@ -17,17 +17,19 @@ ErrorCode Environment::add_namespace(const std::string& name) {
     }
 }
 
-ErrorCode Environment::add_struct(const std::string& name) {
+std::pair<std::shared_ptr<Node::Locatable>, ErrorCode> Environment::add_struct(const Location& location, const std::string& name) {
     if (IS_TYPE(current_scope, Node::LocalScope)) {
-        return E_STRUCT_IN_LOCAL_SCOPE;
+        return {nullptr, E_STRUCT_IN_LOCAL_SCOPE};
     } else {
-        if (HAS_KEY(current_scope->children, name)) {
-            return E_STRUCT_ALREADY_DECLARED;
+        auto iter = current_scope->children.find(name);
+        if (iter != current_scope->children.end()) {
+            auto locatable = std::dynamic_pointer_cast<Node::Locatable>(iter->second);
+            return {locatable, E_STRUCT_ALREADY_DECLARED};
         } else {
-            auto new_scope = std::make_shared<Node::StructScope>(current_scope, name);
+            auto new_scope = std::make_shared<Node::StructScope>(location, current_scope, name);
             current_scope->children[name] = new_scope;
             current_scope = new_scope;
-            return (ErrorCode)0;
+            return {new_scope, (ErrorCode)0};
         }
     }
 }
@@ -41,7 +43,7 @@ void Environment::install_primitive_types() {
         "void",
     };
     for (auto& type : primitive_types) {
-        global_tree->children[type] = std::make_shared<Node::StructScope>(global_tree, type);
+        global_tree->children[type] = std::make_shared<Node::StructScope>(Location(), global_tree, type);
     }
 }
 
@@ -69,13 +71,22 @@ bool Environment::in_global_scope() {
     return !IS_TYPE(current_scope, Node::LocalScope);
 }
 
-std::pair<std::shared_ptr<Node::Variable>, ErrorCode> Environment::declare_variable(const std::string& name, TokenType declarer, std::shared_ptr<Annotation> annotation, bool allow_deferral) {
-    if (HAS_KEY(current_scope->children, name)) {
-        return {nullptr, E_SYMBOL_ALREADY_DECLARED};
+std::pair<std::shared_ptr<Node::Locatable>, ErrorCode> Environment::declare_variable(
+    const Location& location,
+    const std::string& name,
+    TokenType declarer,
+    std::shared_ptr<Annotation> annotation,
+    bool allow_deferral
+) {
+    auto iter = current_scope->children.find(name);
+    if (iter != current_scope->children.end()) {
+        auto locatable = std::dynamic_pointer_cast<Node::Locatable>(iter->second);
+        return {locatable, E_SYMBOL_ALREADY_DECLARED};
     } else {
         std::shared_ptr<Type> type = get_type(annotation);
         if (type == nullptr && allow_deferral) {
             deferred_variables.push_back(DeferredVariable{
+                location,
                 annotation,
                 current_scope,
                 name,
@@ -91,7 +102,7 @@ std::pair<std::shared_ptr<Node::Variable>, ErrorCode> Environment::declare_varia
                 // This is to prevent users from mutating the object that the pointer points to.
                 ptr_type->declarer = declarer;
             }
-            auto new_variable = std::make_shared<Node::Variable>(current_scope, declarer, type, name);
+            auto new_variable = std::make_shared<Node::Variable>(location, current_scope, declarer, type, name);
             current_scope->children[name] = new_variable;
             return {new_variable, (ErrorCode)0};
         }
@@ -226,7 +237,7 @@ bool Environment::verify_deferred_types() {
         // Set the current scope to the scope of the deferred variable.
         current_scope = deferred_variable.scope;
         // This is like jumping to a different part of the tree and declaring the variable there.
-        auto [variable, error] = declare_variable(deferred_variable.name, deferred_variable.declarer, deferred_variable.annotation, false);
+        auto [variable, error] = declare_variable(deferred_variable.location, deferred_variable.name, deferred_variable.declarer, deferred_variable.annotation, false);
         if (error != 0) {
             return false;
         }

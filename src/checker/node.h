@@ -18,6 +18,7 @@ class Node;
 class Node {
 public:
     class Scope;
+    class Locatable;
     class RootScope;
     class NamespaceScope;
     class StructScope;
@@ -39,7 +40,7 @@ public:
  * A scope is a node that can contain other nodes.
  *
  */
-class Node::Scope : public Node {
+class Node::Scope : public virtual Node {
 public:
     virtual ~Scope() = default;
 
@@ -107,6 +108,18 @@ public:
 };
 
 /**
+ * @brief A base class for a node that has a location in the source code.
+ *
+ */
+class Node::Locatable : public virtual Node {
+protected:
+    Locatable() = default;
+
+public:
+    Location location;
+};
+
+/**
  * @brief A special scope that is the root of the namespace tree.
  * Its parent is always nullptr.
  *
@@ -124,9 +137,10 @@ public:
  * Namespaces can contain variables, structs, local scopes, and other namespaces.
  *
  */
-class Node::NamespaceScope : public Node::Scope {
+class Node::NamespaceScope : public Node::Scope, public Node::Locatable {
 public:
-    NamespaceScope(std::shared_ptr<Scope> parent, const std::string& name) {
+    NamespaceScope(const Location& location, std::shared_ptr<Scope> parent, const std::string& name) {
+        this->location = location;
         this->parent = parent;
         unique_name = parent->unique_name + "::" + name;
     }
@@ -139,11 +153,12 @@ public:
  * Structs can contain variables, local scopes, and other structs, but not namespaces.
  *
  */
-class Node::StructScope : public Node::Scope {
+class Node::StructScope : public Node::Scope, public Node::Locatable {
 public:
     std::unordered_map<std::string, std::shared_ptr<Node>> instance_members;
 
-    StructScope(std::shared_ptr<Scope> parent, const std::string& name) {
+    StructScope(const Location& location, std::shared_ptr<Scope> parent, const std::string& name) {
+        this->location = location;
         this->parent = parent;
         unique_name = parent->unique_name + "::" + name;
     }
@@ -174,17 +189,19 @@ public:
  * Variables may have an annotation, which is used to store type information.
  *
  */
-class Node::Variable : public Node {
+class Node::Variable : public Node::Locatable {
 public:
     TokenType declarer;
     std::shared_ptr<Type> type;
 
     Variable(
+        const Location& location,
         std::shared_ptr<Scope> parent,
         TokenType declarer,
         std::shared_ptr<Type> type,
         const std::string& name
     ) : declarer(declarer), type(type) {
+        this->location = location;
         this->parent = parent;
         unique_name = parent->unique_name + "::" + name;
     }

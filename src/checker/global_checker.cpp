@@ -58,12 +58,15 @@ std::any GlobalChecker::visit_eof_stmt(Stmt::EndOfFile* /* stmt */) {
 std::any GlobalChecker::visit_var_decl(Decl::Var* decl) {
 
     // Declare the variable, defer if necessary
-    auto [_, result] = Environment::inst().declare_variable(decl->name.lexeme, decl->declarer, decl->type_annotation, true);
+    auto [node, result] = Environment::inst().declare_variable(decl->location, decl->name.lexeme, decl->declarer, decl->type_annotation, true);
 
     if (result == E_SYMBOL_ALREADY_DECLARED) {
         ErrorLogger::inst().log_error(decl->name.location, result, "A symbol with the same name has already been declared in this scope.");
+        ErrorLogger::inst().log_note(node->location, "Previous declaration was here.");
+        throw GlobalTypeException();
     } else if (result != 0) {
         ErrorLogger::inst().log_error(decl->name.location, E_IMPOSSIBLE, "Function `declare_variable` issued error " + std::to_string(result) + " in global type checking.");
+        throw GlobalTypeException();
     }
     // E_UNKNOWN_TYPE is not handled here since variables with unknown types are deferred here.
 
@@ -73,7 +76,18 @@ std::any GlobalChecker::visit_var_decl(Decl::Var* decl) {
 std::any GlobalChecker::visit_fun_decl(Decl::Fun* decl) {
 
     // Declare the function, defer if necessary
-    auto [variable, result] = Environment::inst().declare_variable(decl->name.lexeme, decl->declarer, decl->type_annotation, true);
+    auto [node, result] = Environment::inst().declare_variable(decl->location, decl->name.lexeme, decl->declarer, decl->type_annotation, true);
+
+    if (result == E_SYMBOL_ALREADY_DECLARED) {
+        ErrorLogger::inst().log_error(decl->name.location, result, "A symbol with the same name has already been declared in this scope.");
+        ErrorLogger::inst().log_note(node->location, "Previous declaration was here.");
+        throw GlobalTypeException();
+    } else if (result != 0) {
+        ErrorLogger::inst().log_error(decl->name.location, result, "An error occurred while declaring the function.");
+        throw GlobalTypeException();
+    }
+
+    auto variable = std::dynamic_pointer_cast<Node::Variable>(node);
 
     if (decl->name.lexeme == "main") {
         // The function declarer must be "fun"
@@ -88,12 +102,6 @@ std::any GlobalChecker::visit_fun_decl(Decl::Fun* decl) {
         if (type_string != "fun() => ::i32" && type_string != "fun(::int, ::char**) => ::i32") {
             ErrorLogger::inst().log_error(decl->name.location, E_INVALID_MAIN_SIGNATURE, "The main function must have the signature 'fun() => i32' or 'fun(int, char**) => i32'. Found type: " + type_string);
         }
-    }
-
-    if (result == E_SYMBOL_ALREADY_DECLARED) {
-        ErrorLogger::inst().log_error(decl->name.location, result, "A symbol with the same name has already been declared in this scope.");
-    } else if (result != 0) {
-        ErrorLogger::inst().log_error(decl->name.location, result, "An error occurred while declaring the function.");
     }
 
     return std::any();

@@ -15,6 +15,7 @@
 #include <vector>
 
 struct DeferredVariable {
+    Location location;
     std::shared_ptr<Annotation> annotation;
     std::shared_ptr<Node::Scope> scope;
     std::string name;
@@ -61,23 +62,26 @@ public:
      * Namespaces can actually be opened with the same name in the same scope.
      * In this case, new symbols will be added to the existing namespace.
      *
+     * @param location The location of the token that declared the namespace.
      * @param name The name of the namespace to add.
      * @return ErrorCode 0 if the namespace was added successfully.
      * E_NAMESPACE_IN_LOCAL_SCOPE if the namespace was added in a local scope.
      * E_NAMESPACE_IN_STRUCT if the namespace was added in a struct.
      */
-    ErrorCode add_namespace(const std::string& name);
+    ErrorCode add_namespace(const Location& location, const std::string& name);
 
     /**
      * @brief Adds a struct to the current scope and enters it.
      * A struct can only be added if the current scope is the root, a namespace, or another struct.
      *
+     * @param location The location of the token that declared the struct.
      * @param name The name of the struct to add.
-     * @return ErrorCode 0 if the struct was added successfully.
-     * E_STRUCT_ALREADY_DECLARED if the struct already exists in the current scope.
-     * E_STRUCT_IN_LOCAL_SCOPE if the struct was added in a local scope.
+     * @return std::pair<std::shared_ptr<Node::Locatable>, ErrorCode> A pair containing a pointer to the struct node and an error code.
+     * If the struct was added successfully, the pair will contain the struct node and 0.
+     * If the struct is already declared, the pair will contain the existing node and E_STRUCT_ALREADY_DECLARED.
+     * If the struct was added in a local scope, the pair will contain nullptr and E_STRUCT_IN_LOCAL_SCOPE.
      */
-    ErrorCode add_struct(const std::string& name);
+    std::pair<std::shared_ptr<Node::Locatable>, ErrorCode> add_struct(const Location& location, const std::string& name);
 
     /**
      * @brief Adds the primitive types to the global scope.
@@ -129,17 +133,24 @@ public:
      * If the type annotation is not valid, the variable will not be declared.
      * If allow_deferral is true, the variable declaration will be deferred until the type is verified.
      *
+     * @param location The location of the token that declared the variable.
      * @param name The name of the symbol to declare.
      * @param declarer The type of the token that declared the variable.
      * @param annotation The type annotation of the variable to declare.
      * @param allow_deferral Whether or not to allow the type to be deferred. Default is false.
-     * @return std::pair<std::shared_ptr<Node::Variable>, ErrorCode> A pair containing a pointer to the variable node and an error code.
-     * If the variable was not declared, the pointer will be nullptr.
-     * The error code will be 0 if the variable was declared successfully or if it was deferred.
-     * E_SYMBOL_ALREADY_DECLARED if the symbol already exists in the current scope.
-     * E_UNKNOWN_TYPE if the type annotation could not be resolved and allow_deferral is false.
+     * @return std::pair<std::shared_ptr<Node::Locatable>, ErrorCode> A pair containing a pointer to the variable node and an error code.
+     * If the variable was declared successfully, the pair will contain the variable node and 0.
+     * If the variable type could not be resolved, the pair will contain nullptr and E_UNKNOWN_TYPE.
+     * If the variable is already declared, the pair will contain the existing node and E_SYMBOL_ALREADY_DECLARED.
+     * If the variable was deferred successfully, the pair will contain nullptr and 0.
      */
-    std::pair<std::shared_ptr<Node::Variable>, ErrorCode> declare_variable(const std::string& name, TokenType declarer, std::shared_ptr<Annotation> annotation, bool allow_deferral = false);
+    std::pair<std::shared_ptr<Node::Locatable>, ErrorCode> declare_variable(
+        const Location& location,
+        const std::string& name,
+        TokenType declarer,
+        std::shared_ptr<Annotation> annotation,
+        bool allow_deferral = false
+    );
 
     /**
      * @brief Retrieves the variable node from the current scope.

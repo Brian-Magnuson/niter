@@ -52,6 +52,15 @@ private:
      */
     void print_pretty_error(const Location& location, const std::string& display_text);
 
+    /**
+     * @brief Prints a pretty info message to the console.
+     * This is used for notes that immediately follow an error message.
+     *
+     * @param location The location related to the info message
+     * @param display_text The info message to display
+     */
+    void print_pretty_note(const Location& location, const std::string& display_text);
+
     ErrorLogger() = default;
     ErrorLogger(const ErrorLogger&) = delete;
     ErrorLogger& operator=(const ErrorLogger&) = delete;
@@ -65,6 +74,15 @@ public:
      * @param message The error message.
      */
     void log_error(const Location& location, ErrorCode error_code, const std::string& message);
+
+    /**
+     * @brief Logs a note message to the console.
+     * Note messages provide additional information about an error.
+     *
+     * @param location The location related to the note message.
+     * @param message The note message.
+     */
+    void log_note(const Location& location, const std::string& message);
 
     /**
      * @brief Changes the output stream to log errors to.

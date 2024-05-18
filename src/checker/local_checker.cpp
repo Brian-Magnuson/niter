@@ -111,20 +111,21 @@ std::any LocalChecker::visit_var_decl(Decl::Var* decl) {
         init_type = std::any_cast<std::shared_ptr<Type>>(decl->initializer->accept(this));
     }
 
-    std::shared_ptr<Node::Variable> variable;
+    std::shared_ptr<Node::Locatable> node;
     ErrorCode result = (ErrorCode)0;
 
     // If we are in global scope, the variable is already declared
     if (Environment::inst().in_global_scope()) {
-        variable = Environment::inst().get_variable({decl->name});
+        node = Environment::inst().get_variable({decl->name});
     } else {
         // Declare the variable, do not defer
-        std::tie(variable, result) = Environment::inst().declare_variable(decl->name.lexeme, decl->declarer, decl->type_annotation);
+        std::tie(node, result) = Environment::inst().declare_variable(decl->location, decl->name.lexeme, decl->declarer, decl->type_annotation);
     }
 
     // Verify that the variable was declared successfully
     if (result == E_SYMBOL_ALREADY_DECLARED) {
         ErrorLogger::inst().log_error(decl->name.location, E_LOCAL_ALREADY_DECLARED, "A symbol with the same name has already been declared in this scope.");
+        ErrorLogger::inst().log_note(node->location, "Previous declaration was here.");
         throw LocalTypeException();
     } else if (result == E_UNKNOWN_TYPE) {
         ErrorLogger::inst().log_error(decl->name.location, result, "Could not resolve type annotation");
@@ -134,6 +135,7 @@ std::any LocalChecker::visit_var_decl(Decl::Var* decl) {
         throw LocalTypeException();
     }
     // Neither variable->type nor init_type should be nullptr at this point.
+    auto variable = std::dynamic_pointer_cast<Node::Variable>(node);
 
     // Verify that the type of the initializer matches the type annotation
     if (!Type::are_compatible(init_type, variable->type)) {
@@ -176,20 +178,23 @@ std::any LocalChecker::visit_fun_decl(Decl::Fun* decl) {
     Environment::inst().increase_local_scope();
 
     // Declare the return variable
-    auto [ret_var, ret_result] = Environment::inst().declare_variable("___return", fun_annotation->return_declarer, fun_annotation->return_annotation);
+    auto [ret_node, ret_result] = Environment::inst().declare_variable(decl->location, "___return", fun_annotation->return_declarer, fun_annotation->return_annotation);
+    auto ret_var = std::dynamic_pointer_cast<Node::Variable>(ret_node);
     ret_var->declarer = KW_VAR;
     // We change the declarer to var because we assign to the return variable in the function body
     // Using a return variable makes it more convenient for LLVM code generation later
     // Reassigning the declarer in this way allows us to keep the original type (which could be a const pointer)
 
     for (unsigned i = 0; i < decl->parameters.size(); i++) {
-        auto [param_var, param_result] = Environment::inst().declare_variable(
+        auto [param_node, param_result] = Environment::inst().declare_variable(
+            decl->parameters[i]->location,
             decl->parameters[i]->name.lexeme,
             decl->parameters[i]->declarer,
             decl->parameters[i]->type_annotation
         );
         if (param_result == E_SYMBOL_ALREADY_DECLARED) {
             ErrorLogger::inst().log_error(decl->parameters[i]->name.location, E_DUPLICATE_PARAM_NAME, "A parameter with the same name has already been declared here.");
+            ErrorLogger::inst().log_note(param_node->location, "Previous declaration was here.");
             throw LocalTypeException();
         } else if (param_result == E_UNKNOWN_TYPE) {
             ErrorLogger::inst().log_error(decl->parameters[i]->name.location, param_result, "Could not resolve type annotation.");
@@ -198,6 +203,7 @@ std::any LocalChecker::visit_fun_decl(Decl::Fun* decl) {
             ErrorLogger::inst().log_error(decl->parameters[i]->name.location, E_IMPOSSIBLE, "Function `declare_variable` issued error " + std::to_string(param_result) + " in LocalChecker::visit_fun_decl.");
             throw LocalTypeException();
         }
+        auto param_var = std::dynamic_pointer_cast<Node::Variable>(param_node);
         // Verify that the parameter type is not blank
         if (param_var->type->kind() == TypeKind::BLANK) {
             ErrorLogger::inst().log_error(decl->parameters[i]->name.location, E_AUTO_IN_PARAMS, "Cannot infer types for function parameters.");

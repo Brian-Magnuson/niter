@@ -144,6 +144,25 @@ struct Location {
     unsigned line_index;
     // A shared pointer to the source code string.
     std::shared_ptr<std::string> source_code;
+
+    Location() {
+        file_name = std::make_shared<std::string>("");
+        line = 0;
+        column = 0;
+        length = 0;
+        line_index = 0;
+        source_code = std::make_shared<std::string>("");
+    }
+
+    Location(
+        std::shared_ptr<std::string> file_name,
+        unsigned line,
+        unsigned column,
+        unsigned length,
+        unsigned line_index,
+        std::shared_ptr<std::string> source_code
+    )
+        : file_name(file_name), line(line), column(column), length(length), line_index(line_index), source_code(source_code) {}
 };
 
 /**
