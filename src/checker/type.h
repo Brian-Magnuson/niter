@@ -24,7 +24,6 @@ enum class TypeKind {
  * @brief A base class representing a type.
  * Unlike annotations, types store pointers to the nodes in the namespace tree.
  * This results in the namespace tree being the single source of truth for types.
- * Note: This class is currently experimental.
  *
  */
 class Type {

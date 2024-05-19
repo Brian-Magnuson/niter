@@ -828,3 +828,37 @@ TEST_CASE("Local checker assign to non lvalue", "[checker]") {
     logger.reset();
     env.reset();
 }
+
+TEST_CASE("Local checker assign to const", "[checker]") {
+    std::string source_code = R"(
+fun main(): i32 {
+    const my_constant = 1;
+    my_constant = 2;
+    return 0;
+}
+)";
+    auto file_name = std::make_shared<std::string>("test_files/assign_to_const.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    auto stmts = parser.parse();
+
+    Environment& env = Environment::inst();
+
+    GlobalChecker global_checker;
+    global_checker.type_check(stmts);
+
+    LocalChecker local_checker;
+    local_checker.type_check(stmts);
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_ASSIGN_TO_CONST);
+
+    logger.reset();
+    env.reset();
+}

@@ -278,14 +278,16 @@ std::any LocalChecker::visit_assign_expr(Expr::Assign* expr) {
         auto member_node = Environment::inst().get_instance_variable(l_struct_type, member_name);
         // Ensure the member declarer is not const
         if (member_node->declarer == KW_CONST) {
-            ErrorLogger::inst().log_error(l_access->location, E_ASSIGN_TO_CONST, "Cannot assign to a constant member.");
+            ErrorLogger::inst().log_error(expr->op.location, E_ASSIGN_TO_CONST, "Cannot assign to a constant member.");
+            ErrorLogger::inst().log_note(member_node->location, "Member declared here.");
             throw LocalTypeException();
         }
     } else if (l_ident != nullptr) {
         // Ensure the variable is not const
         auto var_node = Environment::inst().get_variable(l_ident->tokens);
         if (var_node->declarer == KW_CONST) {
-            ErrorLogger::inst().log_error(l_ident->location, E_ASSIGN_TO_CONST, "Cannot assign to a constant variable.");
+            ErrorLogger::inst().log_error(expr->op.location, E_ASSIGN_TO_CONST, "Cannot assign to a constant variable.");
+            ErrorLogger::inst().log_note(var_node->location, "Constant declared here.");
             throw LocalTypeException();
         }
     } else {
@@ -408,6 +410,7 @@ std::any LocalChecker::visit_unary_expr(Expr::Unary* expr) {
             throw LocalTypeException();
         }
     } else if (expr->op.tok_type == TOK_STAR) {
+        // FIXME: Dereferenced pointer should be allowed as an lvalue
         // The operand must be a pointer type
         auto operand_ptr_type = std::dynamic_pointer_cast<Type::Pointer>(operand_type);
         if (operand_ptr_type == nullptr) {
