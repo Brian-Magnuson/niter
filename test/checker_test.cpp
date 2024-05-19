@@ -589,6 +589,8 @@ TEST_CASE("Local checker no ident after arrow", "[checker]") {
     Parser parser(scanner.get_tokens());
     auto stmts = parser.parse();
 
+    Environment& env = Environment::inst();
+
     GlobalChecker global_checker;
     global_checker.type_check(stmts);
 
@@ -599,4 +601,230 @@ TEST_CASE("Local checker no ident after arrow", "[checker]") {
     CHECK(logger.get_errors().at(0) == E_NO_IDENT_AFTER_DOT);
 
     logger.reset();
+    env.reset();
+}
+
+TEST_CASE("Local checker access on non struct", "[checker]") {
+    std::string source_code = "fun main(): i32 { main.b; return 0; }";
+    auto file_name = std::make_shared<std::string>("test_files/access_on_non_struct.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    auto stmts = parser.parse();
+
+    Environment& env = Environment::inst();
+
+    GlobalChecker global_checker;
+    global_checker.type_check(stmts);
+
+    LocalChecker local_checker;
+    local_checker.type_check(stmts);
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_ACCESS_ON_NON_STRUCT);
+
+    logger.reset();
+    env.reset();
+}
+
+TEST_CASE("Local checker call on non fun", "[checker]") {
+    std::string source_code = "fun main(): i32 { var a: i32; a(); return 0; }";
+    auto file_name = std::make_shared<std::string>("test_files/call_on_non_fun.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    auto stmts = parser.parse();
+
+    Environment& env = Environment::inst();
+
+    GlobalChecker global_checker;
+    global_checker.type_check(stmts);
+
+    LocalChecker local_checker;
+    local_checker.type_check(stmts);
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_CALL_ON_NON_FUN);
+
+    logger.reset();
+    env.reset();
+}
+
+TEST_CASE("Local checker invalid arity", "[checker]") {
+    std::string source_code = R"(
+fun add(a: i32, b: i32): i32 {
+    return a + b
+}
+
+fun main(): i32 {
+    add(1, 2, 3)
+    return 0
+}
+)";
+
+    auto file_name = std::make_shared<std::string>("test_files/invalid_arity.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    auto stmts = parser.parse();
+
+    Environment& env = Environment::inst();
+
+    GlobalChecker global_checker;
+    global_checker.type_check(stmts);
+
+    LocalChecker local_checker;
+    local_checker.type_check(stmts);
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_INVALID_ARITY);
+
+    logger.reset();
+    env.reset();
+}
+
+TEST_CASE("Local checker invalid param type", "[checker]") {
+    std::string source_code = R"(
+fun add(a: i32, b: i32): i32 {
+    return a + b
+}
+
+fun main(): i32 {
+    add(1, true)
+    return 0
+}
+)";
+
+    auto file_name = std::make_shared<std::string>("test_files/invalid_param_type.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    auto stmts = parser.parse();
+
+    Environment& env = Environment::inst();
+
+    GlobalChecker global_checker;
+    global_checker.type_check(stmts);
+
+    LocalChecker local_checker;
+    local_checker.type_check(stmts);
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_INCOMPATIBLE_TYPES);
+
+    logger.reset();
+    env.reset();
+}
+
+TEST_CASE("Local checker valid call", "[checker]") {
+    std::string source_code = R"(
+fun add(a: i32, b: i32): i32 {
+    return a + b
+}
+
+fun main(): i32 {
+    add(1, 2)
+    return 0
+}
+)";
+
+    auto file_name = std::make_shared<std::string>("test_files/valid_call.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(true);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    auto stmts = parser.parse();
+
+    Environment& env = Environment::inst();
+
+    GlobalChecker global_checker;
+    global_checker.type_check(stmts);
+
+    LocalChecker local_checker;
+    local_checker.type_check(stmts);
+
+    REQUIRE(logger.get_errors().size() == 0);
+
+    logger.reset();
+    env.reset();
+}
+
+TEST_CASE("Local checker address of non lvalue", "[checker]") {
+    std::string source_code = "fun main(): i32 { &1; return 0; }";
+    auto file_name = std::make_shared<std::string>("test_files/address_of_non_lvalue.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    auto stmts = parser.parse();
+
+    Environment& env = Environment::inst();
+
+    GlobalChecker global_checker;
+    global_checker.type_check(stmts);
+
+    LocalChecker local_checker;
+    local_checker.type_check(stmts);
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_ADDRESS_OF_NON_LVALUE);
+
+    logger.reset();
+    env.reset();
+}
+
+TEST_CASE("Local checker assign to non lvalue", "[checker]") {
+    std::string source_code = "fun main(): i32 { 1 = 2; return 0; }";
+    auto file_name = std::make_shared<std::string>("test_files/assign_to_non_lvalue.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    auto stmts = parser.parse();
+
+    Environment& env = Environment::inst();
+
+    GlobalChecker global_checker;
+    global_checker.type_check(stmts);
+
+    LocalChecker local_checker;
+    local_checker.type_check(stmts);
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_ASSIGN_TO_NON_LVALUE);
+
+    logger.reset();
+    env.reset();
 }

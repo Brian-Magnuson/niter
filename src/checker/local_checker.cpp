@@ -421,7 +421,7 @@ std::any LocalChecker::visit_unary_expr(Expr::Unary* expr) {
         auto operand_access = std::dynamic_pointer_cast<Expr::Access>(expr->right);
         auto operand_ident = std::dynamic_pointer_cast<Expr::Identifier>(expr->right);
         if (operand_access == nullptr && operand_ident == nullptr) {
-            ErrorLogger::inst().log_error(expr->location, E_INVALID_ADDRESS_OF, "Cannot take the address of a non-lvalue.");
+            ErrorLogger::inst().log_error(expr->location, E_ADDRESS_OF_NON_LVALUE, "Cannot take the address of a non-lvalue.");
             throw LocalTypeException();
         }
         // The type of the expression is a pointer to the type of the operand

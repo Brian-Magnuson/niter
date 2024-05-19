@@ -165,7 +165,7 @@ enum ErrorCode {
     // A function call was found with an incorrect number of arguments
     E_INVALID_ARITY,
     // The unary operator '&' was found on a non-lvalue
-    E_INVALID_ADDRESS_OF,
+    E_ADDRESS_OF_NON_LVALUE,
     // An assignment was found to a non-lvalue
     E_ASSIGN_TO_NON_LVALUE,
     // An assignment was found to a constant
