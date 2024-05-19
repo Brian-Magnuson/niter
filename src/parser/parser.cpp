@@ -204,18 +204,8 @@ std::shared_ptr<Decl> Parser::fun_decl() {
     grouping_tokens.push(TOK_RIGHT_PAREN);
     consume(TOK_LEFT_PAREN, E_NO_LPAREN_IN_FUN_DECL, "Expected '(' after function name.");
     if (!check({TOK_RIGHT_PAREN})) {
-        auto variable = std::dynamic_pointer_cast<Decl::Var>(var_decl());
-        if (variable == nullptr) {
-            ErrorLogger::inst().log_error(peek().location, E_IMPOSSIBLE, "var_decl did not return a variable in function declaration.");
-            throw ParserException();
-        }
-        parameters.push_back(variable);
-        type_annotation->params.push_back({variable->declarer, variable->type_annotation});
-        while (match({TOK_COMMA})) {
-            if (check({TOK_RIGHT_PAREN})) {
-                break;
-            }
-            variable = std::dynamic_pointer_cast<Decl::Var>(var_decl());
+        do {
+            auto variable = std::dynamic_pointer_cast<Decl::Var>(var_decl());
             if (variable == nullptr) {
                 ErrorLogger::inst().log_error(peek().location, E_IMPOSSIBLE, "var_decl did not return a variable in function declaration.");
                 throw ParserException();
@@ -225,9 +215,9 @@ std::shared_ptr<Decl> Parser::fun_decl() {
                 ErrorLogger::inst().log_error(variable->name.location, E_AUTO_IN_PARAM, "Parameters cannot have type 'auto'.");
                 throw ParserException();
             }
-            parameters.push_back(std::dynamic_pointer_cast<Decl::Var>(variable));
+            parameters.push_back(variable);
             type_annotation->params.push_back({variable->declarer, variable->type_annotation});
-        }
+        } while (match({TOK_COMMA}) && !check({TOK_RIGHT_PAREN}));
     }
     consume(TOK_RIGHT_PAREN, E_UNMATCHED_PAREN_IN_PARAMS, "Expected ')' after function parameters.");
 

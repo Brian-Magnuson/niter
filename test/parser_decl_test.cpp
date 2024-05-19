@@ -516,3 +516,21 @@ TEST_CASE("Logger unmatched brace in fun decl", "[logger]") {
 
     logger.reset();
 }
+
+TEST_CASE("Logger auto in param", "[logger]") {
+    std::string source_code = "fun foo(a) {}";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/auto_in_param_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+    Parser parser(scanner.get_tokens());
+    parser.parse();
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_AUTO_IN_PARAM);
+
+    logger.reset();
+}

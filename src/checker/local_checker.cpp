@@ -204,11 +204,7 @@ std::any LocalChecker::visit_fun_decl(Decl::Fun* decl) {
             throw LocalTypeException();
         }
         auto param_var = std::dynamic_pointer_cast<Node::Variable>(param_node);
-        // Verify that the parameter type is not blank
-        if (param_var->type->kind() == TypeKind::BLANK) {
-            ErrorLogger::inst().log_error(decl->parameters[i]->name.location, E_AUTO_IN_PARAMS, "Cannot infer types for function parameters.");
-            throw LocalTypeException();
-        }
+        // Params do not have type `auto`; the parser already checks for this
         // If the parameter is a pointer, make the declarer in the pointer type match the declarer of the parameter
         auto param_ptr_type = std::dynamic_pointer_cast<Type::Pointer>(param_var->type);
         if (param_ptr_type != nullptr) {
@@ -242,6 +238,8 @@ std::any LocalChecker::visit_fun_decl(Decl::Fun* decl) {
             } else {
                 auto ret_type = std::any_cast<std::shared_ptr<Type>>(stmt_type);
 
+                // The return type of the function must match the return type of the return statement
+                // This will also catch the case where the function return type is `void` and the return statement has a value
                 if (!Type::are_compatible(ret_type, variable_fun_type->return_type)) {
                     ErrorLogger::inst().log_error(stmt->location, E_RETURN_INCOMPATIBLE, "Cannot convert from " + ret_type->to_string() + " to return type " + fun_annotation->return_annotation->to_string() + ".");
                     throw LocalTypeException();
@@ -413,7 +411,7 @@ std::any LocalChecker::visit_unary_expr(Expr::Unary* expr) {
         // The operand must be a pointer type
         auto operand_ptr_type = std::dynamic_pointer_cast<Type::Pointer>(operand_type);
         if (operand_ptr_type == nullptr) {
-            ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot dereference non-pointer type " + operand_type->to_string() + ".");
+            ErrorLogger::inst().log_error(expr->location, E_DEREFERENCE_NON_POINTER, "Cannot dereference non-pointer type " + operand_type->to_string() + ".");
             throw LocalTypeException();
         }
         // The type of the expression is the type of the pointer
@@ -498,18 +496,17 @@ std::any LocalChecker::visit_access_expr(Expr::Access* expr) {
         // Pretty much the same as the dot operator, but the left side is dereferenced first
         auto left_ptr_type = std::dynamic_pointer_cast<Type::Pointer>(left_type);
         if (left_ptr_type == nullptr) {
-            ErrorLogger::inst().log_error(expr->location, E_ACCESS_ON_NON_STRUCT, "Cannot access member of non-struct type.");
+            ErrorLogger::inst().log_error(expr->location, E_DEREFERENCE_NON_POINTER, "Cannot dereference non-pointer type. Did you mean to use '.' instead of '->'?");
+            throw LocalTypeException();
+        }
+        std::shared_ptr<Expr::Identifier> right = std::dynamic_pointer_cast<Expr::Identifier>(expr->right);
+        if (right == nullptr) {
+            ErrorLogger::inst().log_error(expr->location, E_NO_IDENT_AFTER_DOT, "Expected identifier after '->'.");
             throw LocalTypeException();
         }
         auto left_seg_type = std::dynamic_pointer_cast<Type::Struct>(left_ptr_type->inner_type);
         if (left_seg_type == nullptr) {
             ErrorLogger::inst().log_error(expr->location, E_ACCESS_ON_NON_STRUCT, "Cannot access member of non-struct type.");
-            throw LocalTypeException();
-        }
-
-        std::shared_ptr<Expr::Identifier> right = std::dynamic_pointer_cast<Expr::Identifier>(expr->right);
-        if (right == nullptr) {
-            ErrorLogger::inst().log_error(expr->location, E_NO_IDENT_AFTER_DOT, "Expected identifier after '->'.");
             throw LocalTypeException();
         }
 
