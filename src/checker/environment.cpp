@@ -35,15 +35,18 @@ std::pair<std::shared_ptr<Node::Locatable>, ErrorCode> Environment::add_struct(c
 }
 
 void Environment::install_primitive_types() {
-    std::vector<std::string> primitive_types = {
-        "i32",
-        "f64",
-        "bool",
-        "char",
-        "void",
+
+    std::vector<std::pair<std::string, llvm::Type*>> primitive_types = {
+        {"i32", llvm::Type::getInt32Ty(*llvm_context)},
+        {"f64", llvm::Type::getDoubleTy(*llvm_context)},
+        {"bool", llvm::Type::getInt1Ty(*llvm_context)},
+        {"char", llvm::Type::getInt8Ty(*llvm_context)},
+        {"void", llvm::Type::getVoidTy(*llvm_context)},
     };
+
     for (auto& type : primitive_types) {
-        global_tree->children[type] = std::make_shared<Node::StructScope>(Location(), global_tree, type);
+        auto new_struct = std::make_shared<Node::StructScope>(Location(), global_tree, type.first, type.second);
+        global_tree->children[type.first] = new_struct;
     }
 }
 
@@ -130,9 +133,9 @@ std::shared_ptr<Node::Variable> Environment::get_variable(const std::vector<Toke
 
 std::shared_ptr<Node::Variable> Environment::get_instance_variable(std::shared_ptr<Type::Struct> instance_type, const std::string& member_name) {
     auto struct_node = instance_type->struct_scope;
-    auto found_node_iter = struct_node->children.find(member_name);
-    if (found_node_iter != struct_node->children.end()) {
-        return std::dynamic_pointer_cast<Node::Variable>(found_node_iter->second);
+    auto found_node_iter = struct_node->instance_members.find(member_name);
+    if (found_node_iter != struct_node->instance_members.end()) {
+        return found_node_iter->second;
     } else {
         return nullptr;
     }
@@ -249,6 +252,7 @@ bool Environment::verify_deferred_types() {
 }
 
 void Environment::reset() {
+    llvm_context = std::make_shared<llvm::LLVMContext>();
     global_tree = std::make_shared<Node::RootScope>();
     current_scope = global_tree;
     install_primitive_types();

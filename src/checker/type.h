@@ -6,6 +6,8 @@ class Type;
 
 #include "../scanner/token.h"
 #include "node.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Type.h"
 #include <memory>
 #include <string>
 #include <utility>
@@ -50,6 +52,14 @@ public:
      * @return std::string The string representation of the type.
      */
     virtual std::string to_string() const = 0;
+
+    /**
+     * @brief Get the LLVM type representation of the type.
+     *
+     * @param context The LLVM context; can be obtained from the Environment singleton.
+     * @return llvm::Type* The LLVM type representation of the type.
+     */
+    virtual llvm::Type* to_llvm_type(std::shared_ptr<llvm::LLVMContext> context) const = 0;
 
     /**
      * @brief Determines if two types are compatible.
@@ -122,6 +132,10 @@ public:
     TypeKind kind() const override { return TypeKind::STRUCT; }
     std::string to_string() const override { return struct_scope->unique_name; }
 
+    llvm::Type* to_llvm_type(std::shared_ptr<llvm::LLVMContext> context) const override {
+        return struct_scope->ir_type;
+    }
+
     Struct(std::shared_ptr<Node::StructScope> struct_scope) : struct_scope(struct_scope) {}
 };
 
@@ -157,6 +171,14 @@ public:
         return str;
     }
 
+    llvm::Type* to_llvm_type(std::shared_ptr<llvm::LLVMContext> context) const override {
+        std::vector<llvm::Type*> param_types;
+        for (auto& param : params) {
+            param_types.push_back(param.second->to_llvm_type(context));
+        }
+        return llvm::FunctionType::get(return_type->to_llvm_type(context), param_types, false);
+    }
+
     Function(
         std::vector<std::pair<TokenType, std::shared_ptr<Type>>>& params,
         TokenType return_declarer,
@@ -181,6 +203,10 @@ public:
     TypeKind kind() const override { return TypeKind::ARRAY; }
     std::string to_string() const override { return inner_type->to_string() + "[]"; }
 
+    llvm::Type* to_llvm_type(std::shared_ptr<llvm::LLVMContext> context) const override {
+        return llvm::ArrayType::get(inner_type->to_llvm_type(context), size);
+    }
+
     Array(std::shared_ptr<Type> inner_type) : inner_type(inner_type) {}
 };
 
@@ -200,6 +226,10 @@ public:
     virtual ~Pointer() = default;
     TypeKind kind() const override { return TypeKind::POINTER; }
     std::string to_string() const override { return inner_type->to_string() + "*"; }
+
+    llvm::Type* to_llvm_type(std::shared_ptr<llvm::LLVMContext> context) const override {
+        return llvm::PointerType::get(inner_type->to_llvm_type(context), 0);
+    }
 
     Pointer(std::shared_ptr<Type> inner_type) : inner_type(inner_type) {}
 };
@@ -225,6 +255,14 @@ public:
         return str;
     }
 
+    llvm::Type* to_llvm_type(std::shared_ptr<llvm::LLVMContext> context) const override {
+        std::vector<llvm::Type*> element_types;
+        for (auto& elem : elements) {
+            element_types.push_back(elem->to_llvm_type(context));
+        }
+        return llvm::StructType::get(*context, element_types);
+    }
+
     Tuple(std::vector<std::shared_ptr<Type>>& elements) : elements(elements) {}
 };
 
@@ -239,6 +277,8 @@ public:
     virtual ~Blank() = default;
     TypeKind kind() const override { return TypeKind::BLANK; }
     std::string to_string() const override { return ""; }
+
+    llvm::Type* to_llvm_type(std::shared_ptr<llvm::LLVMContext> context) const override { return nullptr; }
 
     Blank() {}
 };

@@ -7,6 +7,7 @@
 #include "../scanner/token.h"
 #include "node.h"
 #include "type.h"
+#include "llvm/IR/LLVMContext.h"
 #include <map>
 #include <memory>
 #include <string>
@@ -44,6 +45,9 @@ class Environment {
         reset();
     }
 
+    // The LLVM context used for type checking.
+    std::shared_ptr<llvm::LLVMContext> llvm_context;
+
 public:
     /**
      * @brief Get the singleton instance of the Environment. Will create the instance if it does not exist.
@@ -54,6 +58,14 @@ public:
     inst() {
         static Environment instance;
         return instance;
+    }
+
+    std::shared_ptr<llvm::LLVMContext> get_llvm_context() {
+        return llvm_context;
+    }
+
+    std::shared_ptr<Node::Scope> get_global_tree() {
+        return global_tree;
     }
 
     /**
@@ -159,7 +171,7 @@ public:
      * If the symbol is not found, nullptr will be returned.
      *
      * @param ident_tokens The list of tokens that make up the identifier.
-     * @return std::shared_ptr<Node::Variable> A pointer to the variable node.
+     * @return std::shared_ptr<Node::Variable> A pointer to the variable node. nullptr if the variable is not found.
      */
     std::shared_ptr<Node::Variable> get_variable(const std::vector<Token>& ident_tokens);
 

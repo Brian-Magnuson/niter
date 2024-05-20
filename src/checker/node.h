@@ -6,6 +6,9 @@ class Node;
 
 #include "../scanner/token.h"
 #include "type.h"
+#include "llvm/IR/Instructions.h"
+#include "llvm/IR/Type.h"
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -155,12 +158,25 @@ public:
  */
 class Node::StructScope : public Node::Scope, public Node::Locatable {
 public:
-    std::unordered_map<std::string, std::shared_ptr<Node>> instance_members;
+    std::unordered_map<std::string, std::shared_ptr<Node::Variable>> instance_members;
 
-    StructScope(const Location& location, std::shared_ptr<Scope> parent, const std::string& name) {
+    llvm::Type* ir_type = nullptr;
+    bool is_primitive = true;
+
+    StructScope(const Location& location, std::shared_ptr<Scope> parent, const std::string& name, llvm::Type* llvm_type = nullptr) {
         this->location = location;
         this->parent = parent;
         unique_name = parent->unique_name + "::" + name;
+        // The struct type will be provided for primitive types.
+        ir_type = llvm_type;
+
+        // If the struct type is not provided, create a new one.
+        if (ir_type == nullptr) {
+            auto llvm_safe_name = unique_name;
+            std::replace(llvm_safe_name.begin(), llvm_safe_name.end(), ':', '_');
+
+            ir_type = llvm::StructType::create(*Environment::inst().get_llvm_context(), llvm_safe_name);
+        }
     }
 };
 
@@ -193,6 +209,7 @@ class Node::Variable : public Node::Locatable {
 public:
     TokenType declarer;
     std::shared_ptr<Type> type;
+    llvm::AllocaInst* alloca;
 
     Variable(
         const Location& location,
