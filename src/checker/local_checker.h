@@ -37,6 +37,21 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
     bool check_token(TokenType token, const std::vector<TokenType>& types) const;
 
     /**
+     * @brief Determines if an expression is a valid LHS expression.
+     * That is, the expression is allowed on the left-hand side of an assignment.
+     * NOTE: The expression should be *visited* before calling this function.
+     * Valid lvalues are identifier, access, and dereference expressions.
+     * Dereference expressions aren't a subclass of Expr; they are unary expressions where the operator is TOK_STAR.
+     *
+     * @param expr
+     * @return std::pair<ErrorCode, TokenType> The error code and the declarer for the expression.
+     * The token type is KW_VAR iff the expression is mutable.
+     * The error code is 0 if the expression is an lvalue.
+     * The error code is E_ASSIGN_TO_NON_LVALUE if the expression is not an lvalue.
+     */
+    std::pair<ErrorCode, TokenType> is_lvalue(std::shared_ptr<Expr> expr) const;
+
+    /**
      * @brief Visits a declaration statement and determines if the declaration is valid.
      *
      * @param stmt The declaration statement to visit.

@@ -15,6 +15,30 @@ bool LocalChecker::check_token(TokenType token, const std::vector<TokenType>& ty
     return false;
 }
 
+// MARK: Statements
+
+std::pair<ErrorCode, TokenType> LocalChecker::is_lvalue(std::shared_ptr<Expr> expr) const {
+    auto access = std::dynamic_pointer_cast<Expr::Access>(expr);
+    auto ident = std::dynamic_pointer_cast<Expr::Identifier>(expr);
+    auto unary = std::dynamic_pointer_cast<Expr::Unary>(expr);
+
+    if (ident != nullptr) {
+        auto var_node = Environment::inst().get_variable(ident->tokens);
+        return {(ErrorCode)0, var_node->declarer};
+    } else if (access != nullptr) {
+        auto l_struct_type = std::dynamic_pointer_cast<Type::Struct>(access->left->type);
+        auto member_name = std::dynamic_pointer_cast<Expr::Identifier>(access->right)->to_string();
+        auto var_node = Environment::inst().get_instance_variable(l_struct_type, member_name);
+        return {(ErrorCode)0, var_node->declarer};
+    } else if (unary != nullptr && unary->op.tok_type == TOK_STAR) {
+        // We know the operand is a pointer type because we already visited the unary expression
+        auto ptr_type = std::dynamic_pointer_cast<Type::Pointer>(unary->right->type);
+        return {(ErrorCode)0, ptr_type->declarer};
+    } else {
+        return {E_ASSIGN_TO_NON_LVALUE, KW_VAR};
+    }
+}
+
 std::any LocalChecker::visit_declaration_stmt(Stmt::Declaration* stmt) {
     // Visit the declaration
     return stmt->declaration->accept(this);
@@ -90,6 +114,8 @@ std::any LocalChecker::visit_eof_stmt(Stmt::EndOfFile* /* stmt */) {
     // Does nothing (for now)
     return std::any();
 }
+
+// MARK: Declarations
 
 std::any LocalChecker::visit_var_decl(Decl::Var* decl) {
     // Handle the case where the initializer is not present
@@ -259,6 +285,8 @@ std::any LocalChecker::visit_fun_decl(Decl::Fun* decl) {
     return std::any();
 }
 
+// MARK: Expressions
+
 std::any LocalChecker::visit_assign_expr(Expr::Assign* expr) {
     // The left side of the assignment must be an lvalue
     // Currently, lvalues can be Expr::Identifier or Expr::Access
@@ -266,32 +294,13 @@ std::any LocalChecker::visit_assign_expr(Expr::Assign* expr) {
     auto l_type = std::any_cast<std::shared_ptr<Type>>(expr->left->accept(this));
     auto r_type = std::any_cast<std::shared_ptr<Type>>(expr->right->accept(this));
 
-    auto l_access = std::dynamic_pointer_cast<Expr::Access>(expr->left);
-    auto l_ident = std::dynamic_pointer_cast<Expr::Identifier>(expr->left);
-    if (l_access != nullptr) {
-        // Get the struct type
-        // We already visited the left side, so we know it's a valid access
-        auto l_struct_type = std::dynamic_pointer_cast<Type::Struct>(l_access->left->type);
-        // Get the member name
-        auto member_name = std::dynamic_pointer_cast<Expr::Identifier>(l_access->right)->to_string();
-        // Get the member node
-        auto member_node = Environment::inst().get_instance_variable(l_struct_type, member_name);
-        // Ensure the member declarer is not const
-        if (member_node->declarer == KW_CONST) {
-            ErrorLogger::inst().log_error(expr->op.location, E_ASSIGN_TO_CONST, "Cannot assign to a constant member.");
-            ErrorLogger::inst().log_note(member_node->location, "Member declared here.");
-            throw LocalTypeException();
-        }
-    } else if (l_ident != nullptr) {
-        // Ensure the variable is not const
-        auto var_node = Environment::inst().get_variable(l_ident->tokens);
-        if (var_node->declarer == KW_CONST) {
-            ErrorLogger::inst().log_error(expr->op.location, E_ASSIGN_TO_CONST, "Cannot assign to a constant variable.");
-            ErrorLogger::inst().log_note(var_node->location, "Constant declared here.");
-            throw LocalTypeException();
-        }
-    } else {
-        ErrorLogger::inst().log_error(expr->location, E_ASSIGN_TO_NON_LVALUE, "Left side of assignment is not an lvalue.");
+    auto [ec, declarer] = is_lvalue(expr->left);
+    if (ec != 0) {
+        ErrorLogger::inst().log_error(expr->location, ec, "Left side of assignment is not an lvalue.");
+        throw LocalTypeException();
+    }
+    if (declarer == KW_CONST) {
+        ErrorLogger::inst().log_error(expr->location, E_ASSIGN_TO_CONST, "Cannot assign to a constant.");
         throw LocalTypeException();
     }
 
@@ -410,7 +419,6 @@ std::any LocalChecker::visit_unary_expr(Expr::Unary* expr) {
             throw LocalTypeException();
         }
     } else if (expr->op.tok_type == TOK_STAR) {
-        // FIXME: Dereferenced pointer should be allowed as an lvalue
         // The operand must be a pointer type
         auto operand_ptr_type = std::dynamic_pointer_cast<Type::Pointer>(operand_type);
         if (operand_ptr_type == nullptr) {
@@ -420,10 +428,8 @@ std::any LocalChecker::visit_unary_expr(Expr::Unary* expr) {
         // The type of the expression is the type of the pointer
         expr->type = operand_ptr_type->inner_type;
     } else if (expr->op.tok_type == TOK_AMP) {
-        // Only Expr::Access and Expr::Identifier are allowed as operands
-        auto operand_access = std::dynamic_pointer_cast<Expr::Access>(expr->right);
-        auto operand_ident = std::dynamic_pointer_cast<Expr::Identifier>(expr->right);
-        if (operand_access == nullptr && operand_ident == nullptr) {
+        auto [ec, _] = is_lvalue(expr->right);
+        if (ec != 0) {
             ErrorLogger::inst().log_error(expr->location, E_ADDRESS_OF_NON_LVALUE, "Cannot take the address of a non-lvalue.");
             throw LocalTypeException();
         }

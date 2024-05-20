@@ -862,3 +862,37 @@ fun main(): i32 {
     logger.reset();
     env.reset();
 }
+
+TEST_CASE("Local checker deref and assign", "[checker]") {
+    std::string source_code = R"(
+fun main(): i32 {
+    var a: i32 = 1;
+    var b: i32* = &a;
+    *b = 2;
+    return 0;
+}
+)";
+    auto file_name = std::make_shared<std::string>("test_files/deref_and_assign.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(true);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    auto stmts = parser.parse();
+
+    Environment& env = Environment::inst();
+
+    GlobalChecker global_checker;
+    global_checker.type_check(stmts);
+
+    LocalChecker local_checker;
+    local_checker.type_check(stmts);
+
+    REQUIRE(logger.get_errors().size() == 0);
+
+    logger.reset();
+    env.reset();
+}
