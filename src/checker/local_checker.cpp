@@ -428,13 +428,15 @@ std::any LocalChecker::visit_unary_expr(Expr::Unary* expr) {
         // The type of the expression is the type of the pointer
         expr->type = operand_ptr_type->inner_type;
     } else if (expr->op.tok_type == TOK_AMP) {
-        auto [ec, _] = is_lvalue(expr->right);
+        auto [ec, declarer] = is_lvalue(expr->right);
         if (ec != 0) {
             ErrorLogger::inst().log_error(expr->location, E_ADDRESS_OF_NON_LVALUE, "Cannot take the address of a non-lvalue.");
             throw LocalTypeException();
         }
         // The type of the expression is a pointer to the type of the operand
-        expr->type = std::make_shared<Type::Pointer>(operand_type);
+        auto ptr_type = std::make_shared<Type::Pointer>(operand_type);
+        ptr_type->declarer = declarer;
+        expr->type = ptr_type;
 
     } else {
         // Unreachable

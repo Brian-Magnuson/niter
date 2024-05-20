@@ -408,6 +408,41 @@ TEST_CASE("Local checker invalid ptr declarer", "[checker]") {
     env.reset();
 }
 
+TEST_CASE("Local checker invalid ptr declarer 2", "[checker]") {
+    std::string source_code = R"(
+fun main(): i32 {
+    const a = 1
+    var b: i32* = &a
+    return 0
+}
+)";
+
+    auto file_name = std::make_shared<std::string>("test_files/invalid_ptr_declarer_2.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    auto stmts = parser.parse();
+
+    Environment& env = Environment::inst();
+
+    GlobalChecker global_checker;
+    global_checker.type_check(stmts);
+
+    LocalChecker local_checker;
+    local_checker.type_check(stmts);
+
+    REQUIRE(logger.get_errors().size() == 1);
+    CHECK(logger.get_errors().at(0) == E_INVALID_PTR_DECLARER);
+
+    logger.reset();
+    env.reset();
+}
+
 TEST_CASE("Local checker inconsistent array types", "[checker]") {
     std::string source_code = "fun main(): i32 { var arr = [1, 2, true]; return 0; }";
     auto file_name = std::make_shared<std::string>("test_files/inconsistent_array_types.nit");
