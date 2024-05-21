@@ -113,19 +113,23 @@ std::pair<std::shared_ptr<Node::Locatable>, ErrorCode> Environment::declare_vari
 }
 
 std::shared_ptr<Node::Variable> Environment::get_variable(const std::vector<Token>& ident_tokens) {
+    std::vector<std::string> ident_strings;
+    for (auto& token : ident_tokens) {
+        ident_strings.push_back(token.lexeme);
+    }
+    return get_variable(ident_strings);
+}
+
+std::shared_ptr<Node::Variable> Environment::get_variable(const std::vector<std::string>& ident_strings) {
     std::shared_ptr<Node> found_node = nullptr;
     // If the identifier is a single token, we can look up the variable in the global scope.
-    if (ident_tokens.size() == 1) {
-        found_node = current_scope->upward_lookup(ident_tokens[0].lexeme);
+    if (ident_strings.size() == 1) {
+        found_node = current_scope->upward_lookup(ident_strings[0]);
     }
     // If the first lookup failed or was not attempted, we perform a downward lookup.
     if (found_node == nullptr) {
         // TODO: Check later to see if this works. If it doesn't, this function will return nullptr and it'll appear as if the symbol was not found.
-        std::vector<std::string> path;
-        for (auto& token : ident_tokens) {
-            path.push_back(token.lexeme);
-        }
-        found_node = current_scope->downward_lookup(path);
+        found_node = current_scope->downward_lookup(ident_strings);
     }
 
     return std::dynamic_pointer_cast<Node::Variable>(found_node);

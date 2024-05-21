@@ -221,12 +221,22 @@ std::shared_ptr<Decl> Parser::fun_decl() {
     }
     consume(TOK_RIGHT_PAREN, E_UNMATCHED_PAREN_IN_PARAMS, "Expected ')' after function parameters.");
 
+    // Next, the return variable
+    std::shared_ptr<Decl::Var> return_var = nullptr;
     if (match({TOK_COLON})) {
+        Token return_token = Token{
+            TOK_IDENT,
+            "__return_val__",
+            std::any(),
+            previous().location,
+        };
+
         bool var_found = match({KW_VAR});
         type_annotation->return_annotation = annotation();
         if (var_found) {
             type_annotation->return_declarer = KW_VAR;
         }
+        return_var = std::make_shared<Decl::Var>(type_annotation->return_declarer, return_token, type_annotation->return_annotation, nullptr);
     }
 
     std::vector<std::shared_ptr<Stmt>> body;
@@ -239,7 +249,7 @@ std::shared_ptr<Decl> Parser::fun_decl() {
             ; // Skip over newlines
     }
     consume(TOK_RIGHT_BRACE, E_UNMATCHED_BRACE_IN_FUN_DECL, "Expected '}' after function body.");
-    return std::make_shared<Decl::Fun>(declarer, name, parameters, type_annotation, body);
+    return std::make_shared<Decl::Fun>(declarer, name, parameters, return_var, type_annotation, body);
 }
 
 // MARK: Expressions

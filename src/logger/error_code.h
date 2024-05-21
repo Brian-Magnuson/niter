@@ -173,6 +173,8 @@ enum ErrorCode {
 
     // Code generation errors
     E_CODEGEN = 6000,
+    // The code generator expected a constant, but a non-constant was found
+    E_NOT_A_CONSTANT,
 
     // Post-processing errors
     E_POST_PROCESSING = 8000,

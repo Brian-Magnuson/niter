@@ -142,7 +142,7 @@ std::any LocalChecker::visit_var_decl(Decl::Var* decl) {
 
     // If we are in global scope, the variable is already declared
     if (Environment::inst().in_global_scope()) {
-        node = Environment::inst().get_variable({decl->name});
+        node = Environment::inst().get_variable({decl->name.lexeme});
     } else {
         // Declare the variable, do not defer
         std::tie(node, result) = Environment::inst().declare_variable(decl->location, decl->name.lexeme, decl->declarer, decl->type_annotation);
@@ -194,7 +194,7 @@ std::any LocalChecker::visit_fun_decl(Decl::Fun* decl) {
     }
 
     // No need to declare the function; we've already done that in the global checker
-    auto variable = Environment::inst().get_variable({decl->name});
+    auto variable = Environment::inst().get_variable({decl->name.lexeme});
 
     // We could verify the entire function pointer, but then we'd get less specific error messages
     // So we'll just verify the return type and the parameter types separately
@@ -203,13 +203,9 @@ std::any LocalChecker::visit_fun_decl(Decl::Fun* decl) {
     // Increase the local scope for the parameters and return variable
     Environment::inst().increase_local_scope();
 
-    // Declare the return variable
-    auto [ret_node, ret_result] = Environment::inst().declare_variable(decl->location, "___return", fun_annotation->return_declarer, fun_annotation->return_annotation);
-    auto ret_var = std::dynamic_pointer_cast<Node::Variable>(ret_node);
-    ret_var->declarer = KW_VAR;
-    // We change the declarer to var because we assign to the return variable in the function body
-    // Using a return variable makes it more convenient for LLVM code generation later
-    // Reassigning the declarer in this way allows us to keep the original type (which could be a const pointer)
+    // We don't need to declare the return variable; it's not designed to be accessed directly
+    // The return variable is more important during the code generation phase
+    // We can instead just verify that the return type is correct
 
     for (unsigned i = 0; i < decl->parameters.size(); i++) {
         auto [param_node, param_result] = Environment::inst().declare_variable(

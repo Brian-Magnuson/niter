@@ -176,6 +176,17 @@ public:
     std::shared_ptr<Node::Variable> get_variable(const std::vector<Token>& ident_tokens);
 
     /**
+     * @brief Retrieves the variable node from the current scope.
+     * If the identifier has namespaces, downward lookup will be used.
+     * If the identifier is only one token long, upward lookup will be used, then downward lookup if the symbol is not found.
+     * If the symbol is not found, nullptr will be returned.
+     *
+     * @param ident_strings The list of strings that make up the identifier.
+     * @return std::shared_ptr<Node::Variable> A pointer to the variable node. nullptr if the variable is not found.
+     */
+    std::shared_ptr<Node::Variable> get_variable(const std::vector<std::string>& ident_strings);
+
+    /**
      * @brief Get the instance variable object for a given instance type and member name.
      * The instance type must be a segmented annotation.
      * If it is a pointer, it must be dereferenced first.

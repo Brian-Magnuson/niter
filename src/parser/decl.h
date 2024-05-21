@@ -77,10 +77,10 @@ public:
         TokenType declarer,
         Token name,
         std::vector<std::shared_ptr<Decl::Var>> parameters,
+        std::shared_ptr<Decl::Var> return_var,
         std::shared_ptr<Annotation> type_annotation,
         std::vector<std::shared_ptr<Stmt>> body
-    )
-        : declarer(declarer), name(name), parameters(parameters), type_annotation(type_annotation), body(body) {
+    ) : declarer(declarer), name(name), parameters(parameters), return_var(return_var), type_annotation(type_annotation), body(body) {
         location = name.location;
     }
 
@@ -94,6 +94,8 @@ public:
     Token name;
     // The parameters of the function.
     std::vector<std::shared_ptr<Decl::Var>> parameters;
+    // The return variable of the function. nullptr if the function does not return a value.
+    std::shared_ptr<Decl::Var> return_var;
     // The type of the function. Includes the return type and the type arguments.
     std::shared_ptr<Annotation> type_annotation;
     // The body of the function.

@@ -19,9 +19,17 @@
  *
  */
 class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::Visitor {
+    // A shared pointer to the LLVM context, created in Environment.
     std::shared_ptr<llvm::LLVMContext> context;
+    // The LLVM module that will be generated.
     std::shared_ptr<llvm::Module> ir_module;
+    // The IR builder that will be used to generate the IR. Remember to always set the insertion point before using it.
     std::shared_ptr<llvm::IRBuilder<>> builder;
+
+    // The current function being generated.
+    llvm::Function* current_function;
+    // A stack of blocks for control flow; break stmts will jump to the last block in this stack; return stmts will jump to the first block in this stack.
+    std::vector<llvm::BasicBlock*> block_stack;
 
     /**
      * @brief Traverses the entire namespace tree and declares all structs.
@@ -42,7 +50,17 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
     std::any visit_block_stmt(Stmt::Block* stmt) override;
     std::any visit_conditional_stmt(Stmt::Conditional* stmt) override;
     std::any visit_loop_stmt(Stmt::Loop* stmt) override;
+
+    /**
+     * @brief Visits a return statement.
+     * A return statement doesn't actually create a return instruction.
+     * It instead assigns "__return_val__" to the return value, then jumps to the block at the front of the block stack.
+     *
+     * @param stmt The return statement to visit.
+     * @return std::any nullptr always.
+     */
     std::any visit_return_stmt(Stmt::Return* stmt) override;
+
     std::any visit_break_stmt(Stmt::Break* stmt) override;
     std::any visit_continue_stmt(Stmt::Continue* stmt) override;
     std::any visit_print_stmt(Stmt::Print* stmt) override;

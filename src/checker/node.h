@@ -207,9 +207,12 @@ public:
  */
 class Node::Variable : public Node::Locatable {
 public:
+    // The declarer of the variable
     TokenType declarer;
+    // The type of the variable
     std::shared_ptr<Type> type;
-    llvm::AllocaInst* alloca;
+    // The LLVM value that represents the memory location of the variable; typically, this is either an llvm::GlobalVariable or an llvm::AllocaInst; call CreateLoad to get the actual value
+    llvm::Value* llvm_allocation;
 
     Variable(
         const Location& location,
