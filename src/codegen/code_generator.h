@@ -46,9 +46,36 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
      */
     std::any visit_declaration_stmt(Stmt::Declaration* stmt) override;
 
+    /**
+     * @brief Visits an expression statement.
+     *
+     * @param stmt The expression statement to visit.
+     * @return std::any nullptr always.
+     */
     std::any visit_expression_stmt(Stmt::Expression* stmt) override;
+
+    /**
+     * @brief Visits a block statement.
+     *
+     * @param stmt The block statement to visit.
+     * @return std::any nullptr always.
+     */
     std::any visit_block_stmt(Stmt::Block* stmt) override;
+
+    /**
+     * @brief Visits a conditional statement.
+     *
+     * @param stmt The conditional statement to visit.
+     * @return std::any nullptr always.
+     */
     std::any visit_conditional_stmt(Stmt::Conditional* stmt) override;
+
+    /**
+     * @brief Visits a loop statement.
+     *
+     * @param stmt The loop statement to visit.
+     * @return std::any nullptr always.
+     */
     std::any visit_loop_stmt(Stmt::Loop* stmt) override;
 
     /**

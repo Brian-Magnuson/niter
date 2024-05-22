@@ -42,6 +42,26 @@ std::any CodeGenerator::visit_declaration_stmt(Stmt::Declaration* stmt) {
     return nullptr;
 }
 
+std::any CodeGenerator::visit_expression_stmt(Stmt::Expression* stmt) {
+    stmt->expression->accept(this);
+    return nullptr;
+}
+
+std::any CodeGenerator::visit_block_stmt(Stmt::Block*) {
+    // TODO: Implement block statements
+    return nullptr;
+}
+
+std::any CodeGenerator::visit_conditional_stmt(Stmt::Conditional*) {
+    // TODO: Implement conditional statements
+    return nullptr;
+}
+
+std::any CodeGenerator::visit_loop_stmt(Stmt::Loop*) {
+    // TODO: Implement loop statements
+    return nullptr;
+}
+
 std::any CodeGenerator::visit_return_stmt(Stmt::Return* stmt) {
     if (stmt->value != nullptr) {
         auto value = std::any_cast<llvm::Value*>(stmt->value->accept(this));
@@ -52,6 +72,26 @@ std::any CodeGenerator::visit_return_stmt(Stmt::Return* stmt) {
         throw std::runtime_error("Return statement outside of function.");
     }
     builder->CreateBr(block_stack.front());
+    return nullptr;
+}
+
+std::any CodeGenerator::visit_break_stmt(Stmt::Break*) {
+    // TODO: Implement break statement
+    return nullptr;
+}
+
+std::any CodeGenerator::visit_continue_stmt(Stmt::Continue*) {
+    // TODO: Implement continue statement
+    return nullptr;
+}
+
+std::any CodeGenerator::visit_print_stmt(Stmt::Print*) {
+    // TODO: Implement print statement
+    return nullptr;
+}
+
+std::any CodeGenerator::visit_eof_stmt(Stmt::EndOfFile*) {
+    // TODO: Implement eof statement
     return nullptr;
 }
 
@@ -191,6 +231,66 @@ std::any CodeGenerator::visit_fun_decl(Decl::Fun* decl) {
     );
     fun_node->llvm_allocation = global;
 
+    return nullptr;
+}
+
+std::any CodeGenerator::visit_struct_decl(Decl::Struct*) {
+    // TODO: Implement struct declarations
+    return nullptr;
+}
+
+std::any CodeGenerator::visit_assign_expr(Expr::Assign*) {
+    // TODO: Implement assignment expressions
+    return nullptr;
+}
+
+std::any CodeGenerator::visit_logical_expr(Expr::Logical*) {
+    // TODO: Implement logical expressions
+    return nullptr;
+}
+
+std::any CodeGenerator::visit_binary_expr(Expr::Binary*) {
+    // TODO: Implement binary expressions
+    return nullptr;
+}
+
+std::any CodeGenerator::visit_unary_expr(Expr::Unary*) {
+    // TODO: Implement unary expressions
+    return nullptr;
+}
+
+std::any CodeGenerator::visit_call_expr(Expr::Call*) {
+    // TODO: Implement call expressions
+    return nullptr;
+}
+
+std::any CodeGenerator::visit_access_expr(Expr::Access*) {
+    // TODO: Implement access expressions
+    return nullptr;
+}
+
+std::any CodeGenerator::visit_grouping_expr(Expr::Grouping*) {
+    // TODO: Implement grouping expressions
+    return nullptr;
+}
+
+std::any CodeGenerator::visit_identifier_expr(Expr::Identifier*) {
+    // TODO: Implement identifier expressions
+    return nullptr;
+}
+
+std::any CodeGenerator::visit_literal_expr(Expr::Literal*) {
+    // TODO: Implement literal expressions
+    return nullptr;
+}
+
+std::any CodeGenerator::visit_array_expr(Expr::Array*) {
+    // TODO: Implement array expressions
+    return nullptr;
+}
+
+std::any CodeGenerator::visit_tuple_expr(Expr::Tuple*) {
+    // TODO: Implement tuple expressions
     return nullptr;
 }
 

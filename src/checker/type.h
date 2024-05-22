@@ -1,9 +1,6 @@
 #ifndef TYPE_H
 #define TYPE_H
 
-class Type;
-// Forward declaration of Type to avoid circular dependency with Node
-
 #include "../scanner/token.h"
 #include "node.h"
 #include "llvm/IR/LLVMContext.h"
