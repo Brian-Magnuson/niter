@@ -158,6 +158,10 @@ enum ErrorCode {
     E_ACCESS_ON_NON_STRUCT,
     // A subscript-access expression was found on a non-array type
     E_INDEX_ON_NON_ARRAY,
+    // A tuple was found with an index that was not a literal
+    E_NO_LITERAL_INDEX_ON_TUPLE,
+    // A tuple was found with an index that was out of range
+    E_TUPLE_INDEX_OUT_OF_RANGE,
     // A struct member could not be found
     E_INVALID_STRUCT_MEMBER,
     // A function call was found on a non-function type
