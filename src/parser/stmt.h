@@ -2,6 +2,8 @@
 #define STMT_H
 
 #include "../scanner/token.h"
+#include "decl.h"
+#include "expr.h"
 #include <any>
 #include <memory>
 
@@ -49,8 +51,7 @@ public:
     virtual std::any accept(Visitor* visitor) = 0;
 };
 
-#include "decl.h"
-#include "expr.h"
+class Decl;
 
 /**
  * @brief A class representing a declaration statement.
@@ -59,9 +60,7 @@ public:
  */
 class Stmt::Declaration : public Stmt {
 public:
-    Declaration(std::shared_ptr<Decl> declaration) : declaration(declaration) {
-        location = declaration->location;
-    }
+    Declaration(std::shared_ptr<Decl> declaration);
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_declaration_stmt(this);
@@ -71,6 +70,8 @@ public:
     std::shared_ptr<Decl> declaration;
 };
 
+class Expr;
+
 /**
  * @brief A class representing an expression statement.
  * Expression statements are statements that consist of an expression.
@@ -78,9 +79,7 @@ public:
  */
 class Stmt::Expression : public Stmt {
 public:
-    Expression(std::shared_ptr<Expr> expression) : expression(expression) {
-        location = expression->location;
-    }
+    Expression(std::shared_ptr<Expr> expression);
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_expression_stmt(this);
@@ -121,9 +120,7 @@ public:
  */
 class Stmt::Print : public Stmt {
 public:
-    Print(std::shared_ptr<Expr> value) : value(value) {
-        location = value->location;
-    }
+    Print(std::shared_ptr<Expr> value);
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_print_stmt(this);

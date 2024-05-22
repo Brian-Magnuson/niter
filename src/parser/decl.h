@@ -3,7 +3,8 @@
 
 #include "../scanner/token.h"
 #include "annotation.h"
-
+#include "expr.h"
+#include "stmt.h"
 #include <any>
 #include <memory>
 #include <vector>
@@ -37,9 +38,8 @@ public:
     virtual std::any accept(Visitor* visitor) = 0;
 };
 
-// Include the other declaration classes.
-#include "expr.h"
-#include "stmt.h"
+class Expr;
+// Forward declaration Expr for Decl::Var
 
 /**
  * @brief A class representing a variable declaration.
@@ -65,6 +65,9 @@ public:
     // The initializer expression. Note: if the variable is explicitly initialized to nil, this will still point to an expression that represents nil.
     std::shared_ptr<Expr> initializer;
 };
+
+class Stmt;
+// Forward declaration Stmt for Decl::Fun
 
 /**
  * @brief A class representing a function declaration.
