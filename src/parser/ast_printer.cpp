@@ -27,6 +27,9 @@ std::string AstPrinter::double_to_string(double value, int precision) {
 }
 
 std::string AstPrinter::any_to_string(const std::any& value) {
+    if (value.type() == typeid(int)) {
+        return std::to_string(std::any_cast<int>(value));
+    }
     if (value.type() == typeid(long long)) {
         return std::to_string(std::any_cast<long long>(value));
     }

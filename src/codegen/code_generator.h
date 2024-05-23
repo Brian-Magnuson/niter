@@ -119,6 +119,13 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
     std::any visit_access_expr(Expr::Access* expr) override;
     std::any visit_grouping_expr(Expr::Grouping* expr) override;
     std::any visit_identifier_expr(Expr::Identifier* expr) override;
+
+    /**
+     * @brief Visits a literal expression.
+     *
+     * @param expr The literal expression to visit.
+     * @return std::any An llvm::Value* representing the literal.
+     */
     std::any visit_literal_expr(Expr::Literal* expr) override;
     std::any visit_array_expr(Expr::Array* expr) override;
     std::any visit_tuple_expr(Expr::Tuple* expr) override;

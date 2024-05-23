@@ -552,7 +552,7 @@ std::any LocalChecker::visit_access_expr(Expr::Access* expr) {
                 ErrorLogger::inst().log_error(expr->location, E_NO_LITERAL_INDEX_ON_TUPLE, "Index must be a literal integer.");
                 throw LocalTypeException();
             }
-            auto index = std::any_cast<long long>(index_expr->token.literal);
+            auto index = std::any_cast<int>(index_expr->token.literal);
             if (index < 0 || index >= left_tuple_type->elements.size()) {
                 ErrorLogger::inst().log_error(expr->location, E_TUPLE_INDEX_OUT_OF_RANGE, "Index out of range for tuple of size " + std::to_string(left_tuple_type->elements.size()) + ".");
                 throw LocalTypeException();

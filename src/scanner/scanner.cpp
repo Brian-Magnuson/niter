@@ -530,7 +530,7 @@ void Scanner::numeric_literal() {
         }
     } else {
         try {
-            long long num = std::stoll(num_string, nullptr, base);
+            int num = std::stoi(num_string, nullptr, base);
             add_token(TOK_INT, num);
         } catch (const std::invalid_argument& e) {
             Token t = make_token(TOK_UNKNOWN);

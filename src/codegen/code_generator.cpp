@@ -279,9 +279,26 @@ std::any CodeGenerator::visit_identifier_expr(Expr::Identifier*) {
     return nullptr;
 }
 
-std::any CodeGenerator::visit_literal_expr(Expr::Literal*) {
-    // TODO: Implement literal expressions
-    return nullptr;
+std::any CodeGenerator::visit_literal_expr(Expr::Literal* expr) {
+    if (expr->token.tok_type == TOK_NIL) {
+        return llvm::Constant::getNullValue(llvm::Type::getInt8PtrTy(*context));
+    } else if (expr->token.tok_type == TOK_BOOL) {
+        return llvm::ConstantInt::get(llvm::Type::getInt1Ty(*context), expr->token.lexeme == "true", false);
+    } else if (expr->token.tok_type == TOK_INT) {
+        auto value = std::any_cast<int>(expr->token.literal);
+        return llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context), value, true);
+    } else if (expr->token.tok_type == TOK_FLOAT) {
+        auto value = std::any_cast<double>(expr->token.literal);
+        return llvm::ConstantFP::get(*context, llvm::APFloat(value));
+    } else if (expr->token.tok_type == TOK_CHAR) {
+        auto value = std::any_cast<char>(expr->token.literal);
+        return llvm::ConstantInt::get(llvm::Type::getInt8Ty(*context), value, false);
+    } else if (expr->token.tok_type == TOK_STR) {
+        return builder->CreateGlobalStringPtr(expr->token.lexeme);
+    } else {
+        ErrorLogger::inst().log_error(expr->location, E_IMPOSSIBLE, "Unknown literal type.");
+        throw std::runtime_error("Unknown literal type.");
+    }
 }
 
 std::any CodeGenerator::visit_array_expr(Expr::Array*) {

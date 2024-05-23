@@ -38,6 +38,7 @@ void Environment::install_primitive_types() {
 
     std::vector<std::pair<std::string, llvm::Type*>> primitive_types = {
         {"i32", llvm::Type::getInt32Ty(*llvm_context)},
+        {"i64", llvm::Type::getInt64Ty(*llvm_context)},
         {"f64", llvm::Type::getDoubleTy(*llvm_context)},
         {"bool", llvm::Type::getInt1Ty(*llvm_context)},
         {"char", llvm::Type::getInt8Ty(*llvm_context)},
