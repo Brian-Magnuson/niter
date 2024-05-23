@@ -90,6 +90,15 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
 
     std::any visit_break_stmt(Stmt::Break* stmt) override;
     std::any visit_continue_stmt(Stmt::Continue* stmt) override;
+
+    /**
+     * @brief Visits a print statement.
+     * Effectively calls `printf` from the C standard library and passes the single string argument.
+     * The first time this function is called, it will declare the `printf` function. Subsequent calls will use the existing declaration.
+     *
+     * @param stmt The print statement to visit.
+     * @return std::any nullptr always.
+     */
     std::any visit_print_stmt(Stmt::Print* stmt) override;
     std::any visit_eof_stmt(Stmt::EndOfFile* stmt) override;
 
@@ -115,9 +124,34 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
     std::any visit_logical_expr(Expr::Logical* expr) override;
     std::any visit_binary_expr(Expr::Binary* expr) override;
     std::any visit_unary_expr(Expr::Unary* expr) override;
+
+    /**
+     * @brief Visits a call expression.
+     * Generates code for the function call.
+     *
+     * @param expr The call expression to visit.
+     * @return std::any An llvm::Value* representing the result of the call.
+     */
     std::any visit_call_expr(Expr::Call* expr) override;
     std::any visit_access_expr(Expr::Access* expr) override;
+
+    /**
+     * @brief Visits a grouping expression.
+     * Simply visits the expression inside the grouping and returns the Value*.
+     *
+     * @param expr The grouping expression to visit.
+     * @return std::any An llvm::Value* representing the value of the expression inside the grouping.
+     */
     std::any visit_grouping_expr(Expr::Grouping* expr) override;
+
+    /**
+     * @brief Visits an identifier expression.
+     * This function specifically loads the value from the variable's llvm_allocation.
+     * This function should not be used when the identifier is used as an lvalue.
+     *
+     * @param expr The identifier expression to visit.
+     * @return std::any The llvm::Value* representing the value stored in the variable.
+     */
     std::any visit_identifier_expr(Expr::Identifier* expr) override;
 
     /**

@@ -85,8 +85,38 @@ std::any CodeGenerator::visit_continue_stmt(Stmt::Continue*) {
     return nullptr;
 }
 
-std::any CodeGenerator::visit_print_stmt(Stmt::Print*) {
-    // TODO: Implement print statement
+std::any CodeGenerator::visit_print_stmt(Stmt::Print* stmt) {
+    // Check if printf has already been declared
+    llvm::Function* printf_func = ir_module->getFunction("printf");
+
+    // If not, declare it
+    if (!printf_func) {
+        // Declare the function prototype
+        std::vector<llvm::Type*> printf_arg_types;
+        printf_arg_types.push_back(llvm::Type::getInt8PtrTy(*context)); // char*
+
+        llvm::FunctionType* printf_type =
+            llvm::FunctionType::get(
+                llvm::Type::getInt32Ty(*context), // return type
+                printf_arg_types,                 // argument types
+                true
+            ); // printf is vararg
+
+        // Create the function declaration
+        printf_func = llvm::Function::Create(
+            printf_type,
+            llvm::Function::ExternalLinkage,
+            "printf",
+            *ir_module
+        );
+    }
+
+    // Get the string
+    auto str = std::any_cast<llvm::Value*>(stmt->value->accept(this));
+
+    // Call printf
+    builder->CreateCall(printf_func, str);
+
     return nullptr;
 }
 
@@ -259,9 +289,19 @@ std::any CodeGenerator::visit_unary_expr(Expr::Unary*) {
     return nullptr;
 }
 
-std::any CodeGenerator::visit_call_expr(Expr::Call*) {
-    // TODO: Implement call expressions
-    return nullptr;
+std::any CodeGenerator::visit_call_expr(Expr::Call* expr) {
+    llvm::Value* ret;
+    // Get the function
+    auto fun = llvm::cast<llvm::Function>(std::any_cast<llvm::Value*>(expr->callee->accept(this)));
+    // Get the arguments
+    std::vector<llvm::Value*> args;
+    for (auto& arg : expr->arguments) {
+        args.push_back(std::any_cast<llvm::Value*>(arg->accept(this)));
+    }
+    // Call the function
+    ret = builder->CreateCall(fun, args);
+
+    return ret;
 }
 
 std::any CodeGenerator::visit_access_expr(Expr::Access*) {
@@ -269,36 +309,43 @@ std::any CodeGenerator::visit_access_expr(Expr::Access*) {
     return nullptr;
 }
 
-std::any CodeGenerator::visit_grouping_expr(Expr::Grouping*) {
-    // TODO: Implement grouping expressions
-    return nullptr;
+std::any CodeGenerator::visit_grouping_expr(Expr::Grouping* expr) {
+    return std::any_cast<llvm::Value*>(expr->expression->accept(this));
 }
 
-std::any CodeGenerator::visit_identifier_expr(Expr::Identifier*) {
-    // TODO: Implement identifier expressions
-    return nullptr;
+std::any CodeGenerator::visit_identifier_expr(Expr::Identifier* expr) {
+    // Get the variable node
+    auto var_node = Environment::inst().get_variable(expr->tokens);
+    // This should never be nullptr
+    // Load the value from the variable
+    llvm::Value* ret = builder->CreateLoad(var_node->type->to_llvm_type(context), var_node->llvm_allocation);
+    return ret;
 }
 
 std::any CodeGenerator::visit_literal_expr(Expr::Literal* expr) {
+    llvm::Value* ret;
+
     if (expr->token.tok_type == TOK_NIL) {
-        return llvm::Constant::getNullValue(llvm::Type::getInt8PtrTy(*context));
+        ret = llvm::Constant::getNullValue(llvm::Type::getInt8PtrTy(*context));
     } else if (expr->token.tok_type == TOK_BOOL) {
-        return llvm::ConstantInt::get(llvm::Type::getInt1Ty(*context), expr->token.lexeme == "true", false);
+        ret = llvm::ConstantInt::get(llvm::Type::getInt1Ty(*context), expr->token.lexeme == "true", false);
     } else if (expr->token.tok_type == TOK_INT) {
         auto value = std::any_cast<int>(expr->token.literal);
-        return llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context), value, true);
+        ret = llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context), value, true);
     } else if (expr->token.tok_type == TOK_FLOAT) {
         auto value = std::any_cast<double>(expr->token.literal);
-        return llvm::ConstantFP::get(*context, llvm::APFloat(value));
+        ret = llvm::ConstantFP::get(*context, llvm::APFloat(value));
     } else if (expr->token.tok_type == TOK_CHAR) {
         auto value = std::any_cast<char>(expr->token.literal);
-        return llvm::ConstantInt::get(llvm::Type::getInt8Ty(*context), value, false);
+        ret = llvm::ConstantInt::get(llvm::Type::getInt8Ty(*context), value, false);
     } else if (expr->token.tok_type == TOK_STR) {
-        return builder->CreateGlobalStringPtr(expr->token.lexeme);
+        ret = builder->CreateGlobalStringPtr(expr->token.lexeme);
     } else {
         ErrorLogger::inst().log_error(expr->location, E_IMPOSSIBLE, "Unknown literal type.");
         throw std::runtime_error("Unknown literal type.");
     }
+
+    return ret;
 }
 
 std::any CodeGenerator::visit_array_expr(Expr::Array*) {
