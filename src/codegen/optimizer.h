@@ -4,6 +4,11 @@
 #include "llvm/IR/Module.h"
 #include <memory>
 
+/**
+ * @brief A class to perform optimization on an IR module.
+ * Optimization helps remove unnecessary code and make the code more efficient.
+ *
+ */
 class Optimizer {
 public:
     /**
