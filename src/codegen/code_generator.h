@@ -166,6 +166,16 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
 
 public:
     CodeGenerator();
+
+    /**
+     * @brief Runs the code generator on the given statements.
+     * This function will generate the LLVM IR and return a pointer to the module.
+     * The module will not be optimized. Use the Optimizer class to optimize the module.
+     * If an error occurs during code generation or if the module cannot be verified, this function will return nullptr.
+     *
+     * @param stmts The statements to generate code for.
+     * @return std::shared_ptr<llvm::Module> A pointer to the generated module. nullptr if an error occurred.
+     */
     std::shared_ptr<llvm::Module> generate(std::vector<std::shared_ptr<Stmt>> stmts);
 };
 

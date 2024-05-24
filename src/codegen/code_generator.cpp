@@ -2,7 +2,9 @@
 #include "../checker/environment.h"
 #include "../checker/node.h"
 #include "../logger/logger.h"
+#include "llvm/IR/Verifier.h"
 #include "llvm/Support/Casting.h"
+#include <iostream>
 
 void CodeGenerator::declare_all_structs() {
     // First loop for opaque declarations
@@ -366,9 +368,20 @@ CodeGenerator::CodeGenerator() {
 }
 
 std::shared_ptr<llvm::Module> CodeGenerator::generate(std::vector<std::shared_ptr<Stmt>> stmts) {
-    // Visit each statement
-    for (auto& stmt : stmts) {
-        stmt->accept(this);
+    try {
+        // Visit each statement
+        for (auto& stmt : stmts) {
+            stmt->accept(this);
+        }
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+        return nullptr;
+    }
+
+    // Verify the module
+    if (llvm::verifyModule(*ir_module, &llvm::errs())) {
+        llvm::errs() << "The module is not valid.\n";
+        return nullptr;
     }
 
     return ir_module;
