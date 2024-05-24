@@ -76,7 +76,18 @@ std::any CodeGenerator::visit_return_stmt(Stmt::Return* stmt) {
         ErrorLogger::inst().log_error(stmt->location, E_IMPOSSIBLE, "Return statement outside of function.");
         throw std::runtime_error("Return statement outside of function.");
     }
-    // FIXME: This was recently changed to remove branch instructions. Check if this is correct.
+
+    // LLVM requires that each block has one terminator instruction at the end.
+    builder->CreateBr(block_stack.front());
+
+    // We allow statements to appear after a return statement. Theoretically, these statements should be unreachable.
+    // We allow this anyway because unreachable code is not an error (might generate a warning, though).
+
+    // To prevent LLVM from complaining about terminators in the middle of a block, we create a new block right here.
+    auto new_block = llvm::BasicBlock::Create(*context, "unreachable", block_stack.front()->getParent());
+    builder->SetInsertPoint(new_block);
+    // If this code is truly unreachable, it will be removed by the optimizer (keep things consistent, then optimize).
+
     return nullptr;
 }
 

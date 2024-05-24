@@ -83,7 +83,8 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
     /**
      * @brief Visits a return statement.
      * A return statement doesn't actually create a return instruction.
-     * It instead assigns "__return_val__" to the return value.
+     * It instead assigns "__return_val__" to the return value, then jumps to the exit block where the return instruction is created.
+     * It also creates a new block for any statements that may appear after the return statement.
      *
      * @param stmt The return statement to visit.
      * @return std::any nullptr always.
