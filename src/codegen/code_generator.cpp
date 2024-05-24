@@ -76,6 +76,7 @@ std::any CodeGenerator::visit_return_stmt(Stmt::Return* stmt) {
         ErrorLogger::inst().log_error(stmt->location, E_IMPOSSIBLE, "Return statement outside of function.");
         throw std::runtime_error("Return statement outside of function.");
     }
+    // FIXME: This was recently changed to remove branch instructions. Check if this is correct.
     return nullptr;
 }
 
@@ -89,6 +90,7 @@ std::any CodeGenerator::visit_continue_stmt(Stmt::Continue*) {
     return nullptr;
 }
 
+// FIXME: Add support for `extern` functions instead of print statements.
 std::any CodeGenerator::visit_print_stmt(Stmt::Print* stmt) {
     // Check if printf has already been declared
     llvm::Function* printf_func = ir_module->getFunction("printf");
@@ -388,6 +390,7 @@ std::shared_ptr<llvm::Module> CodeGenerator::generate(std::vector<std::shared_pt
         this->dump_ir();
     }
 
+    // FIXME: Create a way for the ErrorLogger to log this kind of error
     // Verify the module
     if (llvm::verifyModule(*ir_module, &llvm::errs())) {
         llvm::errs() << "The module is not valid.\n";

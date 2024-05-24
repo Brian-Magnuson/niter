@@ -11,6 +11,7 @@
 #include <string>
 
 int main() {
+    // FIXME: Change this to read from a file
     std::string source = R"(
 fun main(): i32 {
     puts "Hello, World!\n";
