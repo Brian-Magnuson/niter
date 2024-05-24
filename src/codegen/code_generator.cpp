@@ -4,6 +4,9 @@
 #include "../logger/logger.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/Support/Casting.h"
+#include "llvm/Support/FileSystem.h"
+#include "llvm/Support/raw_ostream.h"
+#include <filesystem>
 #include <iostream>
 
 void CodeGenerator::declare_all_structs() {
@@ -73,7 +76,6 @@ std::any CodeGenerator::visit_return_stmt(Stmt::Return* stmt) {
         ErrorLogger::inst().log_error(stmt->location, E_IMPOSSIBLE, "Return statement outside of function.");
         throw std::runtime_error("Return statement outside of function.");
     }
-    builder->CreateBr(block_stack.front());
     return nullptr;
 }
 
@@ -212,12 +214,14 @@ std::any CodeGenerator::visit_fun_decl(Decl::Fun* decl) {
     // If the function is named `main`, set the linkage to external
     if (decl->name.lexeme == "main") {
         fun->setLinkage(llvm::Function::ExternalLinkage);
+        fun->setName("main");
     }
 
     // Create the entry block
     Environment::inst().increase_local_scope();
     auto entry_block = llvm::BasicBlock::Create(*context, "entry", fun);
     auto exit_block = llvm::BasicBlock::Create(*context, "exit", fun);
+    block_stack.push_back(exit_block);
     builder->SetInsertPoint(entry_block);
 
     // Handle the return variable
@@ -248,6 +252,7 @@ std::any CodeGenerator::visit_fun_decl(Decl::Fun* decl) {
         builder->CreateRetVoid();
     }
 
+    block_stack.clear();
     // Decrease scope
     Environment::inst().exit_scope();
     Environment::inst().exit_scope();
@@ -341,7 +346,8 @@ std::any CodeGenerator::visit_literal_expr(Expr::Literal* expr) {
         auto value = std::any_cast<char>(expr->token.literal);
         ret = llvm::ConstantInt::get(llvm::Type::getInt8Ty(*context), value, false);
     } else if (expr->token.tok_type == TOK_STR) {
-        ret = builder->CreateGlobalStringPtr(expr->token.lexeme);
+        auto value = std::any_cast<std::string>(expr->token.literal);
+        ret = builder->CreateGlobalStringPtr(value);
     } else {
         ErrorLogger::inst().log_error(expr->location, E_IMPOSSIBLE, "Unknown literal type.");
         throw std::runtime_error("Unknown literal type.");
@@ -367,7 +373,7 @@ CodeGenerator::CodeGenerator() {
     declare_all_structs();
 }
 
-std::shared_ptr<llvm::Module> CodeGenerator::generate(std::vector<std::shared_ptr<Stmt>> stmts) {
+std::shared_ptr<llvm::Module> CodeGenerator::generate(std::vector<std::shared_ptr<Stmt>> stmts, bool dump_ir) {
     try {
         // Visit each statement
         for (auto& stmt : stmts) {
@@ -378,6 +384,10 @@ std::shared_ptr<llvm::Module> CodeGenerator::generate(std::vector<std::shared_pt
         return nullptr;
     }
 
+    if (dump_ir) {
+        this->dump_ir();
+    }
+
     // Verify the module
     if (llvm::verifyModule(*ir_module, &llvm::errs())) {
         llvm::errs() << "The module is not valid.\n";
@@ -385,4 +395,19 @@ std::shared_ptr<llvm::Module> CodeGenerator::generate(std::vector<std::shared_pt
     }
 
     return ir_module;
+}
+
+void CodeGenerator::dump_ir(const std::string& filename) {
+    std::filesystem::path dir = std::filesystem::path(filename).parent_path();
+    if (!std::filesystem::exists(dir)) {
+        std::filesystem::create_directories(dir);
+    }
+    std::error_code ec;
+    llvm::raw_fd_ostream ir_stream(filename, ec, llvm::sys::fs::OF_Text);
+    ir_module->print(ir_stream, nullptr);
+    if (ec) {
+        std::cerr << "Error: " << ec.message() << std::endl;
+        std::cerr << "Current path: " << std::filesystem::current_path() << std::endl;
+        std::cerr << "Failed to write IR to " << filename << std::endl;
+    }
 }

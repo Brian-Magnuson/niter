@@ -27,7 +27,9 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
     std::shared_ptr<llvm::IRBuilder<>> builder;
 
     // The current function being generated.
-    llvm::Function* current_function;
+    // llvm::Function* current_function;
+    // TODO: Determine if this is necessary.
+
     // A stack of blocks for control flow; break stmts will jump to the last block in this stack; return stmts will jump to the first block in this stack.
     std::vector<llvm::BasicBlock*> block_stack;
 
@@ -81,7 +83,7 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
     /**
      * @brief Visits a return statement.
      * A return statement doesn't actually create a return instruction.
-     * It instead assigns "__return_val__" to the return value, then jumps to the block at the front of the block stack.
+     * It instead assigns "__return_val__" to the return value.
      *
      * @param stmt The return statement to visit.
      * @return std::any nullptr always.
@@ -174,9 +176,18 @@ public:
      * If an error occurs during code generation or if the module cannot be verified, this function will return nullptr.
      *
      * @param stmts The statements to generate code for.
+     * @param dump_ir A boolean specifying whether to dump the IR to a file. Default is false.
      * @return std::shared_ptr<llvm::Module> A pointer to the generated module. nullptr if an error occurred.
      */
-    std::shared_ptr<llvm::Module> generate(std::vector<std::shared_ptr<Stmt>> stmts);
+    std::shared_ptr<llvm::Module> generate(std::vector<std::shared_ptr<Stmt>> stmts, bool dump_ir = false);
+
+    /**
+     * @brief Dumps the IR to a file, allowing the user to inspect the generated IR.
+     * Can be called, even if the IR is not valid, allowing the user to debug the code generator.
+     *
+     * @param filename
+     */
+    void dump_ir(const std::string& filename = "./debug/output.ll");
 };
 
 #endif // CODE_GENERATOR_H

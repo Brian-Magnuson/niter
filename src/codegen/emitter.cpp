@@ -22,7 +22,7 @@ void Emitter::emit(const std::shared_ptr<llvm::Module>& ir_module, const std::st
     auto FileType = llvm::CGFT_ObjectFile;
 
     std::error_code EC;
-    llvm::raw_fd_ostream dest("output.o", EC, llvm::sys::fs::OF_None);
+    llvm::raw_fd_ostream dest(target_destination, EC, llvm::sys::fs::OF_None);
 
     if (EC) {
         llvm::errs() << "Could not open output file: " << EC.message();

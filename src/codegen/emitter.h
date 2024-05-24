@@ -3,6 +3,7 @@
 
 #include "llvm/IR/Module.h"
 #include <memory>
+#include <string>
 
 /**
  * @brief A class to emit the IR module to an object file.
@@ -18,7 +19,7 @@ public:
      * @param target_destination A string specifying the target destination for the object file. E.g. "./bin/output.o".
      * Paths are relative to CWD.
      */
-    void emit(const std::shared_ptr<llvm::Module>& ir_module, const std::string& target_destination);
+    void emit(const std::shared_ptr<llvm::Module>& ir_module, const std::string& target_destination = "output.o");
 };
 
 #endif // EMITTER_H
