@@ -364,3 +364,12 @@ CodeGenerator::CodeGenerator() {
     ir_module = std::make_shared<llvm::Module>("main", *context);
     declare_all_structs();
 }
+
+std::shared_ptr<llvm::Module> CodeGenerator::generate(std::vector<std::shared_ptr<Stmt>> stmts) {
+    // Visit each statement
+    for (auto& stmt : stmts) {
+        stmt->accept(this);
+    }
+
+    return ir_module;
+}
