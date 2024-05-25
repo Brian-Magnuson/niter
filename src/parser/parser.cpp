@@ -627,6 +627,25 @@ void Parser::resolve_annotation(std::shared_ptr<Annotation::Segmented>& /*annota
     // Right now, we don't need to do anything here.
 }
 
+std::vector<std::shared_ptr<Stmt>> Parser::parse(const std::vector<std::shared_ptr<Token>>& tokens) {
+    this->tokens = tokens;
+    std::vector<std::shared_ptr<Stmt>> statements;
+
+    while (current != tokens.size()) {
+        while (match({TOK_NEWLINE}))
+            ; // Skip over newlines
+        while (!is_at_end()) {
+            statements.push_back(statement());
+            while (match({TOK_NEWLINE}))
+                ; // Skip over newlines
+        }
+        current++;
+        statements.push_back(std::make_shared<Stmt::EndOfFile>());
+    }
+
+    return statements;
+}
+
 std::vector<std::shared_ptr<Stmt>> Parser::parse() {
     std::vector<std::shared_ptr<Stmt>> statements;
 

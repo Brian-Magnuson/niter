@@ -340,13 +340,32 @@ public:
      * @brief Construct a new Parser object.
      *
      * @param tokens The vector of tokens to parse.
+     * @deprecated Use the default constructor instead.
      */
     Parser(const std::vector<std::shared_ptr<Token>>& tokens) : tokens(tokens) {}
+
+    /**
+     * @brief Construct a new Parser object.
+     * Does not initialize the tokens vector.
+     * Pass the tokens vector to the parse() function instead.
+     *
+     */
+    Parser() = default;
+
+    /**
+     * @brief Parses the vector of tokens into an abstract syntax tree.
+     * Also sets the tokens vector to the given vector of tokens.
+     *
+     * @param tokens The vector of tokens to parse.
+     * @return std::vector<std::shared_ptr<Stmt>> A vector of AST statements.
+     */
+    std::vector<std::shared_ptr<Stmt>> parse(const std::vector<std::shared_ptr<Token>>& tokens);
 
     /**
      * @brief Parses the vector of tokens into an abstract syntax tree.
      *
      * @return std::vector<std::shared_ptr<Stmt>> A vector of AST statements.
+     * @deprecated Use the parse(const std::vector<std::shared_ptr<Token>>& tokens) function instead.
      */
     std::vector<std::shared_ptr<Stmt>> parse();
 };

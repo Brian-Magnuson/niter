@@ -46,8 +46,8 @@ fun main(): i32 {
             return ErrorLogger::inst().get_errors().size() == 0;
         },
         [](CompilerState& state) {
-            Parser parser(state.tokens);
-            state.stmts = parser.parse();
+            Parser parser;
+            state.stmts = parser.parse(state.tokens);
             return ErrorLogger::inst().get_errors().size() == 0;
         },
         [](CompilerState& state) {
