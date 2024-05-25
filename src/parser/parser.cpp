@@ -4,11 +4,11 @@
 #include <exception>
 
 Token& Parser::peek() {
-    return tokens[current];
+    return *tokens[current];
 }
 
 Token& Parser::previous() {
-    return tokens[current - 1];
+    return *tokens[current - 1];
 }
 
 bool Parser::check(const std::vector<TokenType>& types) {

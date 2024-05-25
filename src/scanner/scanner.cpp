@@ -76,7 +76,7 @@ bool Scanner::match(char expected) {
     return true;
 }
 
-Token Scanner::make_token(TokenType tok_type, const std::any& literal) const {
+std::shared_ptr<Token> Scanner::make_token(TokenType tok_type, const std::any& literal) const {
     std::string text = source->substr(start, current - start);
     auto location = Location{
         filename,           // The name of the file where the token is located.
@@ -86,7 +86,7 @@ Token Scanner::make_token(TokenType tok_type, const std::any& literal) const {
         line_index,         // The index of the line in the source code string where the token is located.
         source              // A shared pointer to the source code string.
     };
-    return Token{tok_type, text, literal, location};
+    return std::make_shared<Token>(tok_type, text, literal, location);
 }
 
 void Scanner::add_token(TokenType tok_type, const std::any& literal) {
@@ -109,7 +109,7 @@ bool Scanner::is_digit(char c, int base) {
         return false;
         // Also log E_UNREACHABLE
         ErrorLogger::inst()
-            .log_error(make_token(TOK_UNKNOWN).location, E_UNREACHABLE, "Unreachable code reached in 'is_digit'.");
+            .log_error(make_token(TOK_UNKNOWN)->location, E_UNREACHABLE, "Unreachable code reached in 'is_digit'.");
     }
 }
 
@@ -169,9 +169,9 @@ void Scanner::scan_token() {
             add_token(TOK_STAR_EQ);
         } else if (match('/')) {
             // Not valid since it's not the start of a comment
-            Token t = make_token(TOK_STAR_SLASH);
+            auto t = make_token(TOK_STAR_SLASH);
             ErrorLogger::inst()
-                .log_error(t.location, E_CLOSING_UNOPENED_COMMENT, "Closing comment '*/' without opening '/*'.");
+                .log_error(t->location, E_CLOSING_UNOPENED_COMMENT, "Closing comment '*/' without opening '/*'.");
         } else {
             add_token(TOK_STAR);
         }
@@ -207,9 +207,9 @@ void Scanner::scan_token() {
     case '\\':
         if (!is_at_end() && !match('\n')) {
             // Backslash is used for line continuation. Therefore, it is only valid at the end of a line.
-            Token t = make_token(TOK_BACKSLASH);
+            auto t = make_token(TOK_BACKSLASH);
             ErrorLogger::inst()
-                .log_error(t.location, E_NO_LF_AFTER_BACKSLASH, "Expected newline after backslash.");
+                .log_error(t->location, E_NO_LF_AFTER_BACKSLASH, "Expected newline after backslash.");
         }
         // If there was a newline, it was consumed in the match() function.
         break;
@@ -277,9 +277,9 @@ void Scanner::scan_token() {
         } else if (is_alpha(c)) {
             identifier();
         } else {
-            Token t = make_token(TOK_UNKNOWN);
+            auto t = make_token(TOK_UNKNOWN);
             ErrorLogger::inst()
-                .log_error(t.location, E_UNEXPECTED_CHAR, "Unexpected character.");
+                .log_error(t->location, E_UNEXPECTED_CHAR, "Unexpected character.");
         }
     }
 }
@@ -303,9 +303,9 @@ void Scanner::multi_line_comment() {
         }
         advance();
     }
-    Token t = make_token(TOK_EOF);
+    auto t = make_token(TOK_EOF);
     ErrorLogger::inst()
-        .log_error(t.location, E_UNCLOSED_COMMENT, "Comment was not closed at the end of the file.");
+        .log_error(t->location, E_UNCLOSED_COMMENT, "Comment was not closed at the end of the file.");
 }
 
 char Scanner::read_escape_sequence() {
@@ -335,9 +335,9 @@ char Scanner::read_escape_sequence() {
     case '{':
         return '{'; // Left brace (just in case we need it for formatting)
     default:
-        Token t = make_token(TOK_UNKNOWN);
+        auto t = make_token(TOK_UNKNOWN);
         ErrorLogger::inst()
-            .log_error(t.location, E_ILLEGAL_ESC_SEQ, "Illegal escape sequence.");
+            .log_error(t->location, E_ILLEGAL_ESC_SEQ, "Illegal escape sequence.");
         return c;
     }
 }
@@ -345,15 +345,15 @@ char Scanner::read_escape_sequence() {
 void Scanner::char_literal() {
     // Ensure the next character is not a newline
     if (is_at_end() || peek() == '\n') {
-        Token t = make_token(TOK_SINGLE_QUOTE);
+        auto t = make_token(TOK_SINGLE_QUOTE);
         ErrorLogger::inst()
-            .log_error(t.location, E_UNCLOSED_CHAR, "Character literal was not closed after the first character.");
+            .log_error(t->location, E_UNCLOSED_CHAR, "Character literal was not closed after the first character.");
         return;
     }
     if (peek() == '\'') {
-        Token t = make_token(TOK_SINGLE_QUOTE);
+        auto t = make_token(TOK_SINGLE_QUOTE);
         ErrorLogger::inst()
-            .log_error(t.location, E_EMPTY_CHAR, "Empty character literal found.");
+            .log_error(t->location, E_EMPTY_CHAR, "Empty character literal found.");
         return;
     }
 
@@ -367,9 +367,9 @@ void Scanner::char_literal() {
 
     // Ensure the character literal is closed
     if (!match('\'')) {
-        Token t = make_token(TOK_SINGLE_QUOTE);
+        auto t = make_token(TOK_SINGLE_QUOTE);
         ErrorLogger::inst()
-            .log_error(t.location, E_UNCLOSED_CHAR, "Character literal was not closed after the first character.");
+            .log_error(t->location, E_UNCLOSED_CHAR, "Character literal was not closed after the first character.");
     }
 }
 
@@ -384,15 +384,15 @@ void Scanner::string_literal() {
     }
     while (true) {
         if (is_multi_line && is_at_end()) {
-            Token t = make_token(TOK_EOF);
+            auto t = make_token(TOK_EOF);
             ErrorLogger::inst()
-                .log_error(t.location, E_UNCLOSED_MULTI_LINE_STRING, "Multi-line string literal was not closed at the end of the file.");
+                .log_error(t->location, E_UNCLOSED_MULTI_LINE_STRING, "Multi-line string literal was not closed at the end of the file.");
             return;
         }
         if (!is_multi_line && (is_at_end() || peek() == '\n')) {
-            Token t = make_token(TOK_NEWLINE);
+            auto t = make_token(TOK_NEWLINE);
             ErrorLogger::inst()
-                .log_error(t.location, E_UNCLOSED_STRING, "Single-line string literal was not closed at the end of the line.");
+                .log_error(t->location, E_UNCLOSED_STRING, "Single-line string literal was not closed at the end of the line.");
             return;
         }
         if (is_multi_line && peek() == '"' && peek_next() == '"' && peek_next(2) == '"') {
@@ -464,14 +464,14 @@ void Scanner::numeric_literal() {
             advance();
         } else if (peek() == '.') {
             if (is_float) {
-                Token t = make_token(TOK_UNKNOWN);
+                auto t = make_token(TOK_UNKNOWN);
                 ErrorLogger::inst()
-                    .log_error(t.location, E_MULTIPLE_DECIMAL_POINTS, "Multiple decimal points in a number.");
+                    .log_error(t->location, E_MULTIPLE_DECIMAL_POINTS, "Multiple decimal points in a number.");
                 return;
             } else if (base != 10) {
-                Token t = make_token(TOK_UNKNOWN);
+                auto t = make_token(TOK_UNKNOWN);
                 ErrorLogger::inst()
-                    .log_error(t.location, E_NON_DECIMAL_FLOAT, "Floating point numbers must be in base 10.");
+                    .log_error(t->location, E_NON_DECIMAL_FLOAT, "Floating point numbers must be in base 10.");
                 return;
             } else {
                 is_float = true;
@@ -489,9 +489,9 @@ void Scanner::numeric_literal() {
             num_string += advance();
         }
         if (!is_digit(peek())) {
-            Token t = make_token(TOK_UNKNOWN);
+            auto t = make_token(TOK_UNKNOWN);
             ErrorLogger::inst()
-                .log_error(t.location, E_NO_DIGITS_IN_EXPONENT, "Exponential notation must have at least one digit in the exponent.");
+                .log_error(t->location, E_NO_DIGITS_IN_EXPONENT, "Exponential notation must have at least one digit in the exponent.");
             return;
         }
         while (is_digit(peek()) || peek() == '_') {
@@ -507,9 +507,9 @@ void Scanner::numeric_literal() {
     // This would otherwise make numbers confusing to read.
     // Numbers should be followed by a space, a newline, or a non-alphanumeric character.
     if (is_alpha_numeric(peek())) {
-        Token t = make_token(TOK_UNKNOWN);
+        auto t = make_token(TOK_UNKNOWN);
         ErrorLogger::inst()
-            .log_error(t.location, E_NON_DIGIT_IN_NUMBER, "Numbers should be followed by a space, a newline, or a non-alphanumeric character.");
+            .log_error(t->location, E_NON_DIGIT_IN_NUMBER, "Numbers should be followed by a space, a newline, or a non-alphanumeric character.");
         return;
     }
     // Note: 'f' is currently not allowed as a suffix for 32-bit floats.
@@ -520,26 +520,26 @@ void Scanner::numeric_literal() {
             double num = std::stod(num_string);
             add_token(TOK_FLOAT, num);
         } catch (const std::invalid_argument& e) {
-            Token t = make_token(TOK_UNKNOWN);
+            auto t = make_token(TOK_UNKNOWN);
             ErrorLogger::inst()
-                .log_error(t.location, E_CONVERSION, "An unknown error occurred while parsing a floating point number.");
+                .log_error(t->location, E_CONVERSION, "An unknown error occurred while parsing a floating point number.");
         } catch (const std::out_of_range& e) {
-            Token t = make_token(TOK_UNKNOWN);
+            auto t = make_token(TOK_UNKNOWN);
             ErrorLogger::inst()
-                .log_error(t.location, E_FLOAT_TOO_LARGE, "Floating point number is too large.");
+                .log_error(t->location, E_FLOAT_TOO_LARGE, "Floating point number is too large.");
         }
     } else {
         try {
             int num = std::stoi(num_string, nullptr, base);
             add_token(TOK_INT, num);
         } catch (const std::invalid_argument& e) {
-            Token t = make_token(TOK_UNKNOWN);
+            auto t = make_token(TOK_UNKNOWN);
             ErrorLogger::inst()
-                .log_error(t.location, E_CONVERSION, "An unknown error occurred while parsing an integer.");
+                .log_error(t->location, E_CONVERSION, "An unknown error occurred while parsing an integer.");
         } catch (const std::out_of_range& e) {
-            Token t = make_token(TOK_UNKNOWN);
+            auto t = make_token(TOK_UNKNOWN);
             ErrorLogger::inst()
-                .log_error(t.location, E_INT_TOO_LARGE, "Integer is too large.");
+                .log_error(t->location, E_INT_TOO_LARGE, "Integer is too large.");
         }
     }
 }
@@ -564,7 +564,7 @@ void Scanner::identifier() {
             add_token(TOK_FLOAT, std::numeric_limits<double>::quiet_NaN());
         } else {
             ErrorLogger::inst()
-                .log_error(make_token(TOK_UNKNOWN).location, E_UNREACHABLE, "Unreachable code reached in 'identifier'.");
+                .log_error(make_token(TOK_UNKNOWN)->location, E_UNREACHABLE, "Unreachable code reached in 'identifier'.");
         }
     } else {
         add_token(it->second);
@@ -588,7 +588,7 @@ void Scanner::scan_file(std::shared_ptr<std::string> filename, std::shared_ptr<s
     add_token(TOK_EOF);
 }
 
-const std::vector<Token>& Scanner::get_tokens() const {
+const std::vector<std::shared_ptr<Token>>& Scanner::get_tokens() const {
     return tokens;
 }
 
@@ -597,7 +597,7 @@ void Scanner::clear_tokens() {
 }
 
 void Scanner::print_all_tokens(std::ostream& out) const {
-    for (const Token& t : tokens) {
-        out << t.to_string() << std::endl;
+    for (auto& t : tokens) {
+        out << t->to_string() << std::endl;
     }
 }

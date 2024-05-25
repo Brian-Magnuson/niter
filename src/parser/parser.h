@@ -24,7 +24,7 @@ class ParserException : public std::exception {};
  */
 class Parser {
     // The vector of tokens to parse.
-    std::vector<Token> tokens;
+    std::vector<std::shared_ptr<Token>> tokens;
     // The current token index.
     unsigned current = 0;
     // A stack to keep track of grouping tokens. If the stack is empty, newlines are significant.
@@ -341,7 +341,7 @@ public:
      *
      * @param tokens The vector of tokens to parse.
      */
-    Parser(const std::vector<Token>& tokens) : tokens(tokens) {}
+    Parser(const std::vector<std::shared_ptr<Token>>& tokens) : tokens(tokens) {}
 
     /**
      * @brief Parses the vector of tokens into an abstract syntax tree.

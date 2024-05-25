@@ -96,13 +96,13 @@ TEST_CASE("Scanner", "[scanner]") {
     auto tokens = scanner.get_tokens();
 
     REQUIRE(tokens.size() == 5);
-    CHECK(tokens.at(0).tok_type == KW_VAR);
-    CHECK(tokens.at(1).tok_type == TOK_IDENT);
-    CHECK(tokens.at(2).tok_type == TOK_EQ);
-    CHECK(tokens.at(3).tok_type == TOK_INT);
-    REQUIRE(tokens.at(3).literal.has_value());
-    REQUIRE(std::any_cast<int>(tokens.at(3).literal) == 5);
-    CHECK(tokens.at(4).tok_type == TOK_EOF);
+    CHECK(tokens.at(0)->tok_type == KW_VAR);
+    CHECK(tokens.at(1)->tok_type == TOK_IDENT);
+    CHECK(tokens.at(2)->tok_type == TOK_EQ);
+    CHECK(tokens.at(3)->tok_type == TOK_INT);
+    REQUIRE(tokens.at(3)->literal.has_value());
+    REQUIRE(std::any_cast<int>(tokens.at(3)->literal) == 5);
+    CHECK(tokens.at(4)->tok_type == TOK_EOF);
 }
 
 TEST_CASE("Scanner keywords", "[scanner]") {
@@ -117,39 +117,39 @@ TEST_CASE("Scanner keywords", "[scanner]") {
     auto tokens = scanner.get_tokens();
 
     REQUIRE(tokens.size() == 33);
-    CHECK(tokens.at(0).tok_type == KW_AND);
-    CHECK(tokens.at(1).tok_type == KW_OR);
-    CHECK(tokens.at(2).tok_type == KW_NOT);
-    CHECK(tokens.at(3).tok_type == KW_IF);
-    CHECK(tokens.at(4).tok_type == KW_ELSE);
-    CHECK(tokens.at(5).tok_type == KW_LOOP);
-    CHECK(tokens.at(6).tok_type == KW_WHILE);
-    CHECK(tokens.at(7).tok_type == KW_FOR);
-    CHECK(tokens.at(8).tok_type == KW_IN);
-    CHECK(tokens.at(9).tok_type == KW_BREAK);
-    CHECK(tokens.at(10).tok_type == KW_CONTINUE);
-    CHECK(tokens.at(11).tok_type == KW_RETURN);
-    CHECK(tokens.at(12).tok_type == KW_YIELD);
-    CHECK(tokens.at(13).tok_type == KW_VAR);
-    CHECK(tokens.at(14).tok_type == KW_CONST);
-    CHECK(tokens.at(15).tok_type == KW_FUN);
-    CHECK(tokens.at(16).tok_type == KW_OPER);
-    CHECK(tokens.at(17).tok_type == KW_STRUCT);
-    CHECK(tokens.at(18).tok_type == KW_ENUM);
-    CHECK(tokens.at(19).tok_type == KW_TYPE);
-    CHECK(tokens.at(20).tok_type == KW_INTERFACE);
-    CHECK(tokens.at(21).tok_type == KW_USING);
-    CHECK(tokens.at(22).tok_type == KW_NAMESPACE);
-    CHECK(tokens.at(23).tok_type == KW_STATIC);
-    CHECK(tokens.at(24).tok_type == KW_GLOBAL);
-    CHECK(tokens.at(25).tok_type == KW_SELF);
-    CHECK(tokens.at(26).tok_type == KW_AS);
-    CHECK(tokens.at(27).tok_type == KW_TYPEOF);
-    CHECK(tokens.at(28).tok_type == KW_IS);
-    CHECK(tokens.at(29).tok_type == KW_ALLOC);
-    CHECK(tokens.at(30).tok_type == KW_DEALLOC);
-    CHECK(tokens.at(31).tok_type == KW_EXTERN);
-    CHECK(tokens.at(32).tok_type == TOK_EOF);
+    CHECK(tokens.at(0)->tok_type == KW_AND);
+    CHECK(tokens.at(1)->tok_type == KW_OR);
+    CHECK(tokens.at(2)->tok_type == KW_NOT);
+    CHECK(tokens.at(3)->tok_type == KW_IF);
+    CHECK(tokens.at(4)->tok_type == KW_ELSE);
+    CHECK(tokens.at(5)->tok_type == KW_LOOP);
+    CHECK(tokens.at(6)->tok_type == KW_WHILE);
+    CHECK(tokens.at(7)->tok_type == KW_FOR);
+    CHECK(tokens.at(8)->tok_type == KW_IN);
+    CHECK(tokens.at(9)->tok_type == KW_BREAK);
+    CHECK(tokens.at(10)->tok_type == KW_CONTINUE);
+    CHECK(tokens.at(11)->tok_type == KW_RETURN);
+    CHECK(tokens.at(12)->tok_type == KW_YIELD);
+    CHECK(tokens.at(13)->tok_type == KW_VAR);
+    CHECK(tokens.at(14)->tok_type == KW_CONST);
+    CHECK(tokens.at(15)->tok_type == KW_FUN);
+    CHECK(tokens.at(16)->tok_type == KW_OPER);
+    CHECK(tokens.at(17)->tok_type == KW_STRUCT);
+    CHECK(tokens.at(18)->tok_type == KW_ENUM);
+    CHECK(tokens.at(19)->tok_type == KW_TYPE);
+    CHECK(tokens.at(20)->tok_type == KW_INTERFACE);
+    CHECK(tokens.at(21)->tok_type == KW_USING);
+    CHECK(tokens.at(22)->tok_type == KW_NAMESPACE);
+    CHECK(tokens.at(23)->tok_type == KW_STATIC);
+    CHECK(tokens.at(24)->tok_type == KW_GLOBAL);
+    CHECK(tokens.at(25)->tok_type == KW_SELF);
+    CHECK(tokens.at(26)->tok_type == KW_AS);
+    CHECK(tokens.at(27)->tok_type == KW_TYPEOF);
+    CHECK(tokens.at(28)->tok_type == KW_IS);
+    CHECK(tokens.at(29)->tok_type == KW_ALLOC);
+    CHECK(tokens.at(30)->tok_type == KW_DEALLOC);
+    CHECK(tokens.at(31)->tok_type == KW_EXTERN);
+    CHECK(tokens.at(32)->tok_type == TOK_EOF);
 }
 
 TEST_CASE("Scanner operators 1", "[scanner]") {
@@ -162,27 +162,27 @@ TEST_CASE("Scanner operators 1", "[scanner]") {
     auto tokens = scanner.get_tokens();
 
     REQUIRE(tokens.size() == 21);
-    CHECK(tokens.at(0).tok_type == TOK_LEFT_PAREN);
-    CHECK(tokens.at(1).tok_type == TOK_RIGHT_PAREN);
-    CHECK(tokens.at(2).tok_type == TOK_LEFT_BRACE);
-    CHECK(tokens.at(3).tok_type == TOK_RIGHT_BRACE);
-    CHECK(tokens.at(4).tok_type == TOK_LEFT_SQUARE);
-    CHECK(tokens.at(5).tok_type == TOK_RIGHT_SQUARE);
-    CHECK(tokens.at(6).tok_type == TOK_PLUS);
-    CHECK(tokens.at(7).tok_type == TOK_PLUS_EQ);
-    CHECK(tokens.at(8).tok_type == TOK_MINUS);
-    CHECK(tokens.at(9).tok_type == TOK_MINUS_EQ);
-    CHECK(tokens.at(10).tok_type == TOK_STAR);
-    CHECK(tokens.at(11).tok_type == TOK_STAR_EQ);
-    CHECK(tokens.at(12).tok_type == TOK_SLASH);
-    CHECK(tokens.at(13).tok_type == TOK_SLASH_EQ);
-    CHECK(tokens.at(14).tok_type == TOK_PERCENT);
-    CHECK(tokens.at(15).tok_type == TOK_PERCENT_EQ);
-    CHECK(tokens.at(16).tok_type == TOK_CARET);
-    CHECK(tokens.at(17).tok_type == TOK_CARET_EQ);
-    CHECK(tokens.at(18).tok_type == TOK_COMMA);
-    CHECK(tokens.at(19).tok_type == TOK_SEMICOLON);
-    CHECK(tokens.at(20).tok_type == TOK_EOF);
+    CHECK(tokens.at(0)->tok_type == TOK_LEFT_PAREN);
+    CHECK(tokens.at(1)->tok_type == TOK_RIGHT_PAREN);
+    CHECK(tokens.at(2)->tok_type == TOK_LEFT_BRACE);
+    CHECK(tokens.at(3)->tok_type == TOK_RIGHT_BRACE);
+    CHECK(tokens.at(4)->tok_type == TOK_LEFT_SQUARE);
+    CHECK(tokens.at(5)->tok_type == TOK_RIGHT_SQUARE);
+    CHECK(tokens.at(6)->tok_type == TOK_PLUS);
+    CHECK(tokens.at(7)->tok_type == TOK_PLUS_EQ);
+    CHECK(tokens.at(8)->tok_type == TOK_MINUS);
+    CHECK(tokens.at(9)->tok_type == TOK_MINUS_EQ);
+    CHECK(tokens.at(10)->tok_type == TOK_STAR);
+    CHECK(tokens.at(11)->tok_type == TOK_STAR_EQ);
+    CHECK(tokens.at(12)->tok_type == TOK_SLASH);
+    CHECK(tokens.at(13)->tok_type == TOK_SLASH_EQ);
+    CHECK(tokens.at(14)->tok_type == TOK_PERCENT);
+    CHECK(tokens.at(15)->tok_type == TOK_PERCENT_EQ);
+    CHECK(tokens.at(16)->tok_type == TOK_CARET);
+    CHECK(tokens.at(17)->tok_type == TOK_CARET_EQ);
+    CHECK(tokens.at(18)->tok_type == TOK_COMMA);
+    CHECK(tokens.at(19)->tok_type == TOK_SEMICOLON);
+    CHECK(tokens.at(20)->tok_type == TOK_EOF);
 }
 
 TEST_CASE("Scanner operators 2", "[scanner]") {
@@ -195,30 +195,30 @@ TEST_CASE("Scanner operators 2", "[scanner]") {
     auto tokens = scanner.get_tokens();
 
     REQUIRE(tokens.size() == 24);
-    CHECK(tokens.at(0).tok_type == TOK_AMP);
-    CHECK(tokens.at(1).tok_type == TOK_AMP_AMP);
-    CHECK(tokens.at(2).tok_type == TOK_AMP_EQ);
-    CHECK(tokens.at(3).tok_type == TOK_AMP_AMP_EQ);
-    CHECK(tokens.at(4).tok_type == TOK_BAR);
-    CHECK(tokens.at(5).tok_type == TOK_BAR_BAR);
-    CHECK(tokens.at(6).tok_type == TOK_BAR_EQ);
-    CHECK(tokens.at(7).tok_type == TOK_BAR_BAR_EQ);
-    CHECK(tokens.at(8).tok_type == TOK_BANG);
-    CHECK(tokens.at(9).tok_type == TOK_BANG_EQ);
-    CHECK(tokens.at(10).tok_type == TOK_EQ);
-    CHECK(tokens.at(11).tok_type == TOK_EQ_EQ);
-    CHECK(tokens.at(12).tok_type == TOK_GT);
-    CHECK(tokens.at(13).tok_type == TOK_GE);
-    CHECK(tokens.at(14).tok_type == TOK_LT);
-    CHECK(tokens.at(15).tok_type == TOK_LE);
-    CHECK(tokens.at(16).tok_type == TOK_DOT);
-    CHECK(tokens.at(17).tok_type == TOK_DOT_DOT);
-    CHECK(tokens.at(18).tok_type == TOK_TRIPLE_DOT);
-    CHECK(tokens.at(19).tok_type == TOK_COLON);
-    CHECK(tokens.at(20).tok_type == TOK_COLON_COLON);
-    CHECK(tokens.at(21).tok_type == TOK_ARROW);
-    CHECK(tokens.at(22).tok_type == TOK_DOUBLE_ARROW);
-    CHECK(tokens.at(23).tok_type == TOK_EOF);
+    CHECK(tokens.at(0)->tok_type == TOK_AMP);
+    CHECK(tokens.at(1)->tok_type == TOK_AMP_AMP);
+    CHECK(tokens.at(2)->tok_type == TOK_AMP_EQ);
+    CHECK(tokens.at(3)->tok_type == TOK_AMP_AMP_EQ);
+    CHECK(tokens.at(4)->tok_type == TOK_BAR);
+    CHECK(tokens.at(5)->tok_type == TOK_BAR_BAR);
+    CHECK(tokens.at(6)->tok_type == TOK_BAR_EQ);
+    CHECK(tokens.at(7)->tok_type == TOK_BAR_BAR_EQ);
+    CHECK(tokens.at(8)->tok_type == TOK_BANG);
+    CHECK(tokens.at(9)->tok_type == TOK_BANG_EQ);
+    CHECK(tokens.at(10)->tok_type == TOK_EQ);
+    CHECK(tokens.at(11)->tok_type == TOK_EQ_EQ);
+    CHECK(tokens.at(12)->tok_type == TOK_GT);
+    CHECK(tokens.at(13)->tok_type == TOK_GE);
+    CHECK(tokens.at(14)->tok_type == TOK_LT);
+    CHECK(tokens.at(15)->tok_type == TOK_LE);
+    CHECK(tokens.at(16)->tok_type == TOK_DOT);
+    CHECK(tokens.at(17)->tok_type == TOK_DOT_DOT);
+    CHECK(tokens.at(18)->tok_type == TOK_TRIPLE_DOT);
+    CHECK(tokens.at(19)->tok_type == TOK_COLON);
+    CHECK(tokens.at(20)->tok_type == TOK_COLON_COLON);
+    CHECK(tokens.at(21)->tok_type == TOK_ARROW);
+    CHECK(tokens.at(22)->tok_type == TOK_DOUBLE_ARROW);
+    CHECK(tokens.at(23)->tok_type == TOK_EOF);
 }
 
 TEST_CASE("Scanner bool and nil", "[scanner]") {
@@ -231,14 +231,14 @@ TEST_CASE("Scanner bool and nil", "[scanner]") {
     auto tokens = scanner.get_tokens();
 
     REQUIRE(tokens.size() == 4);
-    CHECK(tokens.at(0).tok_type == TOK_BOOL);
-    REQUIRE(tokens.at(0).literal.has_value());
-    REQUIRE(std::any_cast<bool>(tokens.at(0).literal) == true);
-    CHECK(tokens.at(1).tok_type == TOK_BOOL);
-    REQUIRE(tokens.at(1).literal.has_value());
-    REQUIRE(std::any_cast<bool>(tokens.at(1).literal) == false);
-    CHECK(tokens.at(2).tok_type == TOK_NIL);
-    CHECK(tokens.at(3).tok_type == TOK_EOF);
+    CHECK(tokens.at(0)->tok_type == TOK_BOOL);
+    REQUIRE(tokens.at(0)->literal.has_value());
+    REQUIRE(std::any_cast<bool>(tokens.at(0)->literal) == true);
+    CHECK(tokens.at(1)->tok_type == TOK_BOOL);
+    REQUIRE(tokens.at(1)->literal.has_value());
+    REQUIRE(std::any_cast<bool>(tokens.at(1)->literal) == false);
+    CHECK(tokens.at(2)->tok_type == TOK_NIL);
+    CHECK(tokens.at(3)->tok_type == TOK_EOF);
 }
 
 TEST_CASE("Scanner integers", "[scanner]") {
@@ -251,28 +251,28 @@ TEST_CASE("Scanner integers", "[scanner]") {
     auto tokens = scanner.get_tokens();
 
     REQUIRE(tokens.size() == 8);
-    CHECK(tokens.at(0).tok_type == TOK_INT);
-    REQUIRE(tokens.at(0).literal.has_value());
-    REQUIRE(std::any_cast<int>(tokens.at(0).literal) == 5);
-    CHECK(tokens.at(1).tok_type == TOK_INT);
-    REQUIRE(tokens.at(1).literal.has_value());
-    REQUIRE(std::any_cast<int>(tokens.at(1).literal) == 0xab);
-    CHECK(tokens.at(2).tok_type == TOK_INT);
-    REQUIRE(tokens.at(2).literal.has_value());
-    REQUIRE(std::any_cast<int>(tokens.at(2).literal) == 0xAB);
-    CHECK(tokens.at(3).tok_type == TOK_INT);
-    REQUIRE(tokens.at(3).literal.has_value());
-    REQUIRE(std::any_cast<int>(tokens.at(3).literal) == 042);
-    CHECK(tokens.at(4).tok_type == TOK_INT);
-    REQUIRE(tokens.at(4).literal.has_value());
-    REQUIRE(std::any_cast<int>(tokens.at(4).literal) == 0b11001110);
-    CHECK(tokens.at(5).tok_type == TOK_INT);
-    REQUIRE(tokens.at(5).literal.has_value());
-    REQUIRE(std::any_cast<int>(tokens.at(5).literal) == 100000000);
-    CHECK(tokens.at(6).tok_type == TOK_INT);
-    REQUIRE(tokens.at(6).literal.has_value());
-    REQUIRE(std::any_cast<int>(tokens.at(6).literal) == 42);
-    CHECK(tokens.at(7).tok_type == TOK_EOF);
+    CHECK(tokens.at(0)->tok_type == TOK_INT);
+    REQUIRE(tokens.at(0)->literal.has_value());
+    REQUIRE(std::any_cast<int>(tokens.at(0)->literal) == 5);
+    CHECK(tokens.at(1)->tok_type == TOK_INT);
+    REQUIRE(tokens.at(1)->literal.has_value());
+    REQUIRE(std::any_cast<int>(tokens.at(1)->literal) == 0xab);
+    CHECK(tokens.at(2)->tok_type == TOK_INT);
+    REQUIRE(tokens.at(2)->literal.has_value());
+    REQUIRE(std::any_cast<int>(tokens.at(2)->literal) == 0xAB);
+    CHECK(tokens.at(3)->tok_type == TOK_INT);
+    REQUIRE(tokens.at(3)->literal.has_value());
+    REQUIRE(std::any_cast<int>(tokens.at(3)->literal) == 042);
+    CHECK(tokens.at(4)->tok_type == TOK_INT);
+    REQUIRE(tokens.at(4)->literal.has_value());
+    REQUIRE(std::any_cast<int>(tokens.at(4)->literal) == 0b11001110);
+    CHECK(tokens.at(5)->tok_type == TOK_INT);
+    REQUIRE(tokens.at(5)->literal.has_value());
+    REQUIRE(std::any_cast<int>(tokens.at(5)->literal) == 100000000);
+    CHECK(tokens.at(6)->tok_type == TOK_INT);
+    REQUIRE(tokens.at(6)->literal.has_value());
+    REQUIRE(std::any_cast<int>(tokens.at(6)->literal) == 42);
+    CHECK(tokens.at(7)->tok_type == TOK_EOF);
 }
 
 TEST_CASE("Scanner floating point numbers", "[scanner]") {
@@ -285,40 +285,40 @@ TEST_CASE("Scanner floating point numbers", "[scanner]") {
     auto tokens = scanner.get_tokens();
 
     REQUIRE(tokens.size() == 12);
-    CHECK(tokens.at(0).tok_type == TOK_FLOAT);
-    REQUIRE(tokens.at(0).literal.has_value());
-    REQUIRE(std::any_cast<double>(tokens.at(0).literal) == 5.0);
-    CHECK(tokens.at(1).tok_type == TOK_FLOAT);
-    REQUIRE(tokens.at(1).literal.has_value());
-    REQUIRE(std::any_cast<double>(tokens.at(1).literal) == 5.0);
-    CHECK(tokens.at(2).tok_type == TOK_FLOAT);
-    REQUIRE(tokens.at(2).literal.has_value());
-    REQUIRE(std::any_cast<double>(tokens.at(2).literal) == 0.5);
-    CHECK(tokens.at(3).tok_type == TOK_FLOAT);
-    REQUIRE(tokens.at(3).literal.has_value());
-    REQUIRE(std::any_cast<double>(tokens.at(3).literal) == 0.5);
-    CHECK(tokens.at(4).tok_type == TOK_FLOAT);
-    REQUIRE(tokens.at(4).literal.has_value());
-    REQUIRE(std::any_cast<double>(tokens.at(4).literal) == 5e5);
-    CHECK(tokens.at(5).tok_type == TOK_FLOAT);
-    REQUIRE(tokens.at(5).literal.has_value());
-    REQUIRE(std::any_cast<double>(tokens.at(5).literal) == 5e5);
-    CHECK(tokens.at(6).tok_type == TOK_FLOAT);
-    REQUIRE(tokens.at(6).literal.has_value());
-    REQUIRE(std::any_cast<double>(tokens.at(6).literal) == 5e-5);
-    CHECK(tokens.at(7).tok_type == TOK_FLOAT);
-    REQUIRE(tokens.at(7).literal.has_value());
-    REQUIRE(std::any_cast<double>(tokens.at(7).literal) == 5.0e5);
-    CHECK(tokens.at(8).tok_type == TOK_FLOAT);
-    REQUIRE(tokens.at(8).literal.has_value());
-    REQUIRE(std::any_cast<double>(tokens.at(8).literal) == 5.0e5);
-    CHECK(tokens.at(9).tok_type == TOK_FLOAT);
-    REQUIRE(tokens.at(9).literal.has_value());
-    REQUIRE(std::any_cast<double>(tokens.at(9).literal) == 5.0e-5);
-    CHECK(tokens.at(10).tok_type == TOK_FLOAT);
-    REQUIRE(tokens.at(10).literal.has_value());
-    REQUIRE(std::any_cast<double>(tokens.at(10).literal) == 5e5);
-    CHECK(tokens.at(11).tok_type == TOK_EOF);
+    CHECK(tokens.at(0)->tok_type == TOK_FLOAT);
+    REQUIRE(tokens.at(0)->literal.has_value());
+    REQUIRE(std::any_cast<double>(tokens.at(0)->literal) == 5.0);
+    CHECK(tokens.at(1)->tok_type == TOK_FLOAT);
+    REQUIRE(tokens.at(1)->literal.has_value());
+    REQUIRE(std::any_cast<double>(tokens.at(1)->literal) == 5.0);
+    CHECK(tokens.at(2)->tok_type == TOK_FLOAT);
+    REQUIRE(tokens.at(2)->literal.has_value());
+    REQUIRE(std::any_cast<double>(tokens.at(2)->literal) == 0.5);
+    CHECK(tokens.at(3)->tok_type == TOK_FLOAT);
+    REQUIRE(tokens.at(3)->literal.has_value());
+    REQUIRE(std::any_cast<double>(tokens.at(3)->literal) == 0.5);
+    CHECK(tokens.at(4)->tok_type == TOK_FLOAT);
+    REQUIRE(tokens.at(4)->literal.has_value());
+    REQUIRE(std::any_cast<double>(tokens.at(4)->literal) == 5e5);
+    CHECK(tokens.at(5)->tok_type == TOK_FLOAT);
+    REQUIRE(tokens.at(5)->literal.has_value());
+    REQUIRE(std::any_cast<double>(tokens.at(5)->literal) == 5e5);
+    CHECK(tokens.at(6)->tok_type == TOK_FLOAT);
+    REQUIRE(tokens.at(6)->literal.has_value());
+    REQUIRE(std::any_cast<double>(tokens.at(6)->literal) == 5e-5);
+    CHECK(tokens.at(7)->tok_type == TOK_FLOAT);
+    REQUIRE(tokens.at(7)->literal.has_value());
+    REQUIRE(std::any_cast<double>(tokens.at(7)->literal) == 5.0e5);
+    CHECK(tokens.at(8)->tok_type == TOK_FLOAT);
+    REQUIRE(tokens.at(8)->literal.has_value());
+    REQUIRE(std::any_cast<double>(tokens.at(8)->literal) == 5.0e5);
+    CHECK(tokens.at(9)->tok_type == TOK_FLOAT);
+    REQUIRE(tokens.at(9)->literal.has_value());
+    REQUIRE(std::any_cast<double>(tokens.at(9)->literal) == 5.0e-5);
+    CHECK(tokens.at(10)->tok_type == TOK_FLOAT);
+    REQUIRE(tokens.at(10)->literal.has_value());
+    REQUIRE(std::any_cast<double>(tokens.at(10)->literal) == 5e5);
+    CHECK(tokens.at(11)->tok_type == TOK_EOF);
 }
 
 TEST_CASE("Scanner float inf and NaN", "[scanner]") {
@@ -331,13 +331,13 @@ TEST_CASE("Scanner float inf and NaN", "[scanner]") {
     auto tokens = scanner.get_tokens();
 
     REQUIRE(tokens.size() == 3);
-    CHECK(tokens.at(0).tok_type == TOK_FLOAT);
-    REQUIRE(tokens.at(0).literal.has_value());
-    REQUIRE(std::any_cast<double>(tokens.at(0).literal) == INFINITY);
-    CHECK(tokens.at(1).tok_type == TOK_FLOAT);
-    REQUIRE(tokens.at(1).literal.has_value());
-    REQUIRE(std::isnan(std::any_cast<double>(tokens.at(1).literal)));
-    CHECK(tokens.at(2).tok_type == TOK_EOF);
+    CHECK(tokens.at(0)->tok_type == TOK_FLOAT);
+    REQUIRE(tokens.at(0)->literal.has_value());
+    REQUIRE(std::any_cast<double>(tokens.at(0)->literal) == INFINITY);
+    CHECK(tokens.at(1)->tok_type == TOK_FLOAT);
+    REQUIRE(tokens.at(1)->literal.has_value());
+    REQUIRE(std::isnan(std::any_cast<double>(tokens.at(1)->literal)));
+    CHECK(tokens.at(2)->tok_type == TOK_EOF);
 }
 
 TEST_CASE("Scanner characters", "[scanner]") {
@@ -350,25 +350,25 @@ TEST_CASE("Scanner characters", "[scanner]") {
     auto tokens = scanner.get_tokens();
 
     REQUIRE(tokens.size() == 7);
-    CHECK(tokens.at(0).tok_type == TOK_CHAR);
-    REQUIRE(tokens.at(0).literal.has_value());
-    REQUIRE(std::any_cast<char>(tokens.at(0).literal) == 'a');
-    CHECK(tokens.at(1).tok_type == TOK_CHAR);
-    REQUIRE(tokens.at(1).literal.has_value());
-    REQUIRE(std::any_cast<char>(tokens.at(1).literal) == 'b');
-    CHECK(tokens.at(2).tok_type == TOK_CHAR);
-    REQUIRE(tokens.at(2).literal.has_value());
-    REQUIRE(std::any_cast<char>(tokens.at(2).literal) == '\\');
-    CHECK(tokens.at(3).tok_type == TOK_CHAR);
-    REQUIRE(tokens.at(3).literal.has_value());
-    REQUIRE(std::any_cast<char>(tokens.at(3).literal) == '\n');
-    CHECK(tokens.at(4).tok_type == TOK_CHAR);
-    REQUIRE(tokens.at(4).literal.has_value());
-    REQUIRE(std::any_cast<char>(tokens.at(4).literal) == ' ');
-    CHECK(tokens.at(5).tok_type == TOK_CHAR);
-    REQUIRE(tokens.at(5).literal.has_value());
-    REQUIRE(std::any_cast<char>(tokens.at(5).literal) == '\'');
-    CHECK(tokens.at(6).tok_type == TOK_EOF);
+    CHECK(tokens.at(0)->tok_type == TOK_CHAR);
+    REQUIRE(tokens.at(0)->literal.has_value());
+    REQUIRE(std::any_cast<char>(tokens.at(0)->literal) == 'a');
+    CHECK(tokens.at(1)->tok_type == TOK_CHAR);
+    REQUIRE(tokens.at(1)->literal.has_value());
+    REQUIRE(std::any_cast<char>(tokens.at(1)->literal) == 'b');
+    CHECK(tokens.at(2)->tok_type == TOK_CHAR);
+    REQUIRE(tokens.at(2)->literal.has_value());
+    REQUIRE(std::any_cast<char>(tokens.at(2)->literal) == '\\');
+    CHECK(tokens.at(3)->tok_type == TOK_CHAR);
+    REQUIRE(tokens.at(3)->literal.has_value());
+    REQUIRE(std::any_cast<char>(tokens.at(3)->literal) == '\n');
+    CHECK(tokens.at(4)->tok_type == TOK_CHAR);
+    REQUIRE(tokens.at(4)->literal.has_value());
+    REQUIRE(std::any_cast<char>(tokens.at(4)->literal) == ' ');
+    CHECK(tokens.at(5)->tok_type == TOK_CHAR);
+    REQUIRE(tokens.at(5)->literal.has_value());
+    REQUIRE(std::any_cast<char>(tokens.at(5)->literal) == '\'');
+    CHECK(tokens.at(6)->tok_type == TOK_EOF);
 }
 
 TEST_CASE("Scanner strings", "[scanner]") {
@@ -382,16 +382,16 @@ TEST_CASE("Scanner strings", "[scanner]") {
     auto tokens = scanner.get_tokens();
 
     REQUIRE(tokens.size() == 4);
-    CHECK(tokens.at(0).tok_type == TOK_STR);
-    REQUIRE(tokens.at(0).literal.has_value());
-    REQUIRE(std::any_cast<std::string>(tokens.at(0).literal) == "Hello, world!");
-    CHECK(tokens.at(1).tok_type == TOK_STR);
-    REQUIRE(tokens.at(1).literal.has_value());
-    REQUIRE(std::any_cast<std::string>(tokens.at(1).literal) == "");
-    CHECK(tokens.at(2).tok_type == TOK_STR);
-    REQUIRE(tokens.at(2).literal.has_value());
-    REQUIRE(std::any_cast<std::string>(tokens.at(2).literal) == "\"");
-    CHECK(tokens.at(3).tok_type == TOK_EOF);
+    CHECK(tokens.at(0)->tok_type == TOK_STR);
+    REQUIRE(tokens.at(0)->literal.has_value());
+    REQUIRE(std::any_cast<std::string>(tokens.at(0)->literal) == "Hello, world!");
+    CHECK(tokens.at(1)->tok_type == TOK_STR);
+    REQUIRE(tokens.at(1)->literal.has_value());
+    REQUIRE(std::any_cast<std::string>(tokens.at(1)->literal) == "");
+    CHECK(tokens.at(2)->tok_type == TOK_STR);
+    REQUIRE(tokens.at(2)->literal.has_value());
+    REQUIRE(std::any_cast<std::string>(tokens.at(2)->literal) == "\"");
+    CHECK(tokens.at(3)->tok_type == TOK_EOF);
 }
 
 TEST_CASE("Scanner escape sequences", "[scanner]") {
@@ -405,10 +405,10 @@ TEST_CASE("Scanner escape sequences", "[scanner]") {
     auto tokens = scanner.get_tokens();
 
     REQUIRE(tokens.size() == 2);
-    CHECK(tokens.at(0).tok_type == TOK_STR);
-    REQUIRE(tokens.at(0).literal.has_value());
-    REQUIRE(std::any_cast<std::string>(tokens.at(0).literal) == "\n\t\r\b\f\"\\");
-    CHECK(tokens.at(1).tok_type == TOK_EOF);
+    CHECK(tokens.at(0)->tok_type == TOK_STR);
+    REQUIRE(tokens.at(0)->literal.has_value());
+    REQUIRE(std::any_cast<std::string>(tokens.at(0)->literal) == "\n\t\r\b\f\"\\");
+    CHECK(tokens.at(1)->tok_type == TOK_EOF);
 }
 
 TEST_CASE("Scanner multi line strings", "[scanner]") {
@@ -421,10 +421,10 @@ TEST_CASE("Scanner multi line strings", "[scanner]") {
     auto tokens = scanner.get_tokens();
 
     REQUIRE(tokens.size() == 2);
-    CHECK(tokens.at(0).tok_type == TOK_STR);
-    REQUIRE(tokens.at(0).literal.has_value());
-    REQUIRE(std::any_cast<std::string>(tokens.at(0).literal) == "Hello, world!\nThis is a multi-line string!");
-    CHECK(tokens.at(1).tok_type == TOK_EOF);
+    CHECK(tokens.at(0)->tok_type == TOK_STR);
+    REQUIRE(tokens.at(0)->literal.has_value());
+    REQUIRE(std::any_cast<std::string>(tokens.at(0)->literal) == "Hello, world!\nThis is a multi-line string!");
+    CHECK(tokens.at(1)->tok_type == TOK_EOF);
 }
 
 TEST_CASE("Scanner comments", "[scanner]") {
@@ -437,22 +437,22 @@ TEST_CASE("Scanner comments", "[scanner]") {
     auto tokens = scanner.get_tokens();
 
     REQUIRE(tokens.size() == 10);
-    CHECK(tokens.at(0).tok_type == KW_VAR);
-    CHECK(tokens.at(1).tok_type == TOK_IDENT);
-    CHECK(tokens.at(1).lexeme == "x");
-    CHECK(tokens.at(2).tok_type == TOK_EQ);
-    CHECK(tokens.at(3).tok_type == TOK_INT);
-    REQUIRE(tokens.at(3).literal.has_value());
-    REQUIRE(std::any_cast<int>(tokens.at(3).literal) == 5);
-    CHECK(tokens.at(4).tok_type == TOK_NEWLINE);
-    CHECK(tokens.at(5).tok_type == KW_VAR);
-    CHECK(tokens.at(6).tok_type == TOK_IDENT);
-    CHECK(tokens.at(6).lexeme == "y");
-    CHECK(tokens.at(7).tok_type == TOK_EQ);
-    CHECK(tokens.at(8).tok_type == TOK_INT);
-    REQUIRE(tokens.at(8).literal.has_value());
-    REQUIRE(std::any_cast<int>(tokens.at(8).literal) == 10);
-    CHECK(tokens.at(9).tok_type == TOK_EOF);
+    CHECK(tokens.at(0)->tok_type == KW_VAR);
+    CHECK(tokens.at(1)->tok_type == TOK_IDENT);
+    CHECK(tokens.at(1)->lexeme == "x");
+    CHECK(tokens.at(2)->tok_type == TOK_EQ);
+    CHECK(tokens.at(3)->tok_type == TOK_INT);
+    REQUIRE(tokens.at(3)->literal.has_value());
+    REQUIRE(std::any_cast<int>(tokens.at(3)->literal) == 5);
+    CHECK(tokens.at(4)->tok_type == TOK_NEWLINE);
+    CHECK(tokens.at(5)->tok_type == KW_VAR);
+    CHECK(tokens.at(6)->tok_type == TOK_IDENT);
+    CHECK(tokens.at(6)->lexeme == "y");
+    CHECK(tokens.at(7)->tok_type == TOK_EQ);
+    CHECK(tokens.at(8)->tok_type == TOK_INT);
+    REQUIRE(tokens.at(8)->literal.has_value());
+    REQUIRE(std::any_cast<int>(tokens.at(8)->literal) == 10);
+    CHECK(tokens.at(9)->tok_type == TOK_EOF);
 }
 
 TEST_CASE("Scanner multi line comments", "[scanner]") {
@@ -465,21 +465,21 @@ TEST_CASE("Scanner multi line comments", "[scanner]") {
     auto tokens = scanner.get_tokens();
 
     REQUIRE(tokens.size() == 9);
-    CHECK(tokens.at(0).tok_type == KW_VAR);
-    CHECK(tokens.at(1).tok_type == TOK_IDENT);
-    CHECK(tokens.at(1).lexeme == "x");
-    CHECK(tokens.at(2).tok_type == TOK_EQ);
-    CHECK(tokens.at(3).tok_type == TOK_INT);
-    REQUIRE(tokens.at(3).literal.has_value());
-    REQUIRE(std::any_cast<int>(tokens.at(3).literal) == 5);
-    CHECK(tokens.at(4).tok_type == KW_VAR);
-    CHECK(tokens.at(5).tok_type == TOK_IDENT);
-    CHECK(tokens.at(5).lexeme == "y");
-    CHECK(tokens.at(6).tok_type == TOK_EQ);
-    CHECK(tokens.at(7).tok_type == TOK_INT);
-    REQUIRE(tokens.at(7).literal.has_value());
-    REQUIRE(std::any_cast<int>(tokens.at(7).literal) == 10);
-    CHECK(tokens.at(8).tok_type == TOK_EOF);
+    CHECK(tokens.at(0)->tok_type == KW_VAR);
+    CHECK(tokens.at(1)->tok_type == TOK_IDENT);
+    CHECK(tokens.at(1)->lexeme == "x");
+    CHECK(tokens.at(2)->tok_type == TOK_EQ);
+    CHECK(tokens.at(3)->tok_type == TOK_INT);
+    REQUIRE(tokens.at(3)->literal.has_value());
+    REQUIRE(std::any_cast<int>(tokens.at(3)->literal) == 5);
+    CHECK(tokens.at(4)->tok_type == KW_VAR);
+    CHECK(tokens.at(5)->tok_type == TOK_IDENT);
+    CHECK(tokens.at(5)->lexeme == "y");
+    CHECK(tokens.at(6)->tok_type == TOK_EQ);
+    CHECK(tokens.at(7)->tok_type == TOK_INT);
+    REQUIRE(tokens.at(7)->literal.has_value());
+    REQUIRE(std::any_cast<int>(tokens.at(7)->literal) == 10);
+    CHECK(tokens.at(8)->tok_type == TOK_EOF);
 }
 
 TEST_CASE("Scanner identifiers", "[scanner]") {
@@ -492,27 +492,27 @@ TEST_CASE("Scanner identifiers", "[scanner]") {
     auto tokens = scanner.get_tokens();
 
     REQUIRE(tokens.size() == 11);
-    CHECK(tokens.at(0).tok_type == KW_VAR);
-    CHECK(tokens.at(1).tok_type == TOK_IDENT);
-    CHECK(tokens.at(1).lexeme == "var1");
-    CHECK(tokens.at(2).tok_type == TOK_IDENT);
-    CHECK(tokens.at(2).lexeme == "var_1");
-    CHECK(tokens.at(3).tok_type == TOK_IDENT);
-    CHECK(tokens.at(3).lexeme == "_var");
-    CHECK(tokens.at(4).tok_type == TOK_IDENT);
-    CHECK(tokens.at(4).lexeme == "_var1");
-    CHECK(tokens.at(5).tok_type == TOK_IDENT);
-    CHECK(tokens.at(5).lexeme == "_var_1");
-    CHECK(tokens.at(6).tok_type == TOK_IDENT);
-    CHECK(tokens.at(6).lexeme == "_");
-    CHECK(tokens.at(7).tok_type == TOK_IDENT);
-    CHECK(tokens.at(7).lexeme == "_1");
-    CHECK(tokens.at(8).tok_type == TOK_INT);
-    REQUIRE(tokens.at(8).literal.has_value());
-    REQUIRE(std::any_cast<int>(tokens.at(8).literal) == 1);
-    CHECK(tokens.at(9).tok_type == TOK_IDENT);
-    CHECK(tokens.at(9).lexeme == "v");
-    CHECK(tokens.at(10).tok_type == TOK_EOF);
+    CHECK(tokens.at(0)->tok_type == KW_VAR);
+    CHECK(tokens.at(1)->tok_type == TOK_IDENT);
+    CHECK(tokens.at(1)->lexeme == "var1");
+    CHECK(tokens.at(2)->tok_type == TOK_IDENT);
+    CHECK(tokens.at(2)->lexeme == "var_1");
+    CHECK(tokens.at(3)->tok_type == TOK_IDENT);
+    CHECK(tokens.at(3)->lexeme == "_var");
+    CHECK(tokens.at(4)->tok_type == TOK_IDENT);
+    CHECK(tokens.at(4)->lexeme == "_var1");
+    CHECK(tokens.at(5)->tok_type == TOK_IDENT);
+    CHECK(tokens.at(5)->lexeme == "_var_1");
+    CHECK(tokens.at(6)->tok_type == TOK_IDENT);
+    CHECK(tokens.at(6)->lexeme == "_");
+    CHECK(tokens.at(7)->tok_type == TOK_IDENT);
+    CHECK(tokens.at(7)->lexeme == "_1");
+    CHECK(tokens.at(8)->tok_type == TOK_INT);
+    REQUIRE(tokens.at(8)->literal.has_value());
+    REQUIRE(std::any_cast<int>(tokens.at(8)->literal) == 1);
+    CHECK(tokens.at(9)->tok_type == TOK_IDENT);
+    CHECK(tokens.at(9)->lexeme == "v");
+    CHECK(tokens.at(10)->tok_type == TOK_EOF);
 }
 
 TEST_CASE("Escaping newlines", "[scanner]") {
@@ -525,14 +525,14 @@ TEST_CASE("Escaping newlines", "[scanner]") {
     auto tokens = scanner.get_tokens();
 
     REQUIRE(tokens.size() == 5);
-    CHECK(tokens.at(0).tok_type == KW_VAR);
-    CHECK(tokens.at(1).tok_type == TOK_IDENT);
-    CHECK(tokens.at(1).lexeme == "a");
-    CHECK(tokens.at(2).tok_type == TOK_EQ);
-    CHECK(tokens.at(3).tok_type == TOK_INT);
-    REQUIRE(tokens.at(3).literal.has_value());
-    REQUIRE(std::any_cast<int>(tokens.at(3).literal) == 1);
-    CHECK(tokens.at(4).tok_type == TOK_EOF);
+    CHECK(tokens.at(0)->tok_type == KW_VAR);
+    CHECK(tokens.at(1)->tok_type == TOK_IDENT);
+    CHECK(tokens.at(1)->lexeme == "a");
+    CHECK(tokens.at(2)->tok_type == TOK_EQ);
+    CHECK(tokens.at(3)->tok_type == TOK_INT);
+    REQUIRE(tokens.at(3)->literal.has_value());
+    REQUIRE(std::any_cast<int>(tokens.at(3)->literal) == 1);
+    CHECK(tokens.at(4)->tok_type == TOK_EOF);
 }
 
 // MARK: Error tests

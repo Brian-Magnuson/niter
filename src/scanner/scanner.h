@@ -21,7 +21,7 @@ class Scanner {
     // The name of the file where the source code is located. Used for error messages. A shared pointer is used to avoid copying the filename string.
     std::shared_ptr<std::string> filename;
     // The list of tokens scanned from the source code.
-    std::vector<Token> tokens;
+    std::vector<std::shared_ptr<Token>> tokens;
     // The index of the first character of the current token.
     unsigned start = 0;
     // The index of the character from the source currently being considered.
@@ -78,9 +78,9 @@ class Scanner {
      *
      * @param tok_type The type of the token.
      * @param literal The literal text of the token, if applicable.
-     * @return Token The new token.
+     * @return std::shared_ptr<Token> The new token.
      */
-    Token make_token(TokenType tok_type, const std::any& literal = std::any()) const;
+    std::shared_ptr<Token> make_token(TokenType tok_type, const std::any& literal = std::any()) const;
 
     /**
      * @brief Adds a new token to the list of tokens.
@@ -188,9 +188,9 @@ public:
     /**
      * @brief Get the tokens object
      *
-     * @return const std::vector<Token>& The vector of tokens accumulated.
+     * @return const std::vector<std::shared_ptr<Token>>& The vector of tokens accumulated.
      */
-    const std::vector<Token>& get_tokens() const;
+    const std::vector<std::shared_ptr<Token>>& get_tokens() const;
 
     /**
      * @brief Clears the tokens stored in the tokens vector.
