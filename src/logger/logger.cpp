@@ -62,6 +62,15 @@ void ErrorLogger::print_pretty_error(const Location& location, const std::string
     */
 }
 
+void ErrorLogger::print_pretty_error(const std::string& display_text) {
+    *out << std::endl;
+    *out << "From compiler:" << std::endl;
+
+    *out << colorize(Color::RED) << "Error: "
+         << colorize(Color::RESET)
+         << display_text << std::endl;
+}
+
 void ErrorLogger::print_pretty_note(const Location& location, const std::string& display_text) {
     if (location.file_name->empty())
         return; // Don't print notes for internal errors
@@ -108,6 +117,13 @@ void ErrorLogger::log_error(const Location& location, ErrorCode error_code, cons
     errors.push_back(error_code);
     if (printing_enabled)
         print_pretty_error(location, new_message);
+}
+
+void ErrorLogger::log_error(ErrorCode error_code, const std::string& message) {
+    auto new_message = std::to_string(static_cast<int>(error_code)) + " " + message;
+    errors.push_back(error_code);
+    if (printing_enabled)
+        print_pretty_error(new_message);
 }
 
 void ErrorLogger::log_note(const Location& location, const std::string& message) {

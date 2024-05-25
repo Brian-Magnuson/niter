@@ -188,7 +188,7 @@ public:
      *
      * @param filename
      */
-    void dump_ir(const std::string& filename = "./debug/output.ll");
+    void dump_ir(const std::string& filename = "./debug/bin/output.ll");
 };
 
 #endif // CODE_GENERATOR_H

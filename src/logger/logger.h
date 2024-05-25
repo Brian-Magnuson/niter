@@ -46,11 +46,21 @@ private:
 
     /**
      * @brief Prints a pretty error message to the console.
+     * The error message includes the location of the error and will display the line where the error occurred.
      *
      * @param location The location of the error
      * @param display_text The error message to display
      */
     void print_pretty_error(const Location& location, const std::string& display_text);
+
+    /**
+     * @brief Prints a pretty error message to the console without a location.
+     * Since there is no location, the error message won't show the line where the error occurred.
+     * It simply prints the error message.
+     *
+     * @param display_text The error message to display
+     */
+    void print_pretty_error(const std::string& display_text);
 
     /**
      * @brief Prints a pretty info message to the console.
@@ -74,6 +84,14 @@ public:
      * @param message The error message.
      */
     void log_error(const Location& location, ErrorCode error_code, const std::string& message);
+
+    /**
+     * @brief Logs an error message to the console without a location.
+     *
+     * @param error_code The error code.
+     * @param message The error message.
+     */
+    void log_error(ErrorCode error_code, const std::string& message);
 
     /**
      * @brief Logs a note message to the console.

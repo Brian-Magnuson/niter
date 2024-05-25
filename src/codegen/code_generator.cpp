@@ -393,7 +393,6 @@ std::shared_ptr<llvm::Module> CodeGenerator::generate(std::vector<std::shared_pt
             stmt->accept(this);
         }
     } catch (const std::exception& e) {
-        std::cerr << e.what() << std::endl;
         return nullptr;
     }
 
@@ -401,10 +400,9 @@ std::shared_ptr<llvm::Module> CodeGenerator::generate(std::vector<std::shared_pt
         this->dump_ir();
     }
 
-    // FIXME: Create a way for the ErrorLogger to log this kind of error
     // Verify the module
     if (llvm::verifyModule(*ir_module, &llvm::errs())) {
-        llvm::errs() << "The module is not valid.\n";
+        ErrorLogger::inst().log_error(E_UNVERIFIED_MODULE, "The generated module could not be verified.");
         return nullptr;
     }
 
@@ -420,8 +418,6 @@ void CodeGenerator::dump_ir(const std::string& filename) {
     llvm::raw_fd_ostream ir_stream(filename, ec, llvm::sys::fs::OF_Text);
     ir_module->print(ir_stream, nullptr);
     if (ec) {
-        std::cerr << "Error: " << ec.message() << std::endl;
-        std::cerr << "Current path: " << std::filesystem::current_path() << std::endl;
-        std::cerr << "Failed to write IR to " << filename << std::endl;
+        ErrorLogger::inst().log_error(E_IO, std::string("Could not dump IR to file: ") + ec.message());
     }
 }

@@ -67,7 +67,7 @@ fun main(): i32 {
     optimizer.optimize(ir_module);
 
     Emitter emitter;
-    emitter.emit(ir_module, "./bin/test_output.o");
+    emitter.emit(ir_module, "./debug/bin/test_output.o");
 
     return 0;
 }

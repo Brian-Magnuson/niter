@@ -179,6 +179,12 @@ enum ErrorCode {
     E_CODEGEN = 6000,
     // The code generator expected a constant, but a non-constant was found
     E_NOT_A_CONSTANT,
+    // The emitter was unable to create a target machine
+    E_NO_TARGET_MACHINE,
+    // The emitter could not open the output file
+    E_INVALID_OUTPUT,
+    // The target machine could not emit a file of the specified type
+    E_INVALID_OUTPUT_TYPE,
 
     // Post-processing errors
     E_POST_PROCESSING = 8000,
@@ -193,6 +199,8 @@ enum ErrorCode {
     E_IMPOSSIBLE,
     // Statement was reached that should be unimplemented
     E_UNIMPLEMENTED,
+    // An error occurred while writing to a file
+    E_IO,
     // A function was called with an invalid argument
     E_CONVERSION,
     // Any cast failed
@@ -203,6 +211,9 @@ enum ErrorCode {
     E_EXITED_ROOT_SCOPE,
     // An expression was interpreted as a literal, but the literal was not recognized
     E_UNRECOGNIZED_LITERAL,
+    // The llvm::Module could not be verified
+    E_UNVERIFIED_MODULE,
+
 };
 
 #endif // ERROR_CODE_H

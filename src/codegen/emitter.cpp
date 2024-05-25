@@ -1,4 +1,5 @@
 #include "emitter.h"
+#include "../logger/logger.h"
 #include "llvm/ExecutionEngine/ExecutionEngine.h"
 #include "llvm/IR/LegacyPassManager.h"
 #include "llvm/Support/Error.h"
@@ -11,10 +12,9 @@ void Emitter::emit(const std::shared_ptr<llvm::Module>& ir_module, const std::st
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
 
-    std::string error;
     auto TargetMachine = llvm::EngineBuilder().selectTarget();
     if (!TargetMachine) {
-        llvm::errs() << "Unable to create target machine: " << error;
+        ErrorLogger::inst().log_error(E_NO_TARGET_MACHINE, "Could not select target machine");
         return;
     }
 
@@ -25,12 +25,12 @@ void Emitter::emit(const std::shared_ptr<llvm::Module>& ir_module, const std::st
     llvm::raw_fd_ostream dest(target_destination, EC, llvm::sys::fs::OF_None);
 
     if (EC) {
-        llvm::errs() << "Could not open output file: " << EC.message();
+        ErrorLogger::inst().log_error(E_INVALID_OUTPUT, "Could not open file `" + target_destination + "` due to error: " + EC.message());
         return;
     }
 
     if (TargetMachine->addPassesToEmitFile(pass, dest, nullptr, FileType)) {
-        llvm::errs() << "TargetMachine can't emit a file of this type";
+        ErrorLogger::inst().log_error(E_INVALID_OUTPUT_TYPE, "Could not emit a file of the specified type");
         return;
     }
 

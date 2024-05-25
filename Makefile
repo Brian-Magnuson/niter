@@ -3,6 +3,8 @@ LLVM_LIBS = `llvm-config --cxxflags --ldflags --system-libs --libs core orcjit n
 
 run: bin/niterc
 	./bin/niterc
+	clang -o ./debug/bin/test_output ./debug/bin/test_output.o
+	./debug/bin/test_output
 
 test: test/bin/test
 	./test/bin/test
