@@ -74,7 +74,7 @@ std::any CodeGenerator::visit_return_stmt(Stmt::Return* stmt) {
     }
     if (block_stack.size() == 0) {
         ErrorLogger::inst().log_error(stmt->location, E_IMPOSSIBLE, "Return statement outside of function.");
-        throw std::runtime_error("Return statement outside of function.");
+        throw CodeGenException();
     }
 
     // LLVM requires that each block has one terminator instruction at the end.
@@ -165,7 +165,7 @@ std::any CodeGenerator::visit_var_decl(Decl::Var* decl) {
         auto constant_initializer = llvm::dyn_cast<llvm::Constant>(initializer);
         if (constant_initializer == nullptr) {
             ErrorLogger::inst().log_error(decl->location, E_NOT_A_CONSTANT, "Global variable initializer is not a constant.");
-            throw std::runtime_error("Global variable initializer is not a constant.");
+            throw CodeGenException();
         }
 
         // Create the global variable
@@ -363,7 +363,7 @@ std::any CodeGenerator::visit_literal_expr(Expr::Literal* expr) {
         ret = builder->CreateGlobalStringPtr(value);
     } else {
         ErrorLogger::inst().log_error(expr->location, E_IMPOSSIBLE, "Unknown literal type.");
-        throw std::runtime_error("Unknown literal type.");
+        throw CodeGenException();
     }
 
     return ret;
@@ -392,7 +392,13 @@ std::shared_ptr<llvm::Module> CodeGenerator::generate(std::vector<std::shared_pt
         for (auto& stmt : stmts) {
             stmt->accept(this);
         }
+    } catch (const CodeGenException&) {
+        return nullptr;
+    } catch (const std::bad_any_cast&) {
+        ErrorLogger::inst().log_error(E_ANY_CAST, "Bad any cast in code generation.");
+        return nullptr;
     } catch (const std::exception& e) {
+        ErrorLogger::inst().log_error(E_UNKNOWN, e.what());
         return nullptr;
     }
 

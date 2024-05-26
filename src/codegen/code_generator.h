@@ -8,8 +8,16 @@
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 #include <any>
+#include <exception>
 #include <memory>
+#include <string>
 #include <vector>
+
+/**
+ * @brief An exception for code generation errors.
+ *
+ */
+class CodeGenException : public std::exception {};
 
 /**
  * @brief A class to perform LLVM code generation.
@@ -45,6 +53,7 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
      *
      * @param stmt The declaration statement to visit.
      * @return std::any nullptr always.
+     * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
      */
     std::any visit_declaration_stmt(Stmt::Declaration* stmt) override;
 
@@ -53,6 +62,7 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
      *
      * @param stmt The expression statement to visit.
      * @return std::any nullptr always.
+     * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
      */
     std::any visit_expression_stmt(Stmt::Expression* stmt) override;
 
@@ -61,6 +71,7 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
      *
      * @param stmt The block statement to visit.
      * @return std::any nullptr always.
+     * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
      */
     std::any visit_block_stmt(Stmt::Block* stmt) override;
 
@@ -69,6 +80,7 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
      *
      * @param stmt The conditional statement to visit.
      * @return std::any nullptr always.
+     * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
      */
     std::any visit_conditional_stmt(Stmt::Conditional* stmt) override;
 
@@ -77,6 +89,7 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
      *
      * @param stmt The loop statement to visit.
      * @return std::any nullptr always.
+     * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
      */
     std::any visit_loop_stmt(Stmt::Loop* stmt) override;
 
@@ -88,6 +101,7 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
      *
      * @param stmt The return statement to visit.
      * @return std::any nullptr always.
+     * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
      */
     std::any visit_return_stmt(Stmt::Return* stmt) override;
 
@@ -101,6 +115,7 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
      *
      * @param stmt The print statement to visit.
      * @return std::any nullptr always.
+     * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
      */
     std::any visit_print_stmt(Stmt::Print* stmt) override;
     std::any visit_eof_stmt(Stmt::EndOfFile* stmt) override;
@@ -110,6 +125,7 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
      *
      * @param decl The variable declaration to visit.
      * @return std::any nullptr always.
+     * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
      */
     std::any visit_var_decl(Decl::Var* decl) override;
 
@@ -119,6 +135,7 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
      *
      * @param decl The function declaration to visit.
      * @return std::any nullptr always.
+     * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
      */
     std::any visit_fun_decl(Decl::Fun* decl) override;
     std::any visit_struct_decl(Decl::Struct* decl) override;
@@ -134,6 +151,7 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
      *
      * @param expr The call expression to visit.
      * @return std::any An llvm::Value* representing the result of the call.
+     * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
      */
     std::any visit_call_expr(Expr::Call* expr) override;
     std::any visit_access_expr(Expr::Access* expr) override;
@@ -144,6 +162,7 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
      *
      * @param expr The grouping expression to visit.
      * @return std::any An llvm::Value* representing the value of the expression inside the grouping.
+     * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
      */
     std::any visit_grouping_expr(Expr::Grouping* expr) override;
 
@@ -154,6 +173,7 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
      *
      * @param expr The identifier expression to visit.
      * @return std::any The llvm::Value* representing the value stored in the variable.
+     * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
      */
     std::any visit_identifier_expr(Expr::Identifier* expr) override;
 
@@ -162,6 +182,7 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
      *
      * @param expr The literal expression to visit.
      * @return std::any An llvm::Value* representing the literal.
+     * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
      */
     std::any visit_literal_expr(Expr::Literal* expr) override;
     std::any visit_array_expr(Expr::Array* expr) override;
@@ -188,7 +209,7 @@ public:
      *
      * @param filename
      */
-    void dump_ir(const std::string& filename = "./debug/bin/output.ll");
+    void dump_ir(const std::string& filename = "./debug/output.ll");
 };
 
 #endif // CODE_GENERATOR_H

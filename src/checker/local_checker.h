@@ -56,6 +56,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      *
      * @param stmt The declaration statement to visit.
      * @return std::any The empty std::any value always.
+     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_declaration_stmt(Stmt::Declaration* stmt) override;
 
@@ -64,6 +65,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      *
      * @param stmt The expression statement to visit.
      * @return std::any The empty std::any value always.
+     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_expression_stmt(Stmt::Expression* stmt) override;
 
@@ -72,6 +74,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      *
      * @param stmt The block statement to visit.
      * @return std::any An std::shared_ptr<Annotation> if the block has a return type, the empty std::any value otherwise.
+     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_block_stmt(Stmt::Block* stmt) override;
 
@@ -80,6 +83,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      *
      * @param stmt The conditional statement to visit.
      * @return std::any An std::shared_ptr<Annotation> if the block has a return type, the empty std::any value otherwise.
+     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_conditional_stmt(Stmt::Conditional* stmt) override;
 
@@ -88,6 +92,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      *
      * @param stmt The loop statement to visit.
      * @return std::any An std::shared_ptr<Annotation> if the block has a return type, the empty std::any value otherwise.
+     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_loop_stmt(Stmt::Loop* stmt) override;
 
@@ -96,6 +101,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      *
      * @param stmt The return statement to visit.
      * @return std::any The std::shared_ptr<Annotation> of the return type.
+     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_return_stmt(Stmt::Return* stmt) override;
 
@@ -104,6 +110,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      *
      * @param stmt The break statement to visit.
      * @return std::any The empty std::any value always.
+     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_break_stmt(Stmt::Break* stmt) override;
 
@@ -112,6 +119,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      *
      * @param stmt The continue statement to visit.
      * @return std::any The empty std::any value always.
+     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_continue_stmt(Stmt::Continue* stmt) override;
 
@@ -120,6 +128,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      *
      * @param stmt The print statement to visit.
      * @return std::any The empty std::any value always.
+     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_print_stmt(Stmt::Print* stmt) override;
 
@@ -128,6 +137,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      *
      * @param stmt The end of file statement to visit.
      * @return std::any The empty std::any value always.
+     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_eof_stmt(Stmt::EndOfFile* stmt) override;
 
@@ -136,6 +146,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      *
      * @param decl The variable declaration to visit.
      * @return std::any The empty std::any value always.
+     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_var_decl(Decl::Var* decl) override;
 
@@ -144,6 +155,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      *
      * @param decl The function declaration to visit.
      * @return std::any The empty std::any value always.
+     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_fun_decl(Decl::Fun* decl) override;
 
@@ -162,6 +174,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      *
      * @param expr The assignment expression to visit.
      * @return std::any The empty std::any value always.
+     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_assign_expr(Expr::Assign* expr) override;
 
@@ -171,6 +184,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      *
      * @param expr The logical expression to visit.
      * @return std::any The empty std::any value always.
+     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_logical_expr(Expr::Logical* expr) override;
 
@@ -180,6 +194,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      *
      * @param expr The binary expression to visit.
      * @return std::any The empty std::any value always.
+     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_binary_expr(Expr::Binary* expr) override;
 
@@ -189,6 +204,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      *
      * @param expr The unary expression to visit.
      * @return std::any The empty std::any value always.
+     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_unary_expr(Expr::Unary* expr) override;
 
@@ -198,6 +214,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      *
      * @param expr The call expression to visit.
      * @return std::any The empty std::any value always.
+     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_call_expr(Expr::Call* expr) override;
 
@@ -207,6 +224,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      *
      * @param expr The access expression to visit.
      * @return std::any The empty std::any value always.
+     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_access_expr(Expr::Access* expr) override;
 
@@ -215,6 +233,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      *
      * @param expr The grouping expression to visit.
      * @return std::any The empty std::any value always.
+     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_grouping_expr(Expr::Grouping* expr) override;
 
@@ -224,6 +243,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      *
      * @param expr The identifier expression to visit.
      * @return std::any The empty std::any value always.
+     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_identifier_expr(Expr::Identifier* expr) override;
 
@@ -232,6 +252,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      *
      * @param expr The literal expression to visit.
      * @return std::any The empty std::any value always.
+     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_literal_expr(Expr::Literal* expr) override;
 
@@ -240,6 +261,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      *
      * @param expr The array expression to visit.
      * @return std::any The empty std::any value always.
+     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_array_expr(Expr::Array* expr) override;
 
@@ -248,6 +270,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      *
      * @param expr The tuple expression to visit.
      * @return std::any An std::shared_ptr<Type> representing the type of the tuple.
+     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_tuple_expr(Expr::Tuple* expr) override;
 
