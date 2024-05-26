@@ -134,6 +134,8 @@ enum ErrorCode {
     E_UNINITIALIZED_CONST,
     // A local variable was declared with the same name in the same scope
     E_LOCAL_ALREADY_DECLARED,
+    // A variable was found that was never declared
+    E_UNKNOWN_VAR,
     // A type annotation could not be resolved
     E_UNKNOWN_TYPE,
     // An assignment was found with incompatible types

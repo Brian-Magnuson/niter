@@ -12,7 +12,10 @@ void Emitter::emit(const std::shared_ptr<llvm::Module>& ir_module, const std::st
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
 
-    auto TargetMachine = llvm::EngineBuilder().selectTarget();
+    auto TargetMachine = llvm::EngineBuilder()
+                             .setRelocationModel(llvm::Reloc::Model::PIC_)
+                             .selectTarget();
+
     if (!TargetMachine) {
         ErrorLogger::inst().log_error(E_NO_TARGET_MACHINE, "Could not select target machine");
         return;

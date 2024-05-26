@@ -574,7 +574,12 @@ std::any LocalChecker::visit_grouping_expr(Expr::Grouping* expr) {
 }
 
 std::any LocalChecker::visit_identifier_expr(Expr::Identifier* expr) {
-    expr->type = Environment::inst().get_variable(expr->tokens)->type;
+    auto var_node = Environment::inst().get_variable(expr->tokens);
+    if (var_node == nullptr) {
+        ErrorLogger::inst().log_error(expr->location, E_UNKNOWN_VAR, "Variable `" + expr->to_string() + "` was not declared.");
+        throw LocalTypeException();
+    }
+    expr->type = var_node->type;
     if (expr->type == nullptr) {
         ErrorLogger::inst().log_error(expr->location, E_UNKNOWN_TYPE, "Could not resolve type annotation.");
         throw LocalTypeException();
