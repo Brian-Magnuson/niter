@@ -20,7 +20,11 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/bin/niterc",
-            "args": [],
+            "args": [
+                "sandbox/src/main.nit",
+                "-o",
+                "sandbox/bin/main"
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

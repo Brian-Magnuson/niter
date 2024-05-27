@@ -270,16 +270,7 @@ std::any CodeGenerator::visit_fun_decl(Decl::Fun* decl) {
     Environment::inst().exit_scope();
     Environment::inst().exit_scope();
 
-    // Create a global variable for the function
-    llvm::GlobalVariable* global = new llvm::GlobalVariable(
-        *ir_module,
-        fun->getType(),
-        true,
-        llvm::GlobalValue::InternalLinkage,
-        fun,
-        llvm_safe_name
-    );
-    fun_node->llvm_allocation = global;
+    fun_node->llvm_allocation = fun;
 
     return nullptr;
 }
@@ -295,16 +286,7 @@ std::any CodeGenerator::visit_extern_fun_decl(Decl::ExternFun* decl) {
     // External function names are based strictly on the name of the function, not the unique name in the tree.
     llvm::Function* fun = llvm::Function::Create(fun_type, llvm::Function::ExternalLinkage, decl->name.lexeme, ir_module.get());
 
-    // Create a global variable for the function
-    llvm::GlobalVariable* global = new llvm::GlobalVariable(
-        *ir_module,
-        fun->getType(),
-        true,
-        llvm::GlobalValue::InternalLinkage,
-        fun,
-        decl->name.lexeme
-    );
-    fun_node->llvm_allocation = global;
+    fun_node->llvm_allocation = fun;
 
     return nullptr;
 }
@@ -362,8 +344,23 @@ std::any CodeGenerator::visit_identifier_expr(Expr::Identifier* expr) {
     // Get the variable node
     auto var_node = Environment::inst().get_variable(expr->tokens);
     // This should never be nullptr
+
+    // If var_node is a function, the llvm_allocation is the function itself
+    if (var_node->type->kind() == TypeKind::FUNCTION) {
+        return var_node->llvm_allocation;
+    }
+
     // Load the value from the variable
-    llvm::Value* ret = builder->CreateLoad(var_node->type->to_llvm_type(context), var_node->llvm_allocation);
+
+    llvm::AllocaInst* alloca = llvm::dyn_cast<llvm::AllocaInst>(var_node->llvm_allocation);
+    llvm::GlobalVariable* global = llvm::dyn_cast<llvm::GlobalVariable>(var_node->llvm_allocation);
+    if (alloca == nullptr && global == nullptr) {
+        ErrorLogger::inst().log_error(expr->location, E_IMPOSSIBLE, "Variable allocation is neither alloca nor global.");
+        throw CodeGenException();
+    }
+    llvm::Type* type = alloca != nullptr ? alloca->getAllocatedType() : global->getValueType();
+
+    llvm::Value* ret = builder->CreateLoad(type, var_node->llvm_allocation);
     return ret;
 }
 

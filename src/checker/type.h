@@ -173,7 +173,8 @@ public:
         for (auto& param : params) {
             param_types.push_back(param.second->to_llvm_type(context));
         }
-        return llvm::FunctionType::get(return_type->to_llvm_type(context), param_types, false);
+        auto fun_type = llvm::FunctionType::get(return_type->to_llvm_type(context), param_types, false);
+        return fun_type;
     }
 
     Function(
