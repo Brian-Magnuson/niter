@@ -234,6 +234,36 @@ TEST_CASE("Parser fun decls 5", "[parser]") {
     CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
 }
 
+TEST_CASE("Parser extern fun decls", "[parser]") {
+    std::string source_code = "extern fun foo();";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/extern_fun_decls_test.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 2);
+    CHECK(printer.print(stmts.at(0)) == "(decl:extern_fun foo fun() => void)");
+    CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
+}
+
+TEST_CASE("Parser extern fun decls 2", "[parser]") {
+    std::string source_code = "extern fun foo(i32): i32;";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/extern_fun_decls_test_2.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 2);
+    CHECK(printer.print(stmts.at(0)) == "(decl:extern_fun foo fun(i32) => i32)");
+    CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
+}
+
 TEST_CASE("Parser print stmts", "[parser]") {
     std::string source_code = "puts 5; puts \"Hello, world!\";";
     std::shared_ptr file_name = std::make_shared<std::string>("test_files/print_stmts_test.nit");
@@ -531,6 +561,24 @@ TEST_CASE("Logger auto in param", "[logger]") {
 
     REQUIRE(logger.get_errors().size() >= 1);
     CHECK(logger.get_errors().at(0) == E_AUTO_IN_PARAM);
+
+    logger.reset();
+}
+
+TEST_CASE("Logger no declarer after extern", "[logger]") {
+    std::string source_code = "extern foo();";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/no_declarer_after_extern_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+    Parser parser(scanner.get_tokens());
+    parser.parse();
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_NO_DECLARER_AFTER_EXTERN);
 
     logger.reset();
 }

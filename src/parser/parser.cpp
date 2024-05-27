@@ -88,7 +88,7 @@ void Parser::synchronize() {
 
 std::shared_ptr<Stmt> Parser::statement() {
     try {
-        if (check({KW_VAR, KW_CONST, KW_FUN})) {
+        if (check({KW_VAR, KW_CONST, KW_FUN, KW_EXTERN})) {
             return declaration_statement();
         }
         // if (match({KW_IF})) {
@@ -124,6 +124,17 @@ std::shared_ptr<Stmt> Parser::declaration_statement() {
         }
     } else if (match({KW_FUN})) {
         decl = fun_decl();
+    } else if (match({KW_EXTERN})) {
+        if (match({KW_FUN})) {
+            decl = extern_fun_decl();
+        } else {
+            ErrorLogger::inst().log_error(peek().location, E_NO_DECLARER_AFTER_EXTERN, "'extern' requires valid declarer. Expected 'fun'.");
+            throw ParserException();
+        }
+        if (!match({TOK_NEWLINE, TOK_SEMICOLON})) {
+            ErrorLogger::inst().log_error(peek().location, E_MISSING_STMT_END, "Expected newline or ';' after declaration.");
+            throw ParserException();
+        }
     } else {
         // This function is called in statement where it is verified that the current token signifies a declaration.
         // Therefore, this should be unreachable.
@@ -253,7 +264,7 @@ std::shared_ptr<Decl> Parser::fun_decl() {
 }
 
 std::shared_ptr<Decl> Parser::extern_fun_decl() {
-    TokenType declarer = KW_EXTERN;
+    TokenType declarer = KW_FUN;
     // Get the function name
     Token name = consume(TOK_IDENT, E_UNNAMED_FUN, "Expected identifier in function declaration.");
 

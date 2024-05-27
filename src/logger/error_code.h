@@ -63,9 +63,6 @@ enum ErrorCode {
     E_UNMATCHED_PAREN_IN_TUPLE,
     // A left square bracket was found without a matching right square bracket
     E_UNMATCHED_LEFT_SQUARE,
-    // An equal sign was found without a valid left-hand side
-    // E_INVALID_ASSIGNMENT,
-
     // A call expression was found to have over the maximum number of arguments (of 255)
     E_TOO_MANY_ARGS,
     // A variable declaration was found without an identifier
@@ -100,6 +97,8 @@ enum ErrorCode {
     E_NO_LBRACE_IN_FUN_DECL,
     // A function declaration was found without a right brace
     E_UNMATCHED_BRACE_IN_FUN_DECL,
+    // The extern keyword was found without a valid declarer
+    E_NO_DECLARER_AFTER_EXTERN,
 
     // Global type errors
     E_GLOBAL_TYPE = 4000,
