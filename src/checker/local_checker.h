@@ -160,6 +160,17 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
     std::any visit_fun_decl(Decl::Fun* decl) override;
 
     /**
+     * @brief Visits an external function declaration and determines if the declaration is not in local space.
+     * The global checker should have already checked the function signature.
+     *
+     *
+     * @param decl The external function declaration to visit.
+     * @return std::any The empty std::any value always.
+     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
+     */
+    std::any visit_extern_fun_decl(Decl::ExternFun* decl) override;
+
+    /**
      * @brief Does nothing for struct declarations. Struct declarations are handled in the global checker.
      *
      * @param decl The struct declaration to visit.

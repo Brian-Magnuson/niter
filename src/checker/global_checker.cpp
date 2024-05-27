@@ -107,6 +107,27 @@ std::any GlobalChecker::visit_fun_decl(Decl::Fun* decl) {
     return std::any();
 }
 
+std::any GlobalChecker::visit_extern_fun_decl(Decl::ExternFun* decl) {
+    // Declare the function, defer if necessary
+    auto [node, result] = Environment::inst().declare_variable(decl->location, decl->name.lexeme, decl->declarer, decl->type_annotation, true);
+
+    if (result == E_SYMBOL_ALREADY_DECLARED) {
+        ErrorLogger::inst().log_error(decl->name.location, result, "A symbol with the same name has already been declared in this scope.");
+        ErrorLogger::inst().log_note(node->location, "Previous declaration was here.");
+        throw GlobalTypeException();
+    } else if (result != 0) {
+        ErrorLogger::inst().log_error(decl->name.location, result, "An error occurred while declaring the function.");
+        throw GlobalTypeException();
+    }
+
+    // The function is not allowed to be named `main`
+    if (decl->name.lexeme == "main") {
+        ErrorLogger::inst().log_error(decl->name.location, E_INVALID_MAIN_SIGNATURE, "The main function cannot be declared as an external function.");
+    }
+
+    return std::any();
+}
+
 std::any GlobalChecker::visit_struct_decl(Decl::Struct* decl) {
     // TODO: Implement
     ErrorLogger::inst().log_error(decl->name.location, E_UNIMPLEMENTED, "Struct declarations are not yet implemented.");

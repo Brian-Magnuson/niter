@@ -138,6 +138,18 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
      * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
      */
     std::any visit_fun_decl(Decl::Fun* decl) override;
+
+    /**
+     * @brief Visits an external function declaration.
+     * All external functions have their linkage set to external.
+     * Additionally, their names are based strictly on the name of the function, not the unique name in the tree.
+     *
+     * @param decl The external function declaration to visit.
+     * @return std::any nullptr always.
+     * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
+     */
+    std::any visit_extern_fun_decl(Decl::ExternFun* decl) override;
+
     std::any visit_struct_decl(Decl::Struct* decl) override;
 
     std::any visit_assign_expr(Expr::Assign* expr) override;

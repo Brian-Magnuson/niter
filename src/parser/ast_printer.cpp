@@ -149,6 +149,23 @@ std::any AstPrinter::visit_fun_decl(Decl::Fun* decl) {
     */
 }
 
+std::any AstPrinter::visit_extern_fun_decl(Decl::ExternFun* decl) {
+    std::string result = "(decl:extern_fun ";
+    result += decl->name.lexeme;
+    result += " ";
+    result += decl->type_annotation->to_string();
+    result += ")";
+    return result;
+
+    /*
+    Example:
+    extern fun puts(char*): int
+
+    ->
+    (decl:extern_fun puts fun(char*) => int)
+    */
+}
+
 std::any AstPrinter::visit_struct_decl(Decl::Struct* /*decl*/) {
     // TODO: Implement this
     return std::any();

@@ -284,6 +284,31 @@ std::any CodeGenerator::visit_fun_decl(Decl::Fun* decl) {
     return nullptr;
 }
 
+std::any CodeGenerator::visit_extern_fun_decl(Decl::ExternFun* decl) {
+    // Get the function node from the environment tree
+    auto fun_node = Environment::inst().get_variable({decl->name});
+    // This should never be nullptr
+
+    // Create the function type
+    llvm::FunctionType* fun_type = llvm::cast<llvm::FunctionType>(fun_node->type->to_llvm_type(context));
+
+    // External function names are based strictly on the name of the function, not the unique name in the tree.
+    llvm::Function* fun = llvm::Function::Create(fun_type, llvm::Function::ExternalLinkage, decl->name.lexeme, ir_module.get());
+
+    // Create a global variable for the function
+    llvm::GlobalVariable* global = new llvm::GlobalVariable(
+        *ir_module,
+        fun->getType(),
+        true,
+        llvm::GlobalValue::InternalLinkage,
+        fun,
+        decl->name.lexeme
+    );
+    fun_node->llvm_allocation = global;
+
+    return nullptr;
+}
+
 std::any CodeGenerator::visit_struct_decl(Decl::Struct*) {
     // TODO: Implement struct declarations
     return nullptr;

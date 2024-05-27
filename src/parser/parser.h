@@ -151,12 +151,22 @@ class Parser {
 
     /**
      * @brief Parses a function declaration.
-     * Functoin declarations begin with "fun" followed by an identifier, a list of parameters, and a set of braces containing statements.
+     * Function declarations begin with "fun" followed by an identifier, a list of parameters, and a set of braces containing statements.
      *
      * @return std::shared_ptr<Decl> A pointer to the parsed function declaration.
      * @throw ParserException If an error occurs while parsing the declaration. Will be caught by the statement() function.
      */
     std::shared_ptr<Decl> fun_decl();
+
+    /**
+     * @brief Parses an external function declaration.
+     * External function declarations begin with "extern fun" followed by an identifier, a list of parameters, and a type annotation.
+     * Unlike function declarations, external function declarations do not have a body.
+     *
+     * @return std::shared_ptr<Decl> A pointer to the parsed external function declaration.
+     * @throw ParserException If an error occurs while parsing the declaration. Will be caught by the statement() function.
+     */
+    std::shared_ptr<Decl> extern_fun_decl();
 
     // MARK: Expressions
 

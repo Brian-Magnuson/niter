@@ -252,6 +252,49 @@ std::shared_ptr<Decl> Parser::fun_decl() {
     return std::make_shared<Decl::Fun>(declarer, name, parameters, return_var, type_annotation, body);
 }
 
+std::shared_ptr<Decl> Parser::extern_fun_decl() {
+    TokenType declarer = KW_EXTERN;
+    // Get the function name
+    Token name = consume(TOK_IDENT, E_UNNAMED_FUN, "Expected identifier in function declaration.");
+
+    // Start building the type annotation
+    auto type_annotation = std::make_shared<Annotation::Function>(
+        std::vector<std::pair<TokenType, std::shared_ptr<Annotation>>>(),
+        std::make_shared<Annotation::Segmented>("void"),
+        KW_CONST
+    );
+
+    // Next, the parameters
+    // Unlike internal functions, extern functions do not use named parameters
+    grouping_tokens.push(TOK_RIGHT_PAREN);
+    consume(TOK_LEFT_PAREN, E_NO_LPAREN_IN_FUN_DECL, "Expected '(' after function name.");
+    if (!check({TOK_RIGHT_PAREN})) {
+        do {
+            type_annotation->params.push_back({KW_CONST, annotation()});
+        } while (match({TOK_COMMA}) && !check({TOK_RIGHT_PAREN}));
+    }
+    consume(TOK_RIGHT_PAREN, E_UNMATCHED_PAREN_IN_PARAMS, "Expected ')' after function parameters.");
+
+    // Next, the return type
+    if (match({TOK_COLON})) {
+        Token return_token = Token{
+            TOK_IDENT,
+            "__return_val__",
+            std::any(),
+            previous().location,
+        };
+
+        bool var_found = match({KW_VAR});
+        type_annotation->return_annotation = annotation();
+        if (var_found) {
+            type_annotation->return_declarer = KW_VAR;
+        }
+    }
+    // There is no return variable for extern functions
+
+    return std::make_shared<Decl::ExternFun>(declarer, name, type_annotation);
+}
+
 // MARK: Expressions
 
 std::shared_ptr<Expr> Parser::expression() {

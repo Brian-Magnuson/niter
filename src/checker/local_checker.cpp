@@ -281,6 +281,17 @@ std::any LocalChecker::visit_fun_decl(Decl::Fun* decl) {
     return std::any();
 }
 
+std::any LocalChecker::visit_extern_fun_decl(Decl::ExternFun* decl) {
+    // Function declarations are not allowed in local scope
+    if (!Environment::inst().in_global_scope()) {
+        ErrorLogger::inst().log_error(decl->name.location, E_FUN_IN_LOCAL_SCOPE, "Function declarations are not allowed in local scope.");
+        throw LocalTypeException();
+    }
+
+    // No need to do further checks; we've already done that in the global checker
+    return std::any();
+}
+
 // MARK: Expressions
 
 std::any LocalChecker::visit_assign_expr(Expr::Assign* expr) {

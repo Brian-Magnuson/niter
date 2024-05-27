@@ -17,6 +17,7 @@ class Decl {
 public:
     class Var;
     class Fun;
+    class ExternFun;
     class Struct;
 
     virtual ~Decl() {}
@@ -32,6 +33,7 @@ public:
     public:
         virtual std::any visit_var_decl(Var* decl) = 0;
         virtual std::any visit_fun_decl(Fun* decl) = 0;
+        virtual std::any visit_extern_fun_decl(ExternFun* decl) = 0;
         virtual std::any visit_struct_decl(Struct* decl) = 0;
     };
 
@@ -103,6 +105,33 @@ public:
     std::shared_ptr<Annotation> type_annotation;
     // The body of the function.
     std::vector<std::shared_ptr<Stmt>> body;
+};
+
+/**
+ * @brief A class representing an external function declaration.
+ * E.g. extern fun printf(format: string, ...): int;
+ *
+ */
+class Decl::ExternFun : public Decl {
+public:
+    ExternFun(
+        TokenType declarer,
+        Token name,
+        std::shared_ptr<Annotation> type_annotation
+    ) : declarer(declarer), name(name), type_annotation(type_annotation) {
+        location = name.location;
+    }
+
+    std::any accept(Visitor* visitor) override {
+        return visitor->visit_extern_fun_decl(this);
+    }
+
+    // The token type that signifies the declaration type.
+    TokenType declarer;
+    // The name of the function.
+    Token name;
+    // The type of the function. Includes the return type and the type arguments.
+    std::shared_ptr<Annotation> type_annotation;
 };
 
 /**

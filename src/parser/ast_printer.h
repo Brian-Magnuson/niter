@@ -156,6 +156,14 @@ public:
     std::any visit_fun_decl(Decl::Fun* decl) override;
 
     /**
+     * @brief Visits an external function declaration and returns a string representation of it.
+     *
+     * @param decl The external function declaration to visit.
+     * @return std::any An any object containing the string representation of the declaration.
+     */
+    std::any visit_extern_fun_decl(Decl::ExternFun* decl) override;
+
+    /**
      * @brief Visits a struct declaration and returns a string representation of it.
      *
      * @param decl The struct declaration to visit.

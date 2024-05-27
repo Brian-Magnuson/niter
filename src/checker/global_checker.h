@@ -140,6 +140,14 @@ class GlobalChecker : public Stmt::Visitor, public Decl::Visitor {
     std::any visit_fun_decl(Decl::Fun* decl) override;
 
     /**
+     * @brief Checks an external function declaration in global space.
+     *
+     * @param decl The external function declaration to check
+     * @return std::any The empty any object always.
+     */
+    std::any visit_extern_fun_decl(Decl::ExternFun* decl) override;
+
+    /**
      * @brief Checks a struct declaration in global space.
      *
      * @param decl The struct declaration to check
