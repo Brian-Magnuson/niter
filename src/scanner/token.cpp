@@ -204,6 +204,8 @@ std::string token_type_to_string(TokenType type) {
 
     case KW_EXTERN:
         return "KW_EXTERN";
+    case KW_VARIADIC:
+        return "KW_VARIADIC";
 
     default:
         return "TOK_UNKNOWN";

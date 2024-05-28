@@ -124,6 +124,8 @@ std::shared_ptr<Stmt> Parser::declaration_statement() {
     } else if (match({KW_EXTERN})) {
         if (match({KW_FUN})) {
             decl = extern_fun_decl();
+        } else if (match({KW_VARIADIC}) && match({KW_FUN})) {
+            decl = extern_fun_decl(true);
         } else {
             ErrorLogger::inst().log_error(peek().location, E_NO_DECLARER_AFTER_EXTERN, "'extern' requires valid declarer. Expected 'fun'.");
             throw ParserException();
@@ -196,7 +198,8 @@ std::shared_ptr<Decl> Parser::fun_decl() {
     auto type_annotation = std::make_shared<Annotation::Function>(
         std::vector<std::pair<TokenType, std::shared_ptr<Annotation>>>(),
         std::make_shared<Annotation::Segmented>("void"),
-        KW_CONST
+        KW_CONST,
+        false
     );
 
     // Next, the parameters
@@ -252,7 +255,7 @@ std::shared_ptr<Decl> Parser::fun_decl() {
     return std::make_shared<Decl::Fun>(declarer, name, parameters, return_var, type_annotation, body);
 }
 
-std::shared_ptr<Decl> Parser::extern_fun_decl() {
+std::shared_ptr<Decl> Parser::extern_fun_decl(bool is_variadic) {
     TokenType declarer = KW_FUN;
     // Get the function name
     Token name = consume(TOK_IDENT, E_UNNAMED_FUN, "Expected identifier in function declaration.");
@@ -261,7 +264,8 @@ std::shared_ptr<Decl> Parser::extern_fun_decl() {
     auto type_annotation = std::make_shared<Annotation::Function>(
         std::vector<std::pair<TokenType, std::shared_ptr<Annotation>>>(),
         std::make_shared<Annotation::Segmented>("void"),
-        KW_CONST
+        KW_CONST,
+        is_variadic
     );
 
     // Next, the parameters

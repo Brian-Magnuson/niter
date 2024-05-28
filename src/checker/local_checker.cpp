@@ -453,14 +453,22 @@ std::any LocalChecker::visit_call_expr(Expr::Call* expr) {
     auto fun_type = std::dynamic_pointer_cast<Type::Function>(left_type);
 
     // First, the number of arguments must match the number of parameters
-    if (expr->arguments.size() != fun_type->params.size()) {
+    // If the function is variadic, the number of arguments must be greater than or equal to the number of parameters
+    if (!fun_type->is_variadic && expr->arguments.size() != fun_type->params.size()) {
         ErrorLogger::inst().log_error(expr->location, E_INVALID_ARITY, "Expected " + std::to_string(fun_type->params.size()) + " arguments, found " + std::to_string(expr->arguments.size()) + ".");
         throw LocalTypeException();
+    } else if (fun_type->is_variadic && expr->arguments.size() < fun_type->params.size()) {
+        ErrorLogger::inst().log_error(expr->location, E_INVALID_ARITY, "Expected at least " + std::to_string(fun_type->params.size() - 1) + " arguments, found " + std::to_string(expr->arguments.size()) + ".");
+        throw LocalTypeException();
     }
+
     // Then, the types of the arguments must match the types of the parameters
     for (unsigned i = 0; i < expr->arguments.size(); i++) {
+        // All arguments must be visited to ensure that the types are resolved
         auto arg_type = std::any_cast<std::shared_ptr<Type>>(expr->arguments[i]->accept(this));
-        if (!Type::are_compatible(arg_type, fun_type->params[i].second)) {
+        // We add a range check here in case the function is variadic
+        // If there are more args than params, the extra args will be visited, but not compared against any params
+        if (i < fun_type->params.size() && !Type::are_compatible(arg_type, fun_type->params[i].second)) {
             ErrorLogger::inst().log_error(expr->arguments[i]->location, E_INCOMPATIBLE_TYPES, "Cannot convert from " + arg_type->to_string() + " to " + fun_type->params[i].second->to_string() + ".");
             throw LocalTypeException();
         }

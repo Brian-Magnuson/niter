@@ -102,13 +102,15 @@ public:
     std::shared_ptr<Annotation> return_annotation;
     // The declarer of the return type. E.g. "fun(int, int) => var void" has the return type declarer "var".
     TokenType return_declarer;
+    // Whether the function is variadic. E.g. "fun(int, ...) => void" has the function as variadic.
+    bool is_variadic = false;
 
     Function(
         std::vector<std::pair<TokenType, std::shared_ptr<Annotation>>> params,
         std::shared_ptr<Annotation> return_annotation,
-        TokenType return_declarer
-    )
-        : params(params), return_annotation(return_annotation), return_declarer(return_declarer) {}
+        TokenType return_declarer,
+        bool is_variadic = false
+    ) : params(params), return_annotation(return_annotation), return_declarer(return_declarer), is_variadic(is_variadic) {}
 
     std::string to_string() const override {
         std::string result = "fun(";
@@ -118,6 +120,9 @@ public:
             if (i < params.size() - 1) {
                 result += ", ";
             }
+        }
+        if (is_variadic) {
+            result += ", ...";
         }
         result += ") => ";
         result += return_declarer == KW_VAR ? "var " : "";

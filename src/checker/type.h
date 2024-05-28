@@ -149,6 +149,8 @@ public:
     TokenType return_declarer;
     // The return type.
     std::shared_ptr<Type> return_type = nullptr;
+    // Whether the function is variadic. Currently only allowed for external functions.
+    bool is_variadic = false;
 
     virtual ~Function() = default;
     TypeKind kind() const override { return TypeKind::FUNCTION; }
@@ -173,16 +175,16 @@ public:
         for (auto& param : params) {
             param_types.push_back(param.second->to_llvm_type(context));
         }
-        auto fun_type = llvm::FunctionType::get(return_type->to_llvm_type(context), param_types, false);
+        auto fun_type = llvm::FunctionType::get(return_type->to_llvm_type(context), param_types, is_variadic);
         return fun_type;
     }
 
     Function(
         std::vector<std::pair<TokenType, std::shared_ptr<Type>>>& params,
         TokenType return_declarer,
-        std::shared_ptr<Type> return_type
-    )
-        : params(params), return_declarer(return_declarer), return_type(return_type) {}
+        std::shared_ptr<Type> return_type,
+        bool is_variadic = false
+    ) : params(params), return_declarer(return_declarer), return_type(return_type), is_variadic(is_variadic) {}
 };
 
 /**

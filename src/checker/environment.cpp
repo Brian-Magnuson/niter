@@ -197,7 +197,8 @@ std::shared_ptr<Type> Environment::get_type(const std::shared_ptr<Annotation>& a
         return std::make_shared<Type::Function>(
             params,
             fun_annotation->return_declarer,
-            ret_type
+            ret_type,
+            fun_annotation->is_variadic
         );
     } else if (IS_TYPE(annotation, Annotation::Tuple)) {
         // Annotations of the form `(t, t, t)`

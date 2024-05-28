@@ -154,10 +154,11 @@ class Parser {
      * External function declarations begin with "extern fun" followed by an identifier, a list of parameters, and a type annotation.
      * Unlike function declarations, external function declarations do not have a body.
      *
+     * @param is_variadic Whether the external function is variadic.
      * @return std::shared_ptr<Decl> A pointer to the parsed external function declaration.
      * @throw ParserException If an error occurs while parsing the declaration. Will be caught by the statement() function.
      */
-    std::shared_ptr<Decl> extern_fun_decl();
+    std::shared_ptr<Decl> extern_fun_decl(bool is_variadic = false);
 
     // MARK: Expressions
 

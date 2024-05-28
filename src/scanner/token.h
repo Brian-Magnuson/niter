@@ -124,6 +124,7 @@ enum TokenType {
     KW_DEALLOC,
 
     KW_EXTERN,
+    KW_VARIADIC,
 };
 
 /**

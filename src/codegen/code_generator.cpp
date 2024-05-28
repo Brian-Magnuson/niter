@@ -245,10 +245,11 @@ std::any CodeGenerator::visit_extern_fun_decl(Decl::ExternFun* decl) {
     // This should never be nullptr
 
     // Create the function type
-    llvm::FunctionType* fun_type = llvm::cast<llvm::FunctionType>(fun_node->type->to_llvm_type(context));
+    llvm::FunctionType* fun_ll_type = llvm::cast<llvm::FunctionType>(fun_node->type->to_llvm_type(context));
+    // This should never be nullptr
 
     // External function names are based strictly on the name of the function, not the unique name in the tree.
-    llvm::Function* fun = llvm::Function::Create(fun_type, llvm::Function::ExternalLinkage, decl->name.lexeme, ir_module.get());
+    llvm::Function* fun = llvm::Function::Create(fun_ll_type, llvm::Function::ExternalLinkage, decl->name.lexeme, ir_module.get());
 
     fun_node->llvm_allocation = fun;
 

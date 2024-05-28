@@ -36,6 +36,7 @@ std::unordered_map<std::string, TokenType> Scanner::keywords = {
     {"alloc", KW_ALLOC},
     {"dealloc", KW_DEALLOC},
     {"extern", KW_EXTERN},
+    {"variadic", KW_VARIADIC},
     {"true", TOK_BOOL},
     {"false", TOK_BOOL},
     {"nil", TOK_NIL},
