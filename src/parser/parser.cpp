@@ -636,7 +636,7 @@ std::shared_ptr<Annotation::Function> Parser::function_annotation() {
 
     ret = annotation();
 
-    return std::make_shared<Annotation::Function>(params, ret, return_declarer);
+    return std::make_shared<Annotation::Function>(params, ret, return_declarer, false);
 }
 
 std::shared_ptr<Annotation::Tuple> Parser::tuple_annotation() {

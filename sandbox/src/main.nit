@@ -1,6 +1,6 @@
-extern fun puts(char*): i32
+extern variadic fun printf(char*): i32
 
 fun main(): i32 {
-    puts("Hello, World!")
+    printf("The answer is: %d\n", 42)
     return 0
 }
