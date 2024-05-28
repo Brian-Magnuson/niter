@@ -100,16 +100,6 @@ std::any LocalChecker::visit_continue_stmt(Stmt::Continue* /* stmt */) {
     return std::any();
 }
 
-std::any LocalChecker::visit_print_stmt(Stmt::Print* stmt) {
-    // Currently, print statements are only allowed to print objects of type `char*`
-    auto print_type = std::any_cast<std::shared_ptr<Type>>(stmt->value->accept(this));
-    if (print_type->to_string() != "::char*") {
-        ErrorLogger::inst().log_error(stmt->location, E_PUTS_WITHOUT_STRING, "Print statements are only allowed to print objects of type `char*`.");
-        throw LocalTypeException();
-    }
-    return std::any();
-}
-
 std::any LocalChecker::visit_eof_stmt(Stmt::EndOfFile* /* stmt */) {
     // Does nothing (for now)
     return std::any();

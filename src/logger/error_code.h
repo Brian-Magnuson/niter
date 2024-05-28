@@ -125,8 +125,6 @@ enum ErrorCode {
     E_STRUCT_IN_LOCAL_SCOPE,
     // A function was introduced in a non-global scope
     E_FUN_IN_LOCAL_SCOPE,
-    // A print statement was found with a non-string argument
-    E_PUTS_WITHOUT_STRING,
     // A variable was declared without an initializer
     E_AUTO_WITHOUT_INITIALIZER,
     // A constant was declared without an initializer

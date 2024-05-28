@@ -7,7 +7,3 @@ Stmt::Declaration::Declaration(std::shared_ptr<Decl> declaration) : declaration(
 Stmt::Expression::Expression(std::shared_ptr<Expr> expression) : expression(expression) {
     location = expression->location;
 }
-
-Stmt::Print::Print(std::shared_ptr<Expr> value) : value(value) {
-    location = value->location;
-}

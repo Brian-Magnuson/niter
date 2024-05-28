@@ -122,7 +122,6 @@ enum TokenType {
     KW_IS,
     KW_ALLOC,
     KW_DEALLOC,
-    KW_PUTS, // A temporary keyword for debugging purposes
 
     KW_EXTERN,
 };

@@ -201,8 +201,6 @@ std::string token_type_to_string(TokenType type) {
         return "KW_ALLOC";
     case KW_DEALLOC:
         return "KW_DEALLOC";
-    case KW_PUTS:
-        return "KW_PUTS";
 
     case KW_EXTERN:
         return "KW_EXTERN";

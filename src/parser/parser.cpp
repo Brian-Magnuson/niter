@@ -103,9 +103,6 @@ std::shared_ptr<Stmt> Parser::statement() {
         if (match({KW_RETURN})) {
             return return_statement();
         }
-        if (match({KW_PUTS})) {
-            return print_statement();
-        }
         return expression_statement();
 
     } catch (const ParserException& e) {
@@ -150,14 +147,6 @@ std::shared_ptr<Stmt> Parser::expression_statement() {
         ErrorLogger::inst().log_error(peek().location, E_MISSING_STMT_END, "Expected newline or ';' after expression.");
     }
     return std::make_shared<Stmt::Expression>(expr);
-}
-
-std::shared_ptr<Stmt> Parser::print_statement() {
-    std::shared_ptr<Expr> value = expression();
-    if (!match({TOK_NEWLINE, TOK_SEMICOLON})) {
-        ErrorLogger::inst().log_error(peek().location, E_MISSING_STMT_END, "Expected newline or ';' after expression.");
-    }
-    return std::make_shared<Stmt::Print>(value);
 }
 
 std::shared_ptr<Stmt> Parser::return_statement() {

@@ -124,15 +124,6 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
     std::any visit_continue_stmt(Stmt::Continue* stmt) override;
 
     /**
-     * @brief Visits a print statement and determines if the print is valid.
-     *
-     * @param stmt The print statement to visit.
-     * @return std::any The empty std::any value always.
-     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
-     */
-    std::any visit_print_stmt(Stmt::Print* stmt) override;
-
-    /**
      * @brief Visits an end of file statement and determines if the end of file is valid.
      *
      * @param stmt The end of file statement to visit.

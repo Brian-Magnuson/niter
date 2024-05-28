@@ -58,14 +58,6 @@ public:
     // MARK: Statements
 
     /**
-     * @brief Visits a print statement and returns a string representation of it.
-     *
-     * @param stmt The print statement to visit.
-     * @return std::any An any object containing the string representation of the statement.
-     */
-    std::any visit_print_stmt(Stmt::Print* stmt) override;
-
-    /**
      * @brief Visits a block statement and returns a string representation of it.
      *
      * @param stmt The block statement to visit.

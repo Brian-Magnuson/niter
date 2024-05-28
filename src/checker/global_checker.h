@@ -104,16 +104,6 @@ class GlobalChecker : public Stmt::Visitor, public Decl::Visitor {
     std::any visit_continue_stmt(Stmt::Continue* stmt) override;
 
     /**
-     * @brief Throws an exception for global print statements.
-     * No global print statements are allowed.
-     *
-     * @param stmt The statement to check
-     * @return This function never returns.
-     * @throw GlobalTypeException Always thrown. Will be caught by the type_check function.
-     */
-    std::any visit_print_stmt(Stmt::Print* stmt) override;
-
-    /**
      * @brief Checks the end of file statement. May alter the environment accordingly.
      *
      * @param stmt The statement to check (ignored)

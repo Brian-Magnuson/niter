@@ -44,12 +44,6 @@ std::any GlobalChecker::visit_continue_stmt(Stmt::Continue* /* stmt */) {
     throw GlobalTypeException();
 }
 
-std::any GlobalChecker::visit_print_stmt(Stmt::Print* stmt) {
-    // Global print statements are not allowed
-    ErrorLogger::inst().log_error(stmt->location, E_GLOBAL_PRINT, "Global print statements are not allowed.");
-    throw GlobalTypeException();
-}
-
 std::any GlobalChecker::visit_eof_stmt(Stmt::EndOfFile* /* stmt */) {
     // TODO: This doesn't really do anything right now. This becomes more useful when `using` is implemented.
     return std::any();

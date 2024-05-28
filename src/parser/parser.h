@@ -129,15 +129,6 @@ class Parser {
      */
     std::shared_ptr<Stmt> return_statement();
 
-    /**
-     * @brief Parses a print statement.
-     * Print statements begin with the keyword "puts" followed by an expression.
-     *
-     * @return std::shared_ptr<Stmt> A pointer to the parsed print statement.
-     * @throw ParserException If an error occurs while parsing the statement. Will be caught by the statement() function.
-     */
-    std::shared_ptr<Stmt> print_statement();
-
     // MARK: Declarations
 
     /**

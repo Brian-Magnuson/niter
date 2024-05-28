@@ -48,13 +48,6 @@ std::string AstPrinter::any_to_string(const std::any& value) {
     return std::string("[object]");
 }
 
-std::any AstPrinter::visit_print_stmt(Stmt::Print* stmt) {
-    std::string result = "(stmt:print";
-    result += " " + std::any_cast<std::string>(stmt->value->accept(this));
-    result += ")";
-    return result;
-}
-
 std::any AstPrinter::visit_block_stmt(Stmt::Block* /*stmt*/) {
     // TODO: Implement this
     return std::any();

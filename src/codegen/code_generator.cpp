@@ -101,42 +101,6 @@ std::any CodeGenerator::visit_continue_stmt(Stmt::Continue*) {
     return nullptr;
 }
 
-// FIXME: Add support for `extern` functions instead of print statements.
-std::any CodeGenerator::visit_print_stmt(Stmt::Print* stmt) {
-    // Check if printf has already been declared
-    llvm::Function* printf_func = ir_module->getFunction("printf");
-
-    // If not, declare it
-    if (!printf_func) {
-        // Declare the function prototype
-        std::vector<llvm::Type*> printf_arg_types;
-        printf_arg_types.push_back(llvm::Type::getInt8PtrTy(*context)); // char*
-
-        llvm::FunctionType* printf_type =
-            llvm::FunctionType::get(
-                llvm::Type::getInt32Ty(*context), // return type
-                printf_arg_types,                 // argument types
-                true
-            ); // printf is vararg
-
-        // Create the function declaration
-        printf_func = llvm::Function::Create(
-            printf_type,
-            llvm::Function::ExternalLinkage,
-            "printf",
-            *ir_module
-        );
-    }
-
-    // Get the string
-    auto str = std::any_cast<llvm::Value*>(stmt->value->accept(this));
-
-    // Call printf
-    builder->CreateCall(printf_func, str);
-
-    return nullptr;
-}
-
 std::any CodeGenerator::visit_eof_stmt(Stmt::EndOfFile*) {
     // TODO: Implement eof statement
     return nullptr;

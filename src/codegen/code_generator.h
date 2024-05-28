@@ -107,17 +107,6 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
 
     std::any visit_break_stmt(Stmt::Break* stmt) override;
     std::any visit_continue_stmt(Stmt::Continue* stmt) override;
-
-    /**
-     * @brief Visits a print statement.
-     * Effectively calls `printf` from the C standard library and passes the single string argument.
-     * The first time this function is called, it will declare the `printf` function. Subsequent calls will use the existing declaration.
-     *
-     * @param stmt The print statement to visit.
-     * @return std::any nullptr always.
-     * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
-     */
-    std::any visit_print_stmt(Stmt::Print* stmt) override;
     std::any visit_eof_stmt(Stmt::EndOfFile* stmt) override;
 
     /**

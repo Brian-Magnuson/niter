@@ -264,23 +264,6 @@ TEST_CASE("Parser extern fun decls 2", "[parser]") {
     CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
 }
 
-TEST_CASE("Parser print stmts", "[parser]") {
-    std::string source_code = "puts 5; puts \"Hello, world!\";";
-    std::shared_ptr file_name = std::make_shared<std::string>("test_files/print_stmts_test.nit");
-
-    Scanner scanner;
-    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
-
-    Parser parser(scanner.get_tokens());
-    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
-
-    AstPrinter printer;
-    REQUIRE(stmts.size() == 3);
-    CHECK(printer.print(stmts.at(0)) == "(stmt:print 5)");
-    CHECK(printer.print(stmts.at(1)) == "(stmt:print \"Hello, world!\")");
-    CHECK(printer.print(stmts.at(2)) == "(stmt:eof)");
-}
-
 // MARK: Error tests
 
 TEST_CASE("Logger invalid type annotation", "[logger]") {

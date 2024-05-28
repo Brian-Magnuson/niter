@@ -22,7 +22,6 @@ public:
     class Return;
     class Break;
     class Continue;
-    class Print;
     class EndOfFile;
 
     virtual ~Stmt() {}
@@ -44,7 +43,6 @@ public:
         virtual std::any visit_return_stmt(Return* stmt) = 0;
         virtual std::any visit_break_stmt(Break* stmt) = 0;
         virtual std::any visit_continue_stmt(Continue* stmt) = 0;
-        virtual std::any visit_print_stmt(Print* stmt) = 0;
         virtual std::any visit_eof_stmt(EndOfFile* stmt) = 0;
     };
 
@@ -109,24 +107,6 @@ public:
     // The expression to return.
     // If the shared_ptr is nullptr, no expression was specified.
     // If the shared_ptr is pointing to an expression that represents nil, the return statement was explicitly specified to return nil.
-    std::shared_ptr<Expr> value;
-};
-
-/**
- * @brief A class representing a print statement.
- * Print statements are statements that consist of the "puts" keyword followed by an expression.
- * Designed to be temporary until a proper print function is implemented.
- *
- */
-class Stmt::Print : public Stmt {
-public:
-    Print(std::shared_ptr<Expr> value);
-
-    std::any accept(Visitor* visitor) override {
-        return visitor->visit_print_stmt(this);
-    }
-
-    // The expression to print
     std::shared_ptr<Expr> value;
 };
 
