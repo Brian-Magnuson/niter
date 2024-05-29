@@ -180,6 +180,10 @@ std::any AstPrinter::visit_unary_expr(Expr::Unary* expr) {
     return parenthesize(expr->op.lexeme, {expr->right});
 }
 
+std::any AstPrinter::visit_dereference_expr(Expr::Dereference* expr) {
+    return parenthesize(expr->op.lexeme, {expr->right});
+}
+
 std::any AstPrinter::visit_call_expr(Expr::Call* expr) {
     std::vector<std::shared_ptr<Expr>> args;
     args.push_back(expr->callee);

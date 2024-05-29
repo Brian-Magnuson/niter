@@ -281,6 +281,11 @@ std::any CodeGenerator::visit_unary_expr(Expr::Unary*) {
     return nullptr;
 }
 
+std::any CodeGenerator::visit_dereference_expr(Expr::Dereference*) {
+    // TODO: Implement dereference expressions
+    return nullptr;
+}
+
 std::any CodeGenerator::visit_call_expr(Expr::Call* expr) {
     llvm::Value* ret;
     // Get the function

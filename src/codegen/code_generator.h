@@ -145,6 +145,7 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
     std::any visit_logical_expr(Expr::Logical* expr) override;
     std::any visit_binary_expr(Expr::Binary* expr) override;
     std::any visit_unary_expr(Expr::Unary* expr) override;
+    std::any visit_dereference_expr(Expr::Dereference* expr) override;
 
     /**
      * @brief Visits a call expression.

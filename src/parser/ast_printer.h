@@ -198,6 +198,14 @@ public:
     std::any visit_unary_expr(Expr::Unary* expr) override;
 
     /**
+     * @brief Visits a dereference expression and returns a string representation of it.
+     *
+     * @param expr The dereference expression to visit.
+     * @return std::any An any object containing the string representation of the expression.
+     */
+    std::any visit_dereference_expr(Expr::Dereference* expr) override;
+
+    /**
      * @brief Visits a call expression and returns a string representation of it.
      *
      * @param expr The call expression to visit.

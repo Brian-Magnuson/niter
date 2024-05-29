@@ -36,20 +36,20 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      */
     bool check_token(TokenType token, const std::vector<TokenType>& types) const;
 
-    /**
-     * @brief Determines if an expression is a valid LHS expression.
-     * That is, the expression is allowed on the left-hand side of an assignment.
-     * NOTE: The expression should be *visited* before calling this function.
-     * Valid lvalues are identifier, access, and dereference expressions.
-     * Dereference expressions aren't a subclass of Expr; they are unary expressions where the operator is TOK_STAR.
-     *
-     * @param expr
-     * @return std::pair<ErrorCode, TokenType> The error code and the declarer for the expression.
-     * The token type is KW_VAR iff the expression is mutable.
-     * The error code is 0 if the expression is an lvalue.
-     * The error code is E_ASSIGN_TO_NON_LVALUE if the expression is not an lvalue.
-     */
-    std::pair<ErrorCode, TokenType> is_lvalue(std::shared_ptr<Expr> expr) const;
+    // /**
+    //  * @brief Determines if an expression is a valid LHS expression.
+    //  * That is, the expression is allowed on the left-hand side of an assignment.
+    //  * NOTE: The expression should be *visited* before calling this function.
+    //  * Valid lvalues are identifier, access, and dereference expressions.
+    //  * Dereference expressions aren't a subclass of Expr; they are unary expressions where the operator is TOK_STAR.
+    //  *
+    //  * @param expr
+    //  * @return std::pair<ErrorCode, TokenType> The error code and the declarer for the expression.
+    //  * The token type is KW_VAR iff the expression is mutable.
+    //  * The error code is 0 if the expression is an lvalue.
+    //  * The error code is E_ASSIGN_TO_NON_LVALUE if the expression is not an lvalue.
+    //  */
+    // std::pair<ErrorCode, TokenType> is_lvalue(std::shared_ptr<Expr> expr) const;
 
     /**
      * @brief Visits a declaration statement and determines if the declaration is valid.
@@ -175,7 +175,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      * Furthermore, the LHS expression must be mutable.
      *
      * @param expr The assignment expression to visit.
-     * @return std::any The empty std::any value always.
+     * @return An std::shared_ptr<Type> representing the type of the expression.
      * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_assign_expr(Expr::Assign* expr) override;
@@ -185,7 +185,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      * Note: Both sides of the logical expression must be of type bool.
      *
      * @param expr The logical expression to visit.
-     * @return std::any The empty std::any value always.
+     * @return An std::shared_ptr<Type> representing the type of the expression.
      * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_logical_expr(Expr::Logical* expr) override;
@@ -195,7 +195,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      * Note: Both sides of the binary expression must be of the same type.
      *
      * @param expr The binary expression to visit.
-     * @return std::any The empty std::any value always.
+     * @return An std::shared_ptr<Type> representing the type of the expression.
      * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_binary_expr(Expr::Binary* expr) override;
@@ -205,17 +205,27 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      * Note: The unary expression must be of type int or float.
      *
      * @param expr The unary expression to visit.
-     * @return std::any The empty std::any value always.
+     * @return An std::shared_ptr<Type> representing the type of the expression.
      * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_unary_expr(Expr::Unary* expr) override;
+
+    /**
+     * @brief Visits a dereference expression and determines if the dereference expression is valid.
+     * The inner expression must be of type pointer.
+     *
+     * @param expr The dereference expression to visit.
+     * @return An std::shared_ptr<Type> representing the type of the expression.
+     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
+     */
+    std::any visit_dereference_expr(Expr::Dereference* expr) override;
 
     /**
      * @brief Visits a call expression and determines if the call expression is valid.
      * Note: The function being called must exist and the arguments must match the function's parameters.
      *
      * @param expr The call expression to visit.
-     * @return std::any The empty std::any value always.
+     * @return An std::shared_ptr<Type> representing the type of the expression.
      * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_call_expr(Expr::Call* expr) override;
@@ -225,7 +235,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      * Note: The access expression must be of type array or tuple.
      *
      * @param expr The access expression to visit.
-     * @return std::any The empty std::any value always.
+     * @return An std::shared_ptr<Type> representing the type of the expression.
      * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_access_expr(Expr::Access* expr) override;
@@ -234,7 +244,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      * @brief Visits a grouping expression and determines if the grouping expression is valid.
      *
      * @param expr The grouping expression to visit.
-     * @return std::any The empty std::any value always.
+     * @return An std::shared_ptr<Type> representing the type of the expression.
      * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_grouping_expr(Expr::Grouping* expr) override;
@@ -244,7 +254,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      * Note: The identifier must exist and be mutable.
      *
      * @param expr The identifier expression to visit.
-     * @return std::any The empty std::any value always.
+     * @return An std::shared_ptr<Type> representing the type of the expression.
      * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_identifier_expr(Expr::Identifier* expr) override;
@@ -253,7 +263,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      * @brief Visits a literal expression and determines if the literal expression is valid.
      *
      * @param expr The literal expression to visit.
-     * @return std::any The empty std::any value always.
+     * @return An std::shared_ptr<Type> representing the type of the expression.
      * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_literal_expr(Expr::Literal* expr) override;
@@ -262,7 +272,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      * @brief Visits an array expression and determines if the array expression is valid.
      *
      * @param expr The array expression to visit.
-     * @return std::any The empty std::any value always.
+     * @return std::any An std::shared_ptr<Type> representing the type of the array.
      * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_array_expr(Expr::Array* expr) override;

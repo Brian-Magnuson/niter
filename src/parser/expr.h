@@ -14,10 +14,13 @@
  */
 class Expr {
 public:
+    class Locatable;
+
     class Assign;
     class Logical;
     class Binary;
     class Unary;
+    class Dereference;
     class Call;
     class Access;
     class Grouping;
@@ -47,6 +50,7 @@ public:
         virtual std::any visit_logical_expr(Logical* expr) = 0;
         virtual std::any visit_binary_expr(Binary* expr) = 0;
         virtual std::any visit_unary_expr(Unary* expr) = 0;
+        virtual std::any visit_dereference_expr(Dereference* expr) = 0;
         virtual std::any visit_call_expr(Call* expr) = 0;
         virtual std::any visit_access_expr(Access* expr) = 0;
         virtual std::any visit_grouping_expr(Grouping* expr) = 0;
@@ -64,6 +68,28 @@ public:
      * @return std::any The return value from the visitor class.
      */
     virtual std::any accept(Visitor* visitor) = 0;
+};
+
+/**
+ * @brief A base class for lvalues, i.e., expressions that have a memory location.
+ * Lvalues may be on the left side of an assignment, can be passed by reference, and can have their address taken.
+ * These include Identifier, Access, and Dereference expressions.
+ *
+ */
+class Expr::Locatable : public Expr {
+protected:
+    Locatable() {}
+
+public:
+    virtual ~Locatable() {}
+
+    /**
+     * @brief Retrieves the declarer associated with the lvalue.
+     * An lvalue is mutable iff its declarer KW_VAR.
+     *
+     * @return TokenType The token type of the declarer.
+     */
+    virtual TokenType get_lvalue_declarer() = 0;
 };
 
 /**
@@ -159,13 +185,37 @@ public:
 };
 
 /**
+ * @brief A class representing a dereference expression.
+ * A dereference expression is an expression where a pointer is dereferenced (with the * operator).
+ * Structurally, it is similar to a unary expression, but these expressions can serve as lvalues.
+ *
+ */
+class Expr::Dereference : public Expr::Locatable {
+public:
+    Dereference(Token op, std::shared_ptr<Expr> right) : op(op), right(right) {
+        location = op.location;
+    }
+
+    std::any accept(Visitor* visitor) override {
+        return visitor->visit_dereference_expr(this);
+    }
+
+    // The token representing the operator.
+    Token op;
+    // The expression on the right side.
+    std::shared_ptr<Expr> right;
+
+    TokenType get_lvalue_declarer() override;
+};
+
+/**
  * @brief A class representing an access expression.
  * An access expression is an expression where a member of an object is accessed.
  * This could be using the dot, single arrow, or subscript operators.
  * (. or -> or [])
  *
  */
-class Expr::Access : public Expr {
+class Expr::Access : public Expr::Locatable {
 public:
     Access(std::shared_ptr<Expr> left, Token op, std::shared_ptr<Expr> right)
         : left(left), op(op), right(right) {
@@ -182,6 +232,8 @@ public:
     Token op;
     // The expression on the right side.
     std::shared_ptr<Expr> right;
+
+    TokenType get_lvalue_declarer() override;
 };
 
 /**
@@ -234,7 +286,7 @@ public:
  *
  *
  */
-class Expr::Identifier : public Expr {
+class Expr::Identifier : public Expr::Locatable {
 public:
     Identifier(std::vector<Token> tokens) : tokens(tokens) {
         location = tokens[0].location;
@@ -262,6 +314,8 @@ public:
         }
         return str.substr(0, str.size() - 2);
     }
+
+    TokenType get_lvalue_declarer() override;
 };
 
 /**
