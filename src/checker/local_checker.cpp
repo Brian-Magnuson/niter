@@ -17,28 +17,6 @@ bool LocalChecker::check_token(TokenType token, const std::vector<TokenType>& ty
 
 // MARK: Statements
 
-// std::pair<ErrorCode, TokenType> LocalChecker::is_lvalue(std::shared_ptr<Expr> expr) const {
-//     auto access = std::dynamic_pointer_cast<Expr::Access>(expr);
-//     auto ident = std::dynamic_pointer_cast<Expr::Identifier>(expr);
-//     auto unary = std::dynamic_pointer_cast<Expr::Unary>(expr);
-
-//     if (ident != nullptr) {
-//         auto var_node = Environment::inst().get_variable(ident->tokens);
-//         return {(ErrorCode)0, var_node->declarer};
-//     } else if (access != nullptr) {
-//         auto l_struct_type = std::dynamic_pointer_cast<Type::Struct>(access->left->type);
-//         auto member_name = std::dynamic_pointer_cast<Expr::Identifier>(access->right)->to_string();
-//         auto var_node = Environment::inst().get_instance_variable(l_struct_type, member_name);
-//         return {(ErrorCode)0, var_node->declarer};
-//     } else if (unary != nullptr && unary->op.tok_type == TOK_STAR) {
-//         // We know the operand is a pointer type because we already visited the unary expression
-//         auto ptr_type = std::dynamic_pointer_cast<Type::Pointer>(unary->right->type);
-//         return {(ErrorCode)0, ptr_type->declarer};
-//     } else {
-//         return {E_ASSIGN_TO_NON_LVALUE, KW_VAR};
-//     }
-// }
-
 std::any LocalChecker::visit_declaration_stmt(Stmt::Declaration* stmt) {
     // Visit the declaration
     return stmt->declaration->accept(this);
@@ -291,7 +269,6 @@ std::any LocalChecker::visit_assign_expr(Expr::Assign* expr) {
     auto l_type = std::any_cast<std::shared_ptr<Type>>(expr->left->accept(this));
     auto r_type = std::any_cast<std::shared_ptr<Type>>(expr->right->accept(this));
 
-    // auto [ec, declarer] = is_lvalue(expr->left);
     auto l_value = std::dynamic_pointer_cast<Expr::Locatable>(expr->left);
     if (l_value == nullptr) {
         ErrorLogger::inst().log_error(expr->location, E_ASSIGN_TO_NON_LVALUE, "Left side of assignment is not an lvalue.");
@@ -419,7 +396,6 @@ std::any LocalChecker::visit_unary_expr(Expr::Unary* expr) {
             throw LocalTypeException();
         }
     } else if (expr->op.tok_type == TOK_AMP) {
-        // auto [ec, declarer] = is_lvalue(expr->right);
         auto l_value = std::dynamic_pointer_cast<Expr::Locatable>(expr->right);
         if (l_value == nullptr) {
             ErrorLogger::inst().log_error(expr->location, E_ADDRESS_OF_NON_LVALUE, "Cannot take the address of a non-lvalue.");
