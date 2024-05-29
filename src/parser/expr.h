@@ -70,6 +70,9 @@ public:
     virtual std::any accept(Visitor* visitor) = 0;
 };
 
+class CodeGenerator;
+// Forward declaration of the CodeGenerator class for the Locatable class.
+
 /**
  * @brief A base class for lvalues, i.e., expressions that have a memory location.
  * Lvalues may be on the left side of an assignment, can be passed by reference, and can have their address taken.
@@ -90,6 +93,15 @@ public:
      * @return TokenType The token type of the declarer.
      */
     virtual TokenType get_lvalue_declarer() = 0;
+
+    /**
+     * @brief Get the llvm allocation pointer for the lvalue.
+     * We require the code generator because, if the lvalue is a dereference expression, we need to visit the inner expression.
+     *
+     * @param code_generator The code generator to use.
+     * @return llvm::Value* The llvm::Value* representing the memory location of the lvalue. Use CreateStore to store a value in this location.
+     */
+    virtual llvm::Value* get_llvm_allocation(CodeGenerator* code_generator) = 0;
 };
 
 /**
@@ -206,6 +218,7 @@ public:
     std::shared_ptr<Expr> right;
 
     TokenType get_lvalue_declarer() override;
+    llvm::Value* get_llvm_allocation(CodeGenerator* code_generator) override;
 };
 
 /**
@@ -234,6 +247,7 @@ public:
     std::shared_ptr<Expr> right;
 
     TokenType get_lvalue_declarer() override;
+    llvm::Value* get_llvm_allocation(CodeGenerator* code_generator) override;
 };
 
 /**
@@ -316,6 +330,7 @@ public:
     }
 
     TokenType get_lvalue_declarer() override;
+    llvm::Value* get_llvm_allocation(CodeGenerator* code_generator) override;
 };
 
 /**
