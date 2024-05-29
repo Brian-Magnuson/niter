@@ -261,9 +261,19 @@ std::any CodeGenerator::visit_struct_decl(Decl::Struct*) {
     return nullptr;
 }
 
-std::any CodeGenerator::visit_assign_expr(Expr::Assign*) {
-    // TODO: Implement assignment expressions
-    return nullptr;
+std::any CodeGenerator::visit_assign_expr(Expr::Assign* expr) {
+    // Get the llvm allocation of the left side
+    auto lvalue = std::dynamic_pointer_cast<Expr::Locatable>(expr->left);
+    // This should never be nullptr
+    auto llvm_allocation = lvalue->get_llvm_allocation(this);
+
+    // Get the value of the right side
+    auto value = std::any_cast<llvm::Value*>(expr->right->accept(this));
+
+    // Store the value in the llvm allocation
+    builder->CreateStore(value, llvm_allocation);
+
+    return value;
 }
 
 std::any CodeGenerator::visit_logical_expr(Expr::Logical*) {

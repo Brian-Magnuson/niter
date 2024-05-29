@@ -141,7 +141,17 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
 
     std::any visit_struct_decl(Decl::Struct* decl) override;
 
+    /**
+     * @brief Visits an assign expression.
+     * Note: The left side of the assignment must be an lvalue.
+     * The left side will not be visited like normal expressions.
+     * Instead, the `get_llvm_allocation` function will be called on the left side to get the llvm::Value*.
+     *
+     * @param expr The assign expression to visit.
+     * @return std::any An llvm::Value* representing the result of the assignment.
+     */
     std::any visit_assign_expr(Expr::Assign* expr) override;
+
     std::any visit_logical_expr(Expr::Logical* expr) override;
     std::any visit_binary_expr(Expr::Binary* expr) override;
     std::any visit_unary_expr(Expr::Unary* expr) override;
