@@ -52,7 +52,7 @@ std::any GlobalChecker::visit_eof_stmt(Stmt::EndOfFile* /* stmt */) {
 std::any GlobalChecker::visit_var_decl(Decl::Var* decl) {
 
     // Declare the variable, defer if necessary
-    auto [node, result] = Environment::inst().declare_variable(decl->location, decl->name.lexeme, decl->declarer, decl->type_annotation, true);
+    auto [node, result] = Environment::inst().declare_variable(decl, true);
 
     if (result == E_SYMBOL_ALREADY_DECLARED) {
         ErrorLogger::inst().log_error(decl->name.location, result, "A symbol with the same name has already been declared in this scope.");
@@ -70,7 +70,7 @@ std::any GlobalChecker::visit_var_decl(Decl::Var* decl) {
 std::any GlobalChecker::visit_fun_decl(Decl::Fun* decl) {
 
     // Declare the function, defer if necessary
-    auto [node, result] = Environment::inst().declare_variable(decl->location, decl->name.lexeme, decl->declarer, decl->type_annotation, true);
+    auto [node, result] = Environment::inst().declare_variable(decl, true);
 
     if (result == E_SYMBOL_ALREADY_DECLARED) {
         ErrorLogger::inst().log_error(decl->name.location, result, "A symbol with the same name has already been declared in this scope.");
@@ -103,7 +103,7 @@ std::any GlobalChecker::visit_fun_decl(Decl::Fun* decl) {
 
 std::any GlobalChecker::visit_extern_fun_decl(Decl::ExternFun* decl) {
     // Declare the function, defer if necessary
-    auto [node, result] = Environment::inst().declare_variable(decl->location, decl->name.lexeme, decl->declarer, decl->type_annotation, true);
+    auto [node, result] = Environment::inst().declare_variable(decl, true);
 
     if (result == E_SYMBOL_ALREADY_DECLARED) {
         ErrorLogger::inst().log_error(decl->name.location, result, "A symbol with the same name has already been declared in this scope.");

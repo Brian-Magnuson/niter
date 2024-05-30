@@ -145,7 +145,7 @@ std::any CodeGenerator::visit_var_decl(Decl::Var* decl) {
     } else {
         // For local variables, we need to create an alloca instruction.
         // The node does not exist in the tree, so we need to create it.
-        auto [node, _] = Environment::inst().declare_variable(decl->location, decl->name.lexeme, decl->declarer, decl->type_annotation);
+        auto [node, _] = Environment::inst().declare_variable(decl);
         auto var_node = std::dynamic_pointer_cast<Node::Variable>(node);
         // This should never be nullptr
 

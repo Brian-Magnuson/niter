@@ -76,42 +76,78 @@ bool Environment::in_global_scope() {
 }
 
 std::pair<std::shared_ptr<Node::Locatable>, ErrorCode> Environment::declare_variable(
-    const Location& location,
-    const std::string& name,
-    TokenType declarer,
-    std::shared_ptr<Annotation> annotation,
+    Decl::VarDeclarable* decl,
     bool allow_deferral
 ) {
-    auto iter = current_scope->children.find(name);
+    auto iter = current_scope->children.find(decl->name.lexeme);
     if (iter != current_scope->children.end()) {
+        // The symbol has already been declared.
         auto locatable = std::dynamic_pointer_cast<Node::Locatable>(iter->second);
         return {locatable, E_SYMBOL_ALREADY_DECLARED};
     } else {
-        std::shared_ptr<Type> type = get_type(annotation);
+        // The symbol has not been declared yet.
+        std::shared_ptr<Type> type = get_type(decl->type_annotation);
         if (type == nullptr && allow_deferral) {
-            deferred_variables.push_back(DeferredVariable{
-                location,
-                annotation,
-                current_scope,
-                name,
-                declarer,
-            });
+            // The type is unknown and should be deferred.
+            deferred_declarations.push_back({decl, current_scope});
+
             return {nullptr, (ErrorCode)0};
         } else if (type == nullptr) {
+            // The type is unknown and cannot be deferred.
             return {nullptr, E_UNKNOWN_TYPE};
         } else {
+            // The type is known.
+            decl->type = type;
             // If the type is a pointer, set the declarer to the token type that declared the variable.
             auto ptr_type = std::dynamic_pointer_cast<Type::Pointer>(type);
             if (ptr_type != nullptr) {
                 // This is to prevent users from mutating the object that the pointer points to.
-                ptr_type->declarer = declarer;
+                ptr_type->declarer = decl->declarer;
             }
-            auto new_variable = std::make_shared<Node::Variable>(location, current_scope, declarer, type, name);
-            current_scope->children[name] = new_variable;
+            auto new_variable = std::make_shared<Node::Variable>(decl->location, current_scope, decl->declarer, type, decl->name.lexeme);
+            current_scope->children[decl->name.lexeme] = new_variable;
             return {new_variable, (ErrorCode)0};
         }
     }
 }
+
+// std::pair<std::shared_ptr<Node::Locatable>, ErrorCode> Environment::declare_variable(
+//     const Location& location,
+//     const std::string& name,
+//     TokenType declarer,
+//     std::shared_ptr<Annotation> annotation,
+//     bool allow_deferral
+// ) {
+//     auto iter = current_scope->children.find(name);
+//     if (iter != current_scope->children.end()) {
+//         auto locatable = std::dynamic_pointer_cast<Node::Locatable>(iter->second);
+//         return {locatable, E_SYMBOL_ALREADY_DECLARED};
+//     } else {
+//         std::shared_ptr<Type> type = get_type(annotation);
+//         if (type == nullptr && allow_deferral) {
+//             deferred_variables.push_back(DeferredVariable{
+//                 location,
+//                 annotation,
+//                 current_scope,
+//                 name,
+//                 declarer,
+//             });
+//             return {nullptr, (ErrorCode)0};
+//         } else if (type == nullptr) {
+//             return {nullptr, E_UNKNOWN_TYPE};
+//         } else {
+//             // If the type is a pointer, set the declarer to the token type that declared the variable.
+//             auto ptr_type = std::dynamic_pointer_cast<Type::Pointer>(type);
+//             if (ptr_type != nullptr) {
+//                 // This is to prevent users from mutating the object that the pointer points to.
+//                 ptr_type->declarer = declarer;
+//             }
+//             auto new_variable = std::make_shared<Node::Variable>(location, current_scope, declarer, type, name);
+//             current_scope->children[name] = new_variable;
+//             return {new_variable, (ErrorCode)0};
+//         }
+//     }
+// }
 
 std::shared_ptr<Node::Variable> Environment::get_variable(const std::vector<Token>& ident_tokens) {
     std::vector<std::string> ident_strings;
@@ -242,15 +278,16 @@ bool Environment::verify_deferred_types() {
     // Save the current scope to restore it later.
     auto previous_scope = current_scope;
 
-    for (auto& deferred_variable : deferred_variables) {
-        // Set the current scope to the scope of the deferred variable.
-        current_scope = deferred_variable.scope;
+    for (auto& deferred_declaration : deferred_declarations) {
+        // Set the current scope to the scope of the deferred declaration.
+        current_scope = deferred_declaration.second;
         // This is like jumping to a different part of the tree and declaring the variable there.
-        auto [variable, error] = declare_variable(deferred_variable.location, deferred_variable.name, deferred_variable.declarer, deferred_variable.annotation, false);
+        auto [variable, error] = declare_variable(deferred_declaration.first, false);
         if (error != 0) {
             return false;
         }
     }
+
     // Restore the previous scope (not that we need it anymore since this function is called at the end of the global checker).
     current_scope = previous_scope;
 

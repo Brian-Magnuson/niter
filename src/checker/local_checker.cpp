@@ -113,7 +113,7 @@ std::any LocalChecker::visit_var_decl(Decl::Var* decl) {
         node = Environment::inst().get_variable({decl->name.lexeme});
     } else {
         // Declare the variable, do not defer
-        std::tie(node, result) = Environment::inst().declare_variable(decl->location, decl->name.lexeme, decl->declarer, decl->type_annotation);
+        std::tie(node, result) = Environment::inst().declare_variable(decl);
     }
 
     // Verify that the variable was declared successfully
@@ -177,10 +177,7 @@ std::any LocalChecker::visit_fun_decl(Decl::Fun* decl) {
 
     for (unsigned i = 0; i < decl->parameters.size(); i++) {
         auto [param_node, param_result] = Environment::inst().declare_variable(
-            decl->parameters[i]->location,
-            decl->parameters[i]->name.lexeme,
-            decl->parameters[i]->declarer,
-            decl->parameters[i]->type_annotation
+            decl->parameters[i].get()
         );
         if (param_result == E_SYMBOL_ALREADY_DECLARED) {
             ErrorLogger::inst().log_error(decl->parameters[i]->name.location, E_DUPLICATE_PARAM_NAME, "A parameter with the same name has already been declared here.");
