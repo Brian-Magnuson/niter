@@ -1,5 +1,6 @@
 #include "node.h"
-#include "environment.h"
+
+#include "../checker/environment.h"
 
 std::shared_ptr<Node> Node::Scope::upward_lookup(const std::string& name) {
     if (children.find(name) != children.end()) {
@@ -57,4 +58,13 @@ Node::StructScope::StructScope(const Location& location, std::shared_ptr<Scope> 
 
         ir_type = llvm::StructType::create(*Environment::inst().get_llvm_context(), llvm_safe_name);
     }
+}
+
+Node::Variable::Variable(
+    std::shared_ptr<Scope> parent,
+    Decl::VarDeclarable* declaration
+) : decl(declaration) {
+    this->location = location;
+    this->parent = parent;
+    unique_name = parent->unique_name + "::" + declaration->name.lexeme;
 }

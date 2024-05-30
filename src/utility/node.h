@@ -1,6 +1,8 @@
 #ifndef NODE_H
 #define NODE_H
 
+#include "../utility/core.h"
+
 #include "../scanner/token.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Type.h"
@@ -9,30 +11,6 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-/**
- * @brief A base class for nodes in the namespace tree.
- *
- */
-class Node {
-public:
-    class Scope;
-    class Locatable;
-    class RootScope;
-    class NamespaceScope;
-    class StructScope;
-    class LocalScope;
-    class Variable;
-
-    virtual ~Node() = default;
-
-    // static int local_scope_count;
-
-    // A unique name for this node. Used for type comparison and LLVM IR generation.
-    std::string unique_name;
-    // The parent scope of this node. This is never a variable since variables do not have children.
-    std::shared_ptr<Scope> parent = nullptr;
-};
 
 /**
  * @brief A base class for a scope in the namespace tree.
@@ -154,24 +132,15 @@ class Type;
  */
 class Node::Variable : public Node::Locatable {
 public:
-    // The declarer of the variable
-    TokenType declarer;
-    // The type of the variable
-    std::shared_ptr<Type> type;
+    // The declaration node that created this variable
+    Decl::VarDeclarable* decl;
     // The LLVM value that represents the memory location of the variable; typically, this is either an llvm::GlobalVariable or an llvm::AllocaInst; call CreateLoad to get the actual value
     llvm::Value* llvm_allocation;
 
     Variable(
-        const Location& location,
         std::shared_ptr<Scope> parent,
-        TokenType declarer,
-        std::shared_ptr<Type> type,
-        const std::string& name
-    ) : declarer(declarer), type(type) {
-        this->location = location;
-        this->parent = parent;
-        unique_name = parent->unique_name + "::" + name;
-    }
+        Decl::VarDeclarable* declaration
+    );
 };
 
 #endif // NODE_H

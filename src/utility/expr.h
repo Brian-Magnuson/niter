@@ -1,74 +1,15 @@
 #ifndef EXPR_H
 #define EXPR_H
 
-#include "../checker/type.h"
+#include "../utility/core.h"
+
+#include "../parser/annotation.h"
 #include "../scanner/token.h"
-#include "annotation.h"
+#include "type.h"
+#include "llvm/IR/Value.h"
 #include <any>
 #include <memory>
 #include <vector>
-
-/**
- * @brief An abstract base class for all expressions.
- *
- */
-class Expr {
-public:
-    class Locatable;
-
-    class Assign;
-    class Logical;
-    class Binary;
-    class Unary;
-    class Dereference;
-    class Call;
-    class Access;
-    class Grouping;
-    class Identifier;
-    class Literal;
-    class Array;
-    class Tuple;
-
-    // An annotation representing the type of the expression. Set to nullptr, to be filled in by the type checker.
-    // std::shared_ptr<Annotation> type_annotation = nullptr;
-
-    // The type of the expression. Set to nullptr, to be filled in by the type checker.
-    std::shared_ptr<Type> type = nullptr;
-
-    // A location useful for error messages.
-    Location location;
-
-    virtual ~Expr() {}
-
-    /**
-     * @brief A visitor class for expressions.
-     *
-     */
-    class Visitor {
-    public:
-        virtual std::any visit_assign_expr(Assign* expr) = 0;
-        virtual std::any visit_logical_expr(Logical* expr) = 0;
-        virtual std::any visit_binary_expr(Binary* expr) = 0;
-        virtual std::any visit_unary_expr(Unary* expr) = 0;
-        virtual std::any visit_dereference_expr(Dereference* expr) = 0;
-        virtual std::any visit_call_expr(Call* expr) = 0;
-        virtual std::any visit_access_expr(Access* expr) = 0;
-        virtual std::any visit_grouping_expr(Grouping* expr) = 0;
-        virtual std::any visit_identifier_expr(Identifier* expr) = 0;
-        virtual std::any visit_literal_expr(Literal* expr) = 0;
-        virtual std::any visit_array_expr(Array* expr) = 0;
-        virtual std::any visit_tuple_expr(Tuple* expr) = 0;
-    };
-
-    /**
-     * @brief Accepts a visitor class. Information may be passed upward in the return value.
-     * CAUTION: Improper casting of the std::any value can result in obscure runtime errors.
-     *
-     * @param visitor The visitor class to accept.
-     * @return std::any The return value from the visitor class.
-     */
-    virtual std::any accept(Visitor* visitor) = 0;
-};
 
 class CodeGenerator;
 // Forward declaration of the CodeGenerator class for the Locatable class.

@@ -1,11 +1,11 @@
 #include "../src/logger/logger.h"
 #include "../src/parser/ast_printer.h"
-#include "../src/parser/decl.h"
-#include "../src/parser/expr.h"
 #include "../src/parser/parser.h"
-#include "../src/parser/stmt.h"
 #include "../src/scanner/scanner.h"
 #include "../src/scanner/token.h"
+#include "../src/utility/decl.h"
+#include "../src/utility/expr.h"
+#include "../src/utility/stmt.h"
 #include "catch/catch_amalgamated.hpp"
 #include <any>
 #include <cmath>

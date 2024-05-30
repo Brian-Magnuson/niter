@@ -97,14 +97,17 @@ std::pair<std::shared_ptr<Node::Locatable>, ErrorCode> Environment::declare_vari
             return {nullptr, E_UNKNOWN_TYPE};
         } else {
             // The type is known.
-            decl->type = type;
+            // If we haven't set the type of the declaration yet, set it now.
+            if (decl->type == nullptr) {
+                decl->type = type;
+            }
             // If the type is a pointer, set the declarer to the token type that declared the variable.
             auto ptr_type = std::dynamic_pointer_cast<Type::Pointer>(type);
             if (ptr_type != nullptr) {
                 // This is to prevent users from mutating the object that the pointer points to.
                 ptr_type->declarer = decl->declarer;
             }
-            auto new_variable = std::make_shared<Node::Variable>(decl->location, current_scope, decl->declarer, type, decl->name.lexeme);
+            auto new_variable = std::make_shared<Node::Variable>(current_scope, decl);
             current_scope->children[decl->name.lexeme] = new_variable;
             return {new_variable, (ErrorCode)0};
         }

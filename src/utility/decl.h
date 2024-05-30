@@ -1,48 +1,15 @@
 #ifndef DECL_H
 #define DECL_H
 
+#include "../utility/core.h"
+
+#include "../parser/annotation.h"
 #include "../scanner/token.h"
-#include "annotation.h"
 #include "expr.h"
 #include "stmt.h"
 #include <any>
 #include <memory>
 #include <vector>
-
-/**
- * @brief An abstract base class for all declarations.
- *
- */
-class Decl {
-public:
-    class VarDeclarable;
-
-    class Var;
-    class Fun;
-    class ExternFun;
-    class Struct;
-
-    virtual ~Decl() {}
-
-    // The location of the declaration. Useful for error messages.
-    Location location;
-
-    /**
-     * @brief A visitor class for declarations.
-     *
-     */
-    class Visitor {
-    public:
-        virtual std::any visit_var_decl(Var* decl) = 0;
-        virtual std::any visit_fun_decl(Fun* decl) = 0;
-        virtual std::any visit_extern_fun_decl(ExternFun* decl) = 0;
-        virtual std::any visit_struct_decl(Struct* decl) = 0;
-    };
-
-    virtual std::any accept(Visitor* visitor) = 0;
-};
-
-class Type;
 
 /**
  * @brief A base class for all variable-declarable declarations.

@@ -19,7 +19,7 @@ TokenType Expr::Access::get_lvalue_declarer() {
     auto l_struct_type = std::dynamic_pointer_cast<Type::Struct>(left->type);
     auto member_name = std::dynamic_pointer_cast<Expr::Identifier>(right)->to_string();
     auto var_node = Environment::inst().get_instance_variable(l_struct_type, member_name);
-    return var_node->declarer;
+    return var_node->decl->declarer;
 }
 
 llvm::Value* Expr::Access::get_llvm_allocation(CodeGenerator* /* code_generator */) {
@@ -31,7 +31,7 @@ llvm::Value* Expr::Access::get_llvm_allocation(CodeGenerator* /* code_generator 
 
 TokenType Expr::Identifier::get_lvalue_declarer() {
     auto var_node = Environment::inst().get_variable(tokens);
-    return var_node->declarer;
+    return var_node->decl->declarer;
 }
 
 llvm::Value* Expr::Identifier::get_llvm_allocation(CodeGenerator* /* code_generator */) {

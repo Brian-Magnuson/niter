@@ -1,7 +1,7 @@
 #include "code_generator.h"
 #include "../checker/environment.h"
-#include "../checker/node.h"
 #include "../logger/logger.h"
+#include "../utility/node.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/FileSystem.h"
@@ -25,7 +25,7 @@ void CodeGenerator::declare_all_structs() {
             // Create the struct type
             std::vector<llvm::Type*> member_types;
             for (auto& [name, member] : node_struct->instance_members) {
-                member_types.push_back(member->type->to_llvm_type(context));
+                member_types.push_back(member->decl->type->to_llvm_type(context));
             }
             // The struct type is already created. Just set the body.
             auto llvm_struct_type = llvm::cast<llvm::StructType>(node_struct->ir_type);
@@ -119,7 +119,7 @@ std::any CodeGenerator::visit_var_decl(Decl::Var* decl) {
             initializer = std::any_cast<llvm::Value*>(decl->initializer->accept(this));
         } else {
             // If there is no initializer, store the default value.
-            initializer = llvm::Constant::getNullValue(var_node->type->to_llvm_type(context));
+            initializer = llvm::Constant::getNullValue(var_node->decl->type->to_llvm_type(context));
         }
         // This should never be nullptr
         auto llvm_safe_name = var_node->unique_name;
@@ -135,7 +135,7 @@ std::any CodeGenerator::visit_var_decl(Decl::Var* decl) {
         // Create the global variable
         llvm::GlobalVariable* global = new llvm::GlobalVariable(
             *ir_module,
-            var_node->type->to_llvm_type(context),
+            var_node->decl->type->to_llvm_type(context),
             false,
             llvm::GlobalValue::InternalLinkage,
             constant_initializer,
@@ -158,20 +158,14 @@ std::any CodeGenerator::visit_var_decl(Decl::Var* decl) {
             init_type = decl->initializer->type;
         } else {
             // If there is no initializer, store the default value.
-            initializer = llvm::Constant::getNullValue(var_node->type->to_llvm_type(context));
+            initializer = llvm::Constant::getNullValue(var_node->decl->type->to_llvm_type(context));
         }
-
-        Type::are_compatible(init_type, var_node->type);
-        // If one of the types is `auto`, this will set the type of the variables to be the same.
-        // Note: All expressions already have their types set.
-        // The types of variables are not stored in the AST however; they are stored in the namespace tree.
-        // Since parts of the namespace tree are deleted after type checking, we need to set the types here.
 
         auto llvm_safe_name = var_node->unique_name;
         std::replace(llvm_safe_name.begin(), llvm_safe_name.end(), ':', '_');
 
         // Create the alloca instruction for the variable.
-        llvm::AllocaInst* alloca = builder->CreateAlloca(var_node->type->to_llvm_type(context), nullptr, llvm_safe_name);
+        llvm::AllocaInst* alloca = builder->CreateAlloca(var_node->decl->type->to_llvm_type(context), nullptr, llvm_safe_name);
 
         // Store the value in the alloca instruction.
         builder->CreateStore(initializer, alloca);
@@ -189,7 +183,7 @@ std::any CodeGenerator::visit_fun_decl(Decl::Fun* decl) {
     // This should never be nullptr
 
     // Create the function type
-    llvm::FunctionType* fun_type = llvm::cast<llvm::FunctionType>(fun_node->type->to_llvm_type(context));
+    llvm::FunctionType* fun_type = llvm::cast<llvm::FunctionType>(fun_node->decl->type->to_llvm_type(context));
 
     auto llvm_safe_name = fun_node->unique_name;
     std::replace(llvm_safe_name.begin(), llvm_safe_name.end(), ':', '_');
@@ -254,7 +248,7 @@ std::any CodeGenerator::visit_extern_fun_decl(Decl::ExternFun* decl) {
     // This should never be nullptr
 
     // Create the function type
-    llvm::FunctionType* fun_ll_type = llvm::cast<llvm::FunctionType>(fun_node->type->to_llvm_type(context));
+    llvm::FunctionType* fun_ll_type = llvm::cast<llvm::FunctionType>(fun_node->decl->type->to_llvm_type(context));
     // This should never be nullptr
 
     // External function names are based strictly on the name of the function, not the unique name in the tree.
@@ -335,7 +329,7 @@ std::any CodeGenerator::visit_identifier_expr(Expr::Identifier* expr) {
     // This should never be nullptr
 
     // If var_node is a function, the llvm_allocation is the function itself
-    if (var_node->type->kind() == TypeKind::FUNCTION) {
+    if (var_node->decl->type->kind() == TypeKind::FUNCTION) {
         return var_node->llvm_allocation;
     }
 

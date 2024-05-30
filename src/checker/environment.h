@@ -3,11 +3,11 @@
 
 #include "../logger/error_code.h"
 #include "../parser/annotation.h"
-#include "../parser/decl.h"
-#include "../parser/expr.h"
 #include "../scanner/token.h"
-#include "node.h"
-#include "type.h"
+#include "../utility/decl.h"
+#include "../utility/expr.h"
+#include "../utility/node.h"
+#include "../utility/type.h"
 #include "llvm/IR/LLVMContext.h"
 #include <map>
 #include <memory>
@@ -16,13 +16,13 @@
 #include <utility>
 #include <vector>
 
-struct DeferredVariable {
-    Location location;
-    std::shared_ptr<Annotation> annotation;
-    std::shared_ptr<Node::Scope> scope;
-    std::string name;
-    TokenType declarer;
-};
+// struct DeferredVariable {
+//     Location location;
+//     std::shared_ptr<Annotation> annotation;
+//     std::shared_ptr<Node::Scope> scope;
+//     std::string name;
+//     TokenType declarer;
+// };
 
 /**
  * @brief A singleton class to store environment information for the type checkers.
@@ -44,7 +44,7 @@ class Environment {
      * @deprecated Use deferred_declarations instead.
      *
      */
-    std::vector<DeferredVariable> deferred_variables;
+    // std::vector<DeferredVariable> deferred_variables;
 
     // A list of deferred declarations to be resolved later.
     std::vector<std::pair<Decl::VarDeclarable*, std::shared_ptr<Node::Scope>>>

@@ -1,9 +1,9 @@
 #ifndef LOCAL_CHECKER_H
 #define LOCAL_CHECKER_H
 
-#include "../parser/decl.h"
-#include "../parser/expr.h"
-#include "../parser/stmt.h"
+#include "../utility/decl.h"
+#include "../utility/expr.h"
+#include "../utility/stmt.h"
 #include "environment.h"
 #include <any>
 #include <exception>

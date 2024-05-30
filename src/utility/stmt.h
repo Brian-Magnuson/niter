@@ -1,55 +1,13 @@
 #ifndef STMT_H
 #define STMT_H
 
+#include "../utility/core.h"
+
 #include "../scanner/token.h"
 #include "decl.h"
 #include "expr.h"
 #include <any>
 #include <memory>
-
-/**
- * @brief An abstract base class for all statements.
- * Includes statements for expressions and declarations.
- *
- */
-class Stmt {
-public:
-    class Declaration;
-    class Expression;
-    class Block;
-    class Conditional;
-    class Loop;
-    class Return;
-    class Break;
-    class Continue;
-    class EndOfFile;
-
-    virtual ~Stmt() {}
-
-    // The location of the statement. Useful for error messages.
-    Location location;
-
-    /**
-     * @brief A visitor class for statements.
-     *
-     */
-    class Visitor {
-    public:
-        virtual std::any visit_declaration_stmt(Declaration* stmt) = 0;
-        virtual std::any visit_expression_stmt(Expression* stmt) = 0;
-        virtual std::any visit_block_stmt(Block* stmt) = 0;
-        virtual std::any visit_conditional_stmt(Conditional* stmt) = 0;
-        virtual std::any visit_loop_stmt(Loop* stmt) = 0;
-        virtual std::any visit_return_stmt(Return* stmt) = 0;
-        virtual std::any visit_break_stmt(Break* stmt) = 0;
-        virtual std::any visit_continue_stmt(Continue* stmt) = 0;
-        virtual std::any visit_eof_stmt(EndOfFile* stmt) = 0;
-    };
-
-    virtual std::any accept(Visitor* visitor) = 0;
-};
-
-class Decl;
 
 /**
  * @brief A class representing a declaration statement.
@@ -58,7 +16,9 @@ class Decl;
  */
 class Stmt::Declaration : public Stmt {
 public:
-    Declaration(std::shared_ptr<Decl> declaration);
+    Declaration(std::shared_ptr<Decl> declaration) : declaration(declaration) {
+        location = declaration->location;
+    }
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_declaration_stmt(this);
@@ -68,8 +28,6 @@ public:
     std::shared_ptr<Decl> declaration;
 };
 
-class Expr;
-
 /**
  * @brief A class representing an expression statement.
  * Expression statements are statements that consist of an expression.
@@ -77,7 +35,9 @@ class Expr;
  */
 class Stmt::Expression : public Stmt {
 public:
-    Expression(std::shared_ptr<Expr> expression);
+    Expression(std::shared_ptr<Expr> expression) : expression(expression) {
+        location = expression->location;
+    }
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_expression_stmt(this);

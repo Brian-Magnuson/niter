@@ -3,10 +3,10 @@
 
 #include "../logger/error_code.h"
 #include "../scanner/token.h"
+#include "../utility/decl.h"
+#include "../utility/expr.h"
+#include "../utility/stmt.h"
 #include "annotation.h"
-#include "decl.h"
-#include "expr.h"
-#include "stmt.h"
 #include <exception>
 #include <memory>
 #include <stack>

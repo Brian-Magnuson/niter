@@ -1,8 +1,8 @@
 #ifndef AST_PRINTER_H
 #define AST_PRINTER_H
 
-#include "expr.h"
-#include "stmt.h"
+#include "../utility/expr.h"
+#include "../utility/stmt.h"
 #include <any>
 #include <memory>
 #include <string>

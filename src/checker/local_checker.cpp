@@ -1,8 +1,8 @@
 #include "local_checker.h"
 #include "../logger/logger.h"
 #include "../scanner/token.h"
+#include "../utility/type.h"
 #include "../utility/utils.h"
-#include "type.h"
 #include <iostream>
 #include <tuple>
 
@@ -132,21 +132,21 @@ std::any LocalChecker::visit_var_decl(Decl::Var* decl) {
     auto variable = std::dynamic_pointer_cast<Node::Variable>(node);
 
     // Verify that the type of the initializer matches the type annotation
-    if (!Type::are_compatible(init_type, variable->type)) {
-        ErrorLogger::inst().log_error(decl->name.location, E_INCOMPATIBLE_TYPES, "Cannot convert from " + init_type->to_string() + " to " + variable->type->to_string() + ".");
+    if (!Type::are_compatible(init_type, variable->decl->type)) {
+        ErrorLogger::inst().log_error(decl->name.location, E_INCOMPATIBLE_TYPES, "Cannot convert from " + init_type->to_string() + " to " + variable->decl->type->to_string() + ".");
         throw LocalTypeException();
     }
     // Verify that none of the types are blank
-    if (variable->type->kind() == TypeKind::BLANK || init_type->kind() == TypeKind::BLANK) {
+    if (variable->decl->type->kind() == TypeKind::BLANK || init_type->kind() == TypeKind::BLANK) {
         ErrorLogger::inst().log_error(decl->name.location, E_UNKNOWN_TYPE, "Could not resolve type annotation.");
         throw LocalTypeException();
     }
     // Verify that the right side is not a const pointer being assigned to a non-const pointer
     auto init_ptr_type = std::dynamic_pointer_cast<Type::Pointer>(init_type);
-    if (init_ptr_type != nullptr && init_ptr_type->declarer == KW_CONST && variable->declarer != KW_CONST) {
+    if (init_ptr_type != nullptr && init_ptr_type->declarer == KW_CONST && variable->decl->declarer != KW_CONST) {
         ErrorLogger::inst().log_error(decl->name.location, E_INVALID_PTR_DECLARER, "Cannot assign a const pointer to a non-const pointer.");
         throw LocalTypeException();
-    } else if (init_ptr_type != nullptr && variable->declarer == KW_CONST) {
+    } else if (init_ptr_type != nullptr && variable->decl->declarer == KW_CONST) {
         // If the variable is const, the pointer must be const as well
         init_ptr_type->declarer = KW_CONST;
     }
@@ -193,9 +193,9 @@ std::any LocalChecker::visit_fun_decl(Decl::Fun* decl) {
         auto param_var = std::dynamic_pointer_cast<Node::Variable>(param_node);
         // Params do not have type `auto`; the parser already checks for this
         // If the parameter is a pointer, make the declarer in the pointer type match the declarer of the parameter
-        auto param_ptr_type = std::dynamic_pointer_cast<Type::Pointer>(param_var->type);
+        auto param_ptr_type = std::dynamic_pointer_cast<Type::Pointer>(param_var->decl->type);
         if (param_ptr_type != nullptr) {
-            param_ptr_type->declarer = param_var->declarer;
+            param_ptr_type->declarer = param_var->decl->declarer;
         }
 
         // We don't worry about initializers for parameters; this is just a type checker
@@ -206,7 +206,7 @@ std::any LocalChecker::visit_fun_decl(Decl::Fun* decl) {
         ErrorLogger::inst().log_error(decl->name.location, E_IMPOSSIBLE, "Function pointer variable is nullptr in LocalChecker::visit_fun_decl.");
         throw LocalTypeException();
     }
-    auto variable_fun_type = std::dynamic_pointer_cast<Type::Function>(variable->type);
+    auto variable_fun_type = std::dynamic_pointer_cast<Type::Function>(variable->decl->type);
 
     // Increase the local scope for the function body
     Environment::inst().increase_local_scope();
@@ -219,7 +219,7 @@ std::any LocalChecker::visit_fun_decl(Decl::Fun* decl) {
         std::any stmt_type = stmt->accept(this);
         if (stmt_type.has_value()) {
             has_return = true;
-            if (variable->type->to_string() == "::void") {
+            if (variable->decl->type->to_string() == "::void") {
                 ErrorLogger::inst().log_error(stmt->location, E_RETURN_IN_VOID_FUN, "Function with return type 'void' cannot return a value.");
                 throw LocalTypeException();
             } else {
@@ -483,7 +483,7 @@ std::any LocalChecker::visit_access_expr(Expr::Access* expr) {
             throw LocalTypeException();
         }
 
-        expr->type = Environment::inst().get_instance_variable(left_seg_type, right->to_string())->type;
+        expr->type = Environment::inst().get_instance_variable(left_seg_type, right->to_string())->decl->type;
         // If this returns nullptr, the member was not found
         if (expr->type == nullptr) {
             ErrorLogger::inst().log_error(expr->location, E_INVALID_STRUCT_MEMBER, "Struct type " + left_seg_type->to_string() + " does not have member " + right->to_string() + ".");
@@ -509,7 +509,7 @@ std::any LocalChecker::visit_access_expr(Expr::Access* expr) {
             throw LocalTypeException();
         }
 
-        expr->type = Environment::inst().get_instance_variable(left_seg_type, right->to_string())->type;
+        expr->type = Environment::inst().get_instance_variable(left_seg_type, right->to_string())->decl->type;
         // If this returns nullptr, the member was not found
         if (expr->type == nullptr) {
             ErrorLogger::inst().log_error(expr->location, E_INVALID_STRUCT_MEMBER, "Struct type " + left_seg_type->to_string() + " does not have member " + right->to_string() + ".");
@@ -571,7 +571,7 @@ std::any LocalChecker::visit_identifier_expr(Expr::Identifier* expr) {
         ErrorLogger::inst().log_error(expr->location, E_UNKNOWN_VAR, "Variable `" + expr->to_string() + "` was not declared.");
         throw LocalTypeException();
     }
-    expr->type = var_node->type;
+    expr->type = var_node->decl->type;
     if (expr->type == nullptr) {
         ErrorLogger::inst().log_error(expr->location, E_UNKNOWN_TYPE, "Could not resolve type annotation.");
         throw LocalTypeException();
