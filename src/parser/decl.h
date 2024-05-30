@@ -15,6 +15,8 @@
  */
 class Decl {
 public:
+    class VarDeclarable;
+
     class Var;
     class Fun;
     class ExternFun;
@@ -40,6 +42,36 @@ public:
     virtual std::any accept(Visitor* visitor) = 0;
 };
 
+class Type;
+
+/**
+ * @brief A base class for all variable-declarable declarations.
+ * We say that a declaration is variable-declarable if the Environment class can declare the declaration as a variable.
+ * Includes normal variable declarations and function declarations.
+ * This class allows the namespace tree to store a reference to the AST node that represents the declaration.
+ * Unlike some Nodes in the namespace tree, the AST node lives for the entire duration of the program, making it a reliable source of type information.
+ *
+ */
+class Decl::VarDeclarable : public Decl {
+protected:
+    VarDeclarable(TokenType declarer, Token name, std::shared_ptr<Annotation> type_annotation) : declarer(declarer), name(name), type_annotation(type_annotation) {
+        location = name.location;
+    }
+
+public:
+    virtual ~VarDeclarable() {}
+
+    // The token type that signifies the declaration type.
+    TokenType declarer;
+    // The name of the variable.
+    Token name;
+    // The type annotation of the variable. nullptr if no type was specified.
+    std::shared_ptr<Annotation> type_annotation;
+    // The type of the variable. nullptr if the type was not resolved.
+    // To be set by the type checker.
+    std::shared_ptr<Type> type = nullptr;
+};
+
 class Expr;
 // Forward declaration Expr for Decl::Var
 
@@ -48,22 +80,18 @@ class Expr;
  * E.g. var a = 1; const msg = "Hello, world!";
  *
  */
-class Decl::Var : public Decl {
+class Decl::Var : public Decl::VarDeclarable {
 public:
-    Var(TokenType declarer, Token name, std::shared_ptr<Annotation> type_annotation, std::shared_ptr<Expr> initializer) : declarer(declarer), name(name), type_annotation(type_annotation), initializer(initializer) {
-        location = name.location;
-    }
+    // Var(TokenType declarer, Token name, std::shared_ptr<Annotation> type_annotation, std::shared_ptr<Expr> initializer) : declarer(declarer), name(name), type_annotation(type_annotation), initializer(initializer) {
+    //     location = name.location;
+    // }
+
+    Var(TokenType declarer, Token name, std::shared_ptr<Annotation> type_annotation, std::shared_ptr<Expr> initializer) : VarDeclarable(declarer, name, type_annotation), initializer(initializer) {}
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_var_decl(this);
     }
 
-    // The token type that signifies the declaration type.
-    TokenType declarer;
-    // The name of the variable.
-    Token name;
-    // The type annotation of the variable. nullptr if no type was specified.
-    std::shared_ptr<Annotation> type_annotation;
     // The initializer expression. Note: if the variable is explicitly initialized to nil, this will still point to an expression that represents nil.
     std::shared_ptr<Expr> initializer;
 };
@@ -76,7 +104,7 @@ class Stmt;
  * E.g. fun add(a: int, b: int): int { return a + b; }
  *
  */
-class Decl::Fun : public Decl {
+class Decl::Fun : public Decl::VarDeclarable {
 public:
     Fun(
         TokenType declarer,
@@ -85,24 +113,16 @@ public:
         std::shared_ptr<Decl::Var> return_var,
         std::shared_ptr<Annotation> type_annotation,
         std::vector<std::shared_ptr<Stmt>> body
-    ) : declarer(declarer), name(name), parameters(parameters), return_var(return_var), type_annotation(type_annotation), body(body) {
-        location = name.location;
-    }
+    ) : VarDeclarable(declarer, name, type_annotation), parameters(parameters), return_var(return_var), body(body) {}
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_fun_decl(this);
     }
 
-    // The token type that signifies the declaration type.
-    TokenType declarer;
-    // The name of the function.
-    Token name;
     // The parameters of the function.
     std::vector<std::shared_ptr<Decl::Var>> parameters;
     // The return variable of the function. nullptr if the function does not return a value.
     std::shared_ptr<Decl::Var> return_var;
-    // The type of the function. Includes the return type and the type arguments.
-    std::shared_ptr<Annotation> type_annotation;
     // The body of the function.
     std::vector<std::shared_ptr<Stmt>> body;
 };
@@ -112,26 +132,19 @@ public:
  * E.g. extern fun printf(format: string, ...): int;
  *
  */
-class Decl::ExternFun : public Decl {
+class Decl::ExternFun : public Decl::VarDeclarable {
 public:
     ExternFun(
         TokenType declarer,
         Token name,
         std::shared_ptr<Annotation> type_annotation
-    ) : declarer(declarer), name(name), type_annotation(type_annotation) {
+    ) : VarDeclarable(declarer, name, type_annotation) {
         location = name.location;
     }
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_extern_fun_decl(this);
     }
-
-    // The token type that signifies the declaration type.
-    TokenType declarer;
-    // The name of the function.
-    Token name;
-    // The type of the function. Includes the return type and the type arguments.
-    std::shared_ptr<Annotation> type_annotation;
 };
 
 /**
