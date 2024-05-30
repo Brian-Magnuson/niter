@@ -151,12 +151,21 @@ std::any CodeGenerator::visit_var_decl(Decl::Var* decl) {
 
         // Generate code for the initializer expression.
         llvm::Value* initializer = nullptr;
+        std::shared_ptr<Type> init_type = std::make_shared<Type::Blank>();
+
         if (decl->initializer != nullptr) {
             initializer = std::any_cast<llvm::Value*>(decl->initializer->accept(this));
+            init_type = decl->initializer->type;
         } else {
             // If there is no initializer, store the default value.
             initializer = llvm::Constant::getNullValue(var_node->type->to_llvm_type(context));
         }
+
+        Type::are_compatible(init_type, var_node->type);
+        // If one of the types is `auto`, this will set the type of the variables to be the same.
+        // Note: All expressions already have their types set.
+        // The types of variables are not stored in the AST however; they are stored in the namespace tree.
+        // Since parts of the namespace tree are deleted after type checking, we need to set the types here.
 
         auto llvm_safe_name = var_node->unique_name;
         std::replace(llvm_safe_name.begin(), llvm_safe_name.end(), ':', '_');

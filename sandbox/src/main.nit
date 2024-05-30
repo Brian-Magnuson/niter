@@ -1,6 +1,9 @@
 extern variadic fun printf(char*): i32
 
 fun main(): i32 {
-    printf("The answer is: %d\n", 42)
+    var x = 42
+    x = 21
+
+    printf("The answer is: %d\n", x)
     return 0
 }
