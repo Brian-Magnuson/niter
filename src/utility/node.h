@@ -115,7 +115,7 @@ class Node::LocalScope : public Node::Scope {
 public:
     LocalScope(std::shared_ptr<Scope> parent) {
         this->parent = parent;
-        unique_name = parent->unique_name + std::to_string(local_scope_count++) + "__";
+        unique_name = parent->unique_name + "::" + std::to_string(local_scope_count++);
     }
 };
 

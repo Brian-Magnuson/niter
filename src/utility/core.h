@@ -310,8 +310,8 @@ public:
 
     virtual ~Node() = default;
 
+    // The number of local scopes created. Used for generating unique names.
     static int local_scope_count;
-
     // A unique name for this node. Used for type comparison and LLVM IR generation.
     std::string unique_name;
     // The parent scope of this node. This is never a variable since variables do not have children.

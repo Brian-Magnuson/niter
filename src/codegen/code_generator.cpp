@@ -391,7 +391,7 @@ CodeGenerator::CodeGenerator() {
     declare_all_structs();
 }
 
-std::shared_ptr<llvm::Module> CodeGenerator::generate(std::vector<std::shared_ptr<Stmt>> stmts, bool dump_ir) {
+std::shared_ptr<llvm::Module> CodeGenerator::generate(std::vector<std::shared_ptr<Stmt>> stmts, const std::string& ir_target_destination) {
     try {
         // Visit each statement
         for (auto& stmt : stmts) {
@@ -407,8 +407,8 @@ std::shared_ptr<llvm::Module> CodeGenerator::generate(std::vector<std::shared_pt
         return nullptr;
     }
 
-    if (dump_ir) {
-        this->dump_ir();
+    if (ir_target_destination != "") {
+        this->dump_ir(ir_target_destination);
     }
 
     // Verify the module
@@ -421,14 +421,14 @@ std::shared_ptr<llvm::Module> CodeGenerator::generate(std::vector<std::shared_pt
 }
 
 void CodeGenerator::dump_ir(const std::string& filename) {
-    std::filesystem::path dir = std::filesystem::path(filename).parent_path();
-    if (!std::filesystem::exists(dir)) {
-        std::filesystem::create_directories(dir);
-    }
+
     std::error_code ec;
     llvm::raw_fd_ostream ir_stream(filename, ec, llvm::sys::fs::OF_Text);
-    ir_module->print(ir_stream, nullptr);
+
     if (ec) {
         ErrorLogger::inst().log_error(E_IO, std::string("Could not dump IR to file: ") + ec.message());
+        return;
     }
+
+    ir_module->print(ir_stream, nullptr);
 }
