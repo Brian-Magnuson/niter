@@ -9,8 +9,10 @@
 
 /**
  * @brief A base class representing a type.
- * Unlike annotations, types store pointers to the nodes in the namespace tree.
- * This results in the namespace tree being the single source of truth for types.
+ * Types are used to represent the kind of data that can be stored in a variable.
+ * They can be resolved to LLVM types for code generation.
+ * If a type contains a struct type, the struct type will point to a Node in the namespace tree.
+ * Types are different from Annotations, which merely represent the label of a type applied to a declaration.
  *
  */
 class Type {
@@ -123,8 +125,10 @@ public:
 };
 
 /**
- * @brief An abstract base class for all statements.
+ * @brief An abstract base class for all statements in the AST.
  * Includes statements for expressions and declarations.
+ * A program is an ordered list of statements.
+ * Function declarations and blocks may also contain a list of statements.
  *
  */
 class Stmt {
@@ -161,11 +165,25 @@ public:
         virtual std::any visit_eof_stmt(EndOfFile* stmt) = 0;
     };
 
+    /**
+     * @brief Accepts a visitor class. Information may be passed upward in the return value.
+     * CAUTION: Improper casting of the std::any value can result in obscure runtime errors.
+     *
+     * @param visitor The visitor class to accept.
+     * @return std::any The return value from the visitor class.
+     * Statements usually return the empty std::any value unless the statement contains a return statement.
+     * If the visitor is a type checker, the return value will be a Type.
+     * If the visitor is a code generator, usually nullptr.
+     */
     virtual std::any accept(Visitor* visitor) = 0;
 };
 
 /**
- * @brief An abstract base class for all declarations.
+ * @brief An abstract base class for all declarations in the AST.
+ * A declaration is a statement that introduces a new name into the program.
+ * Structs are used to create Struct Nodes in the namespace tree.
+ * Other declaration types are VarDeclarable, meaning they can be declared as variables in the Environment.
+ * If a declaration is VarDeclarable, it may store its resolved Type in addition to its Annotation.
  *
  */
 class Decl {
@@ -194,16 +212,29 @@ public:
         virtual std::any visit_struct_decl(Struct* decl) = 0;
     };
 
+    /**
+     * @brief Accepts a visitor class. Information may be passed upward in the return value.
+     * CAUTION: Improper casting of the std::any value can result in obscure runtime errors.
+     *
+     * @param visitor The visitor class to accept.
+     * @return std::any The return value from the visitor class.
+     * In the type checkers, visiting a declaration usually yields the empty std::any value.
+     * In the code generator, visiting a declaration usually yields nullptr.
+     */
     virtual std::any accept(Visitor* visitor) = 0;
 };
 
 /**
- * @brief An abstract base class for all expressions.
+ * @brief An abstract base class for all expressions in the AST.
+ * Expressions are statements that evaluate to a value.
+ * In the type checkers, visiting an expression will yield a Type.
+ * In the code generator, visiting an expression will yield an LLVM Value.
+ * Some expressions are LValues; these expressions implement a special visit function for code generation.
  *
  */
 class Expr {
 public:
-    class Locatable;
+    class LValue;
 
     class Assign;
     class Logical;
@@ -217,9 +248,6 @@ public:
     class Literal;
     class Array;
     class Tuple;
-
-    // An annotation representing the type of the expression. Set to nullptr, to be filled in by the type checker.
-    // std::shared_ptr<Annotation> type_annotation = nullptr;
 
     // The type of the expression. Set to nullptr, to be filled in by the type checker.
     std::shared_ptr<Type> type = nullptr;
@@ -255,12 +283,19 @@ public:
      *
      * @param visitor The visitor class to accept.
      * @return std::any The return value from the visitor class.
+     * In the type checkers, visiting an expression will yield a Type.
+     * In the code generator, visiting an expression will yield an LLVM Value.
      */
     virtual std::any accept(Visitor* visitor) = 0;
 };
 
 /**
  * @brief A base class for nodes in the namespace tree.
+ * The namespace tree is a tree structure representing the various *spaces* in the program
+ * and the variables contained within them.
+ * All nodes have a reference to their parent scope; the root scope has a nullptr parent.
+ * Some nodes in the namespace tree are Scopes, which contain other nodes.
+ * Some nodes are also Locatable, which means they have a location in the source code.
  *
  */
 class Node {

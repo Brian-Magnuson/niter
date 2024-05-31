@@ -120,14 +120,12 @@ public:
     }
 };
 
-class Type;
-// Need to forward declare Type for Node::Variable
-
 /**
  * @brief A node that represents a variable.
  * Despite the name "Variable", this class is also used for function pointers.
  * Variables may not have children, though they still track their parent scope.
- * Variables may have an annotation, which is used to store type information.
+ * Variables store a raw pointer to the AST declaration node that created them.
+ * The variable's name, type, and declarer are stored in the declaration node.
  *
  */
 class Node::Variable : public Node::Locatable {

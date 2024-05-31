@@ -266,7 +266,7 @@ std::any LocalChecker::visit_assign_expr(Expr::Assign* expr) {
     auto l_type = std::any_cast<std::shared_ptr<Type>>(expr->left->accept(this));
     auto r_type = std::any_cast<std::shared_ptr<Type>>(expr->right->accept(this));
 
-    auto l_value = std::dynamic_pointer_cast<Expr::Locatable>(expr->left);
+    auto l_value = std::dynamic_pointer_cast<Expr::LValue>(expr->left);
     if (l_value == nullptr) {
         ErrorLogger::inst().log_error(expr->location, E_ASSIGN_TO_NON_LVALUE, "Left side of assignment is not an lvalue.");
         throw LocalTypeException();
@@ -393,7 +393,7 @@ std::any LocalChecker::visit_unary_expr(Expr::Unary* expr) {
             throw LocalTypeException();
         }
     } else if (expr->op.tok_type == TOK_AMP) {
-        auto l_value = std::dynamic_pointer_cast<Expr::Locatable>(expr->right);
+        auto l_value = std::dynamic_pointer_cast<Expr::LValue>(expr->right);
         if (l_value == nullptr) {
             ErrorLogger::inst().log_error(expr->location, E_ADDRESS_OF_NON_LVALUE, "Cannot take the address of a non-lvalue.");
             throw LocalTypeException();

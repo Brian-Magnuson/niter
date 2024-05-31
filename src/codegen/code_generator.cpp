@@ -266,7 +266,7 @@ std::any CodeGenerator::visit_struct_decl(Decl::Struct*) {
 
 std::any CodeGenerator::visit_assign_expr(Expr::Assign* expr) {
     // Get the llvm allocation of the left side
-    auto lvalue = std::dynamic_pointer_cast<Expr::Locatable>(expr->left);
+    auto lvalue = std::dynamic_pointer_cast<Expr::LValue>(expr->left);
     // This should never be nullptr
     auto llvm_allocation = lvalue->get_llvm_allocation(this);
 

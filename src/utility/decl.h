@@ -63,9 +63,6 @@ public:
     std::shared_ptr<Expr> initializer;
 };
 
-class Stmt;
-// Forward declaration Stmt for Decl::Fun
-
 /**
  * @brief A class representing a function declaration.
  * E.g. fun add(a: int, b: int): int { return a + b; }

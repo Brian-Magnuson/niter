@@ -20,12 +20,12 @@ class CodeGenerator;
  * These include Identifier, Access, and Dereference expressions.
  *
  */
-class Expr::Locatable : public Expr {
+class Expr::LValue : public Expr {
 protected:
-    Locatable() {}
+    LValue() {}
 
 public:
-    virtual ~Locatable() {}
+    virtual ~LValue() {}
 
     /**
      * @brief Retrieves the declarer associated with the lvalue.
@@ -146,7 +146,7 @@ public:
  * Structurally, it is similar to a unary expression, but these expressions can serve as lvalues.
  *
  */
-class Expr::Dereference : public Expr::Locatable {
+class Expr::Dereference : public Expr::LValue {
 public:
     Dereference(Token op, std::shared_ptr<Expr> right) : op(op), right(right) {
         location = op.location;
@@ -172,7 +172,7 @@ public:
  * (. or -> or [])
  *
  */
-class Expr::Access : public Expr::Locatable {
+class Expr::Access : public Expr::LValue {
 public:
     Access(std::shared_ptr<Expr> left, Token op, std::shared_ptr<Expr> right)
         : left(left), op(op), right(right) {
@@ -244,7 +244,7 @@ public:
  *
  *
  */
-class Expr::Identifier : public Expr::Locatable {
+class Expr::Identifier : public Expr::LValue {
 public:
     Identifier(std::vector<Token> tokens) : tokens(tokens) {
         location = tokens[0].location;
