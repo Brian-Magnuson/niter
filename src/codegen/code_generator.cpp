@@ -329,7 +329,7 @@ std::any CodeGenerator::visit_identifier_expr(Expr::Identifier* expr) {
     // This should never be nullptr
 
     // If var_node is a function, the llvm_allocation is the function itself
-    if (var_node->decl->type->kind() == TypeKind::FUNCTION) {
+    if (var_node->decl->type->kind() == Type::Kind::FUNCTION) {
         return var_node->llvm_allocation;
     }
 

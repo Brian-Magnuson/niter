@@ -7,15 +7,6 @@
 #include <memory>
 #include <string>
 
-enum class TypeKind {
-    STRUCT,
-    FUNCTION,
-    ARRAY,
-    POINTER,
-    TUPLE,
-    BLANK
-};
-
 /**
  * @brief A base class representing a type.
  * Unlike annotations, types store pointers to the nodes in the namespace tree.
@@ -24,6 +15,25 @@ enum class TypeKind {
  */
 class Type {
 public:
+    /**
+     * @brief An enum class representing the kind of the type.
+     *
+     */
+    enum class Kind {
+        // The basic kind of type; used for primitives and user-defined types.
+        STRUCT,
+        // A function type.
+        FUNCTION,
+        // An array type.
+        ARRAY,
+        // A pointer type.
+        POINTER,
+        // A tuple type.
+        TUPLE,
+        // A blank type; used for type inference.
+        BLANK
+    };
+
     class Struct;
     class Function;
     class Array;
@@ -36,9 +46,9 @@ public:
     /**
      * @brief Get the kind of the type.
      *
-     * @return TypeKind An enum representing the kind of the type.
+     * @return Type::Kind An enum representing the kind of the type.
      */
-    virtual TypeKind kind() const = 0;
+    virtual Kind kind() const = 0;
 
     /**
      * @brief Get the string representation of the type.
@@ -67,10 +77,10 @@ public:
     static bool are_compatible(std::shared_ptr<Type>& a, std::shared_ptr<Type>& b) {
         if (a->kind() == b->kind()) {
             return a->to_string() == b->to_string();
-        } else if (a->kind() == TypeKind::BLANK) {
+        } else if (a->kind() == Type::Kind::BLANK) {
             a = b;
             return true;
-        } else if (b->kind() == TypeKind::BLANK) {
+        } else if (b->kind() == Type::Kind::BLANK) {
             b = a;
             return true;
         }

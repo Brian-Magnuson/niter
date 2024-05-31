@@ -23,7 +23,7 @@ public:
     std::shared_ptr<Node::StructScope> struct_scope = nullptr;
 
     virtual ~Struct() = default;
-    TypeKind kind() const override { return TypeKind::STRUCT; }
+    Type::Kind kind() const override { return Type::Kind::STRUCT; }
     std::string to_string() const override { return struct_scope->unique_name; }
 
     llvm::Type* to_llvm_type(std::shared_ptr<llvm::LLVMContext> context) const override {
@@ -50,7 +50,7 @@ public:
     bool is_variadic = false;
 
     virtual ~Function() = default;
-    TypeKind kind() const override { return TypeKind::FUNCTION; }
+    Type::Kind kind() const override { return Type::Kind::FUNCTION; }
     std::string to_string() const override {
         std::string str = "fun(";
         for (auto& param : params) {
@@ -97,7 +97,7 @@ public:
     int size = -1;
 
     virtual ~Array() = default;
-    TypeKind kind() const override { return TypeKind::ARRAY; }
+    Type::Kind kind() const override { return Type::Kind::ARRAY; }
     std::string to_string() const override { return inner_type->to_string() + "[]"; }
 
     llvm::Type* to_llvm_type(std::shared_ptr<llvm::LLVMContext> context) const override {
@@ -121,7 +121,7 @@ public:
     std::shared_ptr<Type> inner_type = nullptr;
 
     virtual ~Pointer() = default;
-    TypeKind kind() const override { return TypeKind::POINTER; }
+    Type::Kind kind() const override { return Type::Kind::POINTER; }
     std::string to_string() const override { return inner_type->to_string() + "*"; }
 
     llvm::Type* to_llvm_type(std::shared_ptr<llvm::LLVMContext> context) const override {
@@ -142,7 +142,7 @@ public:
     std::vector<std::shared_ptr<Type>> elements;
 
     virtual ~Tuple() = default;
-    TypeKind kind() const override { return TypeKind::TUPLE; }
+    Type::Kind kind() const override { return Type::Kind::TUPLE; }
     std::string to_string() const override {
         std::string str = "(";
         for (auto& elem : elements) {
@@ -172,7 +172,7 @@ public:
 class Type::Blank : public Type {
 public:
     virtual ~Blank() = default;
-    TypeKind kind() const override { return TypeKind::BLANK; }
+    Type::Kind kind() const override { return Type::Kind::BLANK; }
     std::string to_string() const override { return ""; }
 
     llvm::Type* to_llvm_type(std::shared_ptr<llvm::LLVMContext> context) const override { return nullptr; }

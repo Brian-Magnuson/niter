@@ -137,7 +137,7 @@ std::any LocalChecker::visit_var_decl(Decl::Var* decl) {
         throw LocalTypeException();
     }
     // Verify that none of the types are blank
-    if (variable->decl->type->kind() == TypeKind::BLANK || init_type->kind() == TypeKind::BLANK) {
+    if (variable->decl->type->kind() == Type::Kind::BLANK || init_type->kind() == Type::Kind::BLANK) {
         ErrorLogger::inst().log_error(decl->name.location, E_UNKNOWN_TYPE, "Could not resolve type annotation.");
         throw LocalTypeException();
     }
