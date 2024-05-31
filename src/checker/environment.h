@@ -16,14 +16,6 @@
 #include <utility>
 #include <vector>
 
-// struct DeferredVariable {
-//     Location location;
-//     std::shared_ptr<Annotation> annotation;
-//     std::shared_ptr<Node::Scope> scope;
-//     std::string name;
-//     TokenType declarer;
-// };
-
 /**
  * @brief A singleton class to store environment information for the type checkers.
  * Uses a namespace tree to store scopes.
@@ -35,16 +27,6 @@ class Environment {
     std::shared_ptr<Node::RootScope> global_tree;
     // The current scope in the namespace tree.
     std::shared_ptr<Node::Scope> current_scope;
-
-    // A list of deferred types to be resolved later.
-    // std::vector<std::pair<std::shared_ptr<Annotation>, std::shared_ptr<Node::Scope>>> deferred_types;
-
-    /**
-     * @brief A list of deferred variables to be resolved later.
-     * @deprecated Use deferred_declarations instead.
-     *
-     */
-    // std::vector<DeferredVariable> deferred_variables;
 
     // A list of deferred declarations to be resolved later.
     std::vector<std::pair<Decl::VarDeclarable*, std::shared_ptr<Node::Scope>>>
@@ -164,34 +146,6 @@ public:
      * If the variable was deferred successfully, the pair will contain nullptr and 0.
      */
     std::pair<std::shared_ptr<Node::Locatable>, ErrorCode> declare_variable(Decl::VarDeclarable* decl, bool allow_deferral = false);
-
-    // /**
-    //  * @brief Declares a new variable in the current scope.
-    //  * If the symbol already exists in the current scope, it will not be declared.
-    //  * If the current scope is a local scope, this information will be removed when the local scope is exited.
-    //  * If the current scope is a global scope, this information will be kept until the program ends or the environment is reset.
-    //  * If the type annotation is not valid, the variable will not be declared.
-    //  * If allow_deferral is true, the variable declaration will be deferred until the type is verified.
-    //  *
-    //  * @param location The location of the token that declared the variable.
-    //  * @param name The name of the symbol to declare.
-    //  * @param declarer The type of the token that declared the variable.
-    //  * @param annotation The type annotation of the variable to declare.
-    //  * @param allow_deferral Whether or not to allow the type to be deferred. Default is false.
-    //  * @return std::pair<std::shared_ptr<Node::Locatable>, ErrorCode> A pair containing a pointer to the variable node and an error code.
-    //  * If the variable was declared successfully, the pair will contain the variable node and 0.
-    //  * If the variable type could not be resolved, the pair will contain nullptr and E_UNKNOWN_TYPE.
-    //  * If the variable is already declared, the pair will contain the existing node and E_SYMBOL_ALREADY_DECLARED.
-    //  * If the variable was deferred successfully, the pair will contain nullptr and 0.
-    //  * @deprecated Use the version that takes a Decl::VarDeclarable object instead.
-    //  */
-    // std::pair<std::shared_ptr<Node::Locatable>, ErrorCode> declare_variable(
-    //     const Location& location,
-    //     const std::string& name,
-    //     TokenType declarer,
-    //     std::shared_ptr<Annotation> annotation,
-    //     bool allow_deferral = false
-    // );
 
     /**
      * @brief Retrieves the variable node from the current scope.

@@ -114,44 +114,6 @@ std::pair<std::shared_ptr<Node::Locatable>, ErrorCode> Environment::declare_vari
     }
 }
 
-// std::pair<std::shared_ptr<Node::Locatable>, ErrorCode> Environment::declare_variable(
-//     const Location& location,
-//     const std::string& name,
-//     TokenType declarer,
-//     std::shared_ptr<Annotation> annotation,
-//     bool allow_deferral
-// ) {
-//     auto iter = current_scope->children.find(name);
-//     if (iter != current_scope->children.end()) {
-//         auto locatable = std::dynamic_pointer_cast<Node::Locatable>(iter->second);
-//         return {locatable, E_SYMBOL_ALREADY_DECLARED};
-//     } else {
-//         std::shared_ptr<Type> type = get_type(annotation);
-//         if (type == nullptr && allow_deferral) {
-//             deferred_variables.push_back(DeferredVariable{
-//                 location,
-//                 annotation,
-//                 current_scope,
-//                 name,
-//                 declarer,
-//             });
-//             return {nullptr, (ErrorCode)0};
-//         } else if (type == nullptr) {
-//             return {nullptr, E_UNKNOWN_TYPE};
-//         } else {
-//             // If the type is a pointer, set the declarer to the token type that declared the variable.
-//             auto ptr_type = std::dynamic_pointer_cast<Type::Pointer>(type);
-//             if (ptr_type != nullptr) {
-//                 // This is to prevent users from mutating the object that the pointer points to.
-//                 ptr_type->declarer = declarer;
-//             }
-//             auto new_variable = std::make_shared<Node::Variable>(location, current_scope, declarer, type, name);
-//             current_scope->children[name] = new_variable;
-//             return {new_variable, (ErrorCode)0};
-//         }
-//     }
-// }
-
 std::shared_ptr<Node::Variable> Environment::get_variable(const std::vector<Token>& ident_tokens) {
     std::vector<std::string> ident_strings;
     for (auto& token : ident_tokens) {
