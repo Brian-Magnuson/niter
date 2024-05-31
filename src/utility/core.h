@@ -310,7 +310,7 @@ public:
 
     virtual ~Node() = default;
 
-    // static int local_scope_count;
+    static int local_scope_count;
 
     // A unique name for this node. Used for type comparison and LLVM IR generation.
     std::string unique_name;

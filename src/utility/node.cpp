@@ -2,6 +2,8 @@
 
 #include "../checker/environment.h"
 
+int Node::local_scope_count = 0;
+
 std::shared_ptr<Node> Node::Scope::upward_lookup(const std::string& name) {
     if (children.find(name) != children.end()) {
         return children[name];
