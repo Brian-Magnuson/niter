@@ -564,10 +564,14 @@ std::any LocalChecker::visit_cast_expr(Expr::Cast* expr) {
     auto left_type = std::any_cast<std::shared_ptr<Type>>(expr->expression->accept(this));
     auto target_type = Environment::inst().get_type(expr->annotation);
 
-    // If both types are numeric, the cast is allowed
     // We'll let the code generator handle the specifics of the cast
     if (left_type->is_numeric() && target_type->is_numeric()) {
+        // If both types are numeric, the cast is allowed
         expr->type = target_type;
+    } else if ((left_type->is_numeric() || left_type->kind() == Type::Kind::POINTER) && target_type->to_string() == "::bool") {
+        // If the left type is numeric or a pointer, and the target type is bool, the cast is allowed
+        expr->type = target_type;
+        // This type cast allows people to check if a number is 0 or a pointer is null
     } else {
         ErrorLogger::inst().log_error(expr->location, E_INVALID_CAST, "Cannot cast from " + left_type->to_string() + " to " + target_type->to_string() + ".");
         throw LocalTypeException();

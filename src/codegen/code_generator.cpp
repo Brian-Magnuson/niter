@@ -331,6 +331,8 @@ std::any CodeGenerator::visit_cast_expr(Expr::Cast* expr) {
         return builder->CreateSIToFP(left_value, target_type->to_llvm_type(context));
     } else if (left_type->is_float() && target_type->is_int()) {
         return builder->CreateFPToSI(left_value, target_type->to_llvm_type(context));
+    } else if ((left_type->is_numeric() || left_type->kind() == Type::Kind::POINTER) && target_type->to_string() == "::bool") {
+        return builder->CreateICmpNE(left_value, llvm::Constant::getNullValue(left_value->getType()));
     } else {
         ErrorLogger::inst().log_error(expr->location, E_UNREACHABLE, "Code generator could not perform cast from " + left_type->to_string() + " to " + target_type->to_string() + ".");
         throw CodeGenException();
