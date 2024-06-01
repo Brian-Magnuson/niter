@@ -1110,3 +1110,37 @@ fun main(): i32 {
     logger.reset();
     env.reset();
 }
+
+TEST_CASE("Local checker valid cast 2", "[checker]") {
+    std::string source_code = R"(
+fun main(): i32 {
+    var a = 1;
+    var b = &a;
+    var c = 'a';
+    var a_bool = (a as bool);
+    var b_bool = (b as bool);
+    var c_bool = (c as bool);
+    return 0;
+})";
+    auto file_name = std::make_shared<std::string>("test_files/valid_cast_2.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(true);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    auto stmts = parser.parse();
+    Environment& env = Environment::inst();
+
+    GlobalChecker global_checker;
+    global_checker.type_check(stmts);
+
+    LocalChecker local_checker;
+    local_checker.type_check(stmts);
+    REQUIRE(logger.get_errors().size() == 0);
+
+    logger.reset();
+    env.reset();
+}
