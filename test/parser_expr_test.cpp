@@ -466,6 +466,23 @@ TEST_CASE("Parser idents 2", "[parser]") {
     CHECK(printer.print(stmts.at(2)) == "(stmt:eof)");
 }
 
+TEST_CASE("Parser cast exprs", "[parser]") {
+    std::string source_code = "1 as i64; 2 as f64;";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/cast_exprs_test.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser;
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse(scanner.get_tokens());
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 3);
+    CHECK(printer.print(stmts.at(0)) == "(as 1 i64)");
+    CHECK(printer.print(stmts.at(1)) == "(as 2 f64)");
+    CHECK(printer.print(stmts.at(2)) == "(stmt:eof)");
+}
+
 // MARK: Error tests
 
 TEST_CASE("Logger unmatched paren in grouping", "[logger]") {
@@ -597,6 +614,25 @@ TEST_CASE("Logger not an expression", "[logger]") {
 
     REQUIRE(logger.get_errors().size() >= 1);
     CHECK(logger.get_errors().at(0) == E_NOT_AN_EXPRESSION);
+
+    logger.reset();
+}
+
+TEST_CASE("Logger not an annotation", "[logger]") {
+    std::string source_code = "1 as 2;";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/not_an_annotation_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser;
+    parser.parse(scanner.get_tokens());
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_INVALID_TYPE_ANNOTATION);
 
     logger.reset();
 }

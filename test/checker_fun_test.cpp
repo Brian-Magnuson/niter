@@ -1047,3 +1047,66 @@ fun main(): i32 {
     logger.reset();
     env.reset();
 }
+
+TEST_CASE("Local checker invalid cast", "[checker]") {
+    std::string source_code = R"(
+fun main(): i32 {
+    var a: i32 = 1;
+    var b: i32* = (a as i32*);
+    return 0;
+}
+)";
+    auto file_name = std::make_shared<std::string>("test_files/invalid_cast.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    auto stmts = parser.parse();
+    Environment& env = Environment::inst();
+
+    GlobalChecker global_checker;
+    global_checker.type_check(stmts);
+
+    LocalChecker local_checker;
+    local_checker.type_check(stmts);
+    REQUIRE(logger.get_errors().size() == 1);
+    CHECK(logger.get_errors().at(0) == E_INVALID_CAST);
+
+    logger.reset();
+    env.reset();
+}
+
+TEST_CASE("Local checker valid cast", "[checker]") {
+    std::string source_code = R"(
+fun main(): i32 {
+    var a: i32 = 1;
+    var b: f64 = (a as f64);
+    return 0;
+}
+)";
+    auto file_name = std::make_shared<std::string>("test_files/valid_cast.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(true);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser(scanner.get_tokens());
+    auto stmts = parser.parse();
+    Environment& env = Environment::inst();
+
+    GlobalChecker global_checker;
+    global_checker.type_check(stmts);
+
+    LocalChecker local_checker;
+    local_checker.type_check(stmts);
+    REQUIRE(logger.get_errors().size() == 0);
+
+    logger.reset();
+    env.reset();
+}
