@@ -137,6 +137,8 @@ enum ErrorCode {
     E_UNKNOWN_TYPE,
     // An assignment was found with incompatible types
     E_INCOMPATIBLE_TYPES,
+    // A cast expression was found with incompatible types
+    E_INVALID_CAST,
     // An attempt was made to assign const pointer to a non-const pointer
     E_INVALID_PTR_DECLARER,
     // An array was found with inconsistent types

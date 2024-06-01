@@ -206,6 +206,16 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
     std::any visit_dereference_expr(Expr::Dereference* expr) override;
 
     /**
+     * @brief Visits an access expression and determines if the access expression is valid.
+     * Note: The access expression must be of type array or tuple.
+     *
+     * @param expr The access expression to visit.
+     * @return An std::shared_ptr<Type> representing the type of the expression.
+     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
+     */
+    std::any visit_access_expr(Expr::Access* expr) override;
+
+    /**
      * @brief Visits a call expression and determines if the call expression is valid.
      * Note: The function being called must exist and the arguments must match the function's parameters.
      *
@@ -216,14 +226,15 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
     std::any visit_call_expr(Expr::Call* expr) override;
 
     /**
-     * @brief Visits an access expression and determines if the access expression is valid.
-     * Note: The access expression must be of type array or tuple.
+     * @brief Visits a cast expression and determines if the cast expression is valid.
+     * Cast expressions are type conversions that use the `as` keyword.
+     * Only a few types can be casted to each other.
      *
-     * @param expr The access expression to visit.
-     * @return An std::shared_ptr<Type> representing the type of the expression.
+     * @param expr The cast expression to visit.
+     * @return std::any An std::shared_ptr<Type> representing the type of the casted expression.
      * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
-    std::any visit_access_expr(Expr::Access* expr) override;
+    std::any visit_cast_expr(Expr::Cast* expr) override;
 
     /**
      * @brief Visits a grouping expression and determines if the grouping expression is valid.

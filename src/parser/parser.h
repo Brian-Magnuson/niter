@@ -272,6 +272,15 @@ class Parser {
     std::shared_ptr<Expr> call_expr();
 
     /**
+     * @brief Parses a cast expression.
+     * Cast expressions are expressions followed by a "as" keyword and a type annotation.
+     *
+     * @return std::shared_ptr<Expr> A pointer to the parsed cast expression.
+     * @throw ParserException If an error occurs while parsing the expression. Will be caught by the statement() function.
+     */
+    std::shared_ptr<Expr> cast_expr();
+
+    /**
      * @brief Parses a primary expression.
      * Primary expressions are the most basic expressions and can be literals, identifiers, or grouped expressions.
      *

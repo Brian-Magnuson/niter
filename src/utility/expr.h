@@ -220,6 +220,30 @@ public:
 };
 
 /**
+ * @brief A class representing a cast expression.
+ * E.g. 42 as f32
+ *
+ */
+class Expr::Cast : public Expr {
+public:
+    Cast(std::shared_ptr<Expr> expression, Token as_kw, std::shared_ptr<Annotation> annotation)
+        : expression(expression), as_kw(as_kw), annotation(annotation) {
+        location = as_kw.location;
+    }
+
+    std::any accept(Visitor* visitor) override {
+        return visitor->visit_cast_expr(this);
+    }
+
+    // The expression to cast.
+    std::shared_ptr<Expr> expression;
+    // The keyword token indicating the cast.
+    Token as_kw;
+    // The annotation indicating the type to cast to.
+    std::shared_ptr<Annotation> annotation;
+};
+
+/**
  * @brief A class representing a grouping expression.
  * E.g. (a + b) * c
  *

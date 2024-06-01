@@ -206,6 +206,14 @@ public:
     std::any visit_dereference_expr(Expr::Dereference* expr) override;
 
     /**
+     * @brief Visits an access expression and returns a string representation of it.
+     *
+     * @param expr The access expression to visit.
+     * @return std::any An any object containing the string representation of the expression.
+     */
+    std::any visit_access_expr(Expr::Access* expr) override;
+
+    /**
      * @brief Visits a call expression and returns a string representation of it.
      *
      * @param expr The call expression to visit.
@@ -214,12 +222,12 @@ public:
     std::any visit_call_expr(Expr::Call* expr) override;
 
     /**
-     * @brief Visits an access expression and returns a string representation of it.
+     * @brief Visits a cast expression and returns a string representation of it.
      *
-     * @param expr The access expression to visit.
+     * @param expr The cast expression to visit.
      * @return std::any An any object containing the string representation of the expression.
      */
-    std::any visit_access_expr(Expr::Access* expr) override;
+    std::any visit_cast_expr(Expr::Cast* expr) override;
 
     /**
      * @brief Visits a grouping expression and returns a string representation of it.
@@ -236,15 +244,6 @@ public:
      * @return std::any An any object containing the string representation of the expression.
      */
     std::any visit_identifier_expr(Expr::Identifier* expr) override;
-
-    // TODO: Clean this up
-    // /**
-    //  * @brief Visits a type identifier expression and returns a string representation of it.
-    //  *
-    //  * @param expr The type identifier expression to visit.
-    //  * @return std::any An any object containing the string representation of the expression.
-    //  */
-    // std::any visit_type_ident_expr(Expr::TypeIdent* expr) override;
 
     /**
      * @brief Visits a literal expression and returns a string representation of it.

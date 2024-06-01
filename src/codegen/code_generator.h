@@ -156,6 +156,7 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
     std::any visit_binary_expr(Expr::Binary* expr) override;
     std::any visit_unary_expr(Expr::Unary* expr) override;
     std::any visit_dereference_expr(Expr::Dereference* expr) override;
+    std::any visit_access_expr(Expr::Access* expr) override;
 
     /**
      * @brief Visits a call expression.
@@ -166,7 +167,16 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
      * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
      */
     std::any visit_call_expr(Expr::Call* expr) override;
-    std::any visit_access_expr(Expr::Access* expr) override;
+
+    /**
+     * @brief Visits a cast expression.
+     * Generates code for the cast expression.
+     *
+     * @param expr The cast expression to visit.
+     * @return std::any An llvm::Value* representing the result of the cast.
+     * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
+     */
+    std::any visit_cast_expr(Expr::Cast* expr) override;
 
     /**
      * @brief Visits a grouping expression.

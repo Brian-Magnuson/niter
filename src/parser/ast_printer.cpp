@@ -184,6 +184,14 @@ std::any AstPrinter::visit_dereference_expr(Expr::Dereference* expr) {
     return parenthesize(expr->op.lexeme, {expr->right});
 }
 
+std::any AstPrinter::visit_access_expr(Expr::Access* expr) {
+    if (expr->op.tok_type == TOK_LEFT_SQUARE) {
+        return parenthesize("[]", {expr->left, expr->right});
+    } else {
+        return parenthesize(expr->op.lexeme, {expr->left, expr->right});
+    }
+}
+
 std::any AstPrinter::visit_call_expr(Expr::Call* expr) {
     std::vector<std::shared_ptr<Expr>> args;
     args.push_back(expr->callee);
@@ -193,12 +201,13 @@ std::any AstPrinter::visit_call_expr(Expr::Call* expr) {
     return parenthesize("call", args);
 }
 
-std::any AstPrinter::visit_access_expr(Expr::Access* expr) {
-    if (expr->op.tok_type == TOK_LEFT_SQUARE) {
-        return parenthesize("[]", {expr->left, expr->right});
-    } else {
-        return parenthesize(expr->op.lexeme, {expr->left, expr->right});
-    }
+std::any AstPrinter::visit_cast_expr(Expr::Cast* expr) {
+    std::string result = "(as ";
+    result += std::any_cast<std::string>(expr->expression->accept(this));
+    result += " ";
+    result += expr->annotation->to_string();
+    result += ")";
+    return result;
 }
 
 std::any AstPrinter::visit_grouping_expr(Expr::Grouping* expr) {

@@ -122,6 +122,17 @@ public:
         }
         return false;
     }
+
+    /**
+     * @brief Checks if the type is a primitive numeric type.
+     * Numeric types are either integers or floating point numbers.
+     *
+     * @return true
+     * @return false
+     */
+    bool is_numeric() {
+        return is_int() || is_float();
+    }
 };
 
 /**
@@ -241,8 +252,9 @@ public:
     class Binary;
     class Unary;
     class Dereference;
-    class Call;
     class Access;
+    class Call;
+    class Cast;
     class Grouping;
     class Identifier;
     class Literal;
@@ -268,8 +280,9 @@ public:
         virtual std::any visit_binary_expr(Binary* expr) = 0;
         virtual std::any visit_unary_expr(Unary* expr) = 0;
         virtual std::any visit_dereference_expr(Dereference* expr) = 0;
-        virtual std::any visit_call_expr(Call* expr) = 0;
         virtual std::any visit_access_expr(Access* expr) = 0;
+        virtual std::any visit_call_expr(Call* expr) = 0;
+        virtual std::any visit_cast_expr(Cast* expr) = 0;
         virtual std::any visit_grouping_expr(Grouping* expr) = 0;
         virtual std::any visit_identifier_expr(Identifier* expr) = 0;
         virtual std::any visit_literal_expr(Literal* expr) = 0;

@@ -426,42 +426,6 @@ std::any LocalChecker::visit_dereference_expr(Expr::Dereference* expr) {
     return expr->type;
 }
 
-std::any LocalChecker::visit_call_expr(Expr::Call* expr) {
-    // The left side of the call expression must be callable; i.e. a function pointer type
-    auto left_type = std::any_cast<std::shared_ptr<Type>>(expr->callee->accept(this));
-    if (!IS_TYPE(left_type, Type::Function)) {
-        ErrorLogger::inst().log_error(expr->location, E_CALL_ON_NON_FUN, "Expression is not callable.");
-        throw LocalTypeException();
-    }
-    auto fun_type = std::dynamic_pointer_cast<Type::Function>(left_type);
-
-    // First, the number of arguments must match the number of parameters
-    // If the function is variadic, the number of arguments must be greater than or equal to the number of parameters
-    if (!fun_type->is_variadic && expr->arguments.size() != fun_type->params.size()) {
-        ErrorLogger::inst().log_error(expr->location, E_INVALID_ARITY, "Expected " + std::to_string(fun_type->params.size()) + " arguments, found " + std::to_string(expr->arguments.size()) + ".");
-        throw LocalTypeException();
-    } else if (fun_type->is_variadic && expr->arguments.size() < fun_type->params.size()) {
-        ErrorLogger::inst().log_error(expr->location, E_INVALID_ARITY, "Expected at least " + std::to_string(fun_type->params.size() - 1) + " arguments, found " + std::to_string(expr->arguments.size()) + ".");
-        throw LocalTypeException();
-    }
-
-    // Then, the types of the arguments must match the types of the parameters
-    for (unsigned i = 0; i < expr->arguments.size(); i++) {
-        // All arguments must be visited to ensure that the types are resolved
-        auto arg_type = std::any_cast<std::shared_ptr<Type>>(expr->arguments[i]->accept(this));
-        // We add a range check here in case the function is variadic
-        // If there are more args than params, the extra args will be visited, but not compared against any params
-        if (i < fun_type->params.size() && !Type::are_compatible(arg_type, fun_type->params[i].second)) {
-            ErrorLogger::inst().log_error(expr->arguments[i]->location, E_INCOMPATIBLE_TYPES, "Cannot convert from " + arg_type->to_string() + " to " + fun_type->params[i].second->to_string() + ".");
-            throw LocalTypeException();
-        }
-    }
-
-    // The type of the call expression is the return type of the function
-    expr->type = fun_type->return_type;
-    return expr->type;
-}
-
 std::any LocalChecker::visit_access_expr(Expr::Access* expr) {
     auto left_type = std::any_cast<std::shared_ptr<Type>>(expr->left->accept(this));
 
@@ -558,6 +522,60 @@ std::any LocalChecker::visit_access_expr(Expr::Access* expr) {
         ErrorLogger::inst().log_error(expr->location, E_UNREACHABLE, "Unknown access operator.");
         throw LocalTypeException();
     }
+}
+
+std::any LocalChecker::visit_call_expr(Expr::Call* expr) {
+    // The left side of the call expression must be callable; i.e. a function pointer type
+    auto left_type = std::any_cast<std::shared_ptr<Type>>(expr->callee->accept(this));
+    if (!IS_TYPE(left_type, Type::Function)) {
+        ErrorLogger::inst().log_error(expr->location, E_CALL_ON_NON_FUN, "Expression is not callable.");
+        throw LocalTypeException();
+    }
+    auto fun_type = std::dynamic_pointer_cast<Type::Function>(left_type);
+
+    // First, the number of arguments must match the number of parameters
+    // If the function is variadic, the number of arguments must be greater than or equal to the number of parameters
+    if (!fun_type->is_variadic && expr->arguments.size() != fun_type->params.size()) {
+        ErrorLogger::inst().log_error(expr->location, E_INVALID_ARITY, "Expected " + std::to_string(fun_type->params.size()) + " arguments, found " + std::to_string(expr->arguments.size()) + ".");
+        throw LocalTypeException();
+    } else if (fun_type->is_variadic && expr->arguments.size() < fun_type->params.size()) {
+        ErrorLogger::inst().log_error(expr->location, E_INVALID_ARITY, "Expected at least " + std::to_string(fun_type->params.size() - 1) + " arguments, found " + std::to_string(expr->arguments.size()) + ".");
+        throw LocalTypeException();
+    }
+
+    // Then, the types of the arguments must match the types of the parameters
+    for (unsigned i = 0; i < expr->arguments.size(); i++) {
+        // All arguments must be visited to ensure that the types are resolved
+        auto arg_type = std::any_cast<std::shared_ptr<Type>>(expr->arguments[i]->accept(this));
+        // We add a range check here in case the function is variadic
+        // If there are more args than params, the extra args will be visited, but not compared against any params
+        if (i < fun_type->params.size() && !Type::are_compatible(arg_type, fun_type->params[i].second)) {
+            ErrorLogger::inst().log_error(expr->arguments[i]->location, E_INCOMPATIBLE_TYPES, "Cannot convert from " + arg_type->to_string() + " to " + fun_type->params[i].second->to_string() + ".");
+            throw LocalTypeException();
+        }
+    }
+
+    // The type of the call expression is the return type of the function
+    expr->type = fun_type->return_type;
+    return expr->type;
+}
+
+std::any LocalChecker::visit_cast_expr(Expr::Cast* expr) {
+    auto left_type = std::any_cast<std::shared_ptr<Type>>(expr->expression->accept(this));
+    auto target_type = Environment::inst().get_type(expr->annotation);
+
+    // If both types are numeric, the cast is allowed
+    // We'll let the code generator handle the specifics of the cast
+    if (left_type->is_numeric() && target_type->is_numeric()) {
+        expr->type = target_type;
+    } else {
+        ErrorLogger::inst().log_error(expr->location, E_INVALID_CAST, "Cannot cast from " + left_type->to_string() + " to " + target_type->to_string() + ".");
+        throw LocalTypeException();
+    }
+    // Currently, no other casts are allowed
+    // Pointer casts may be allowed in the future, but they will likely require more syntax rules since they are inherently unsafe
+
+    return expr->type;
 }
 
 std::any LocalChecker::visit_grouping_expr(Expr::Grouping* expr) {

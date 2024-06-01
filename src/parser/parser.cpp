@@ -432,7 +432,7 @@ std::shared_ptr<Expr> Parser::access_expr() {
 }
 
 std::shared_ptr<Expr> Parser::call_expr() {
-    std::shared_ptr<Expr> expr = primary_expr();
+    std::shared_ptr<Expr> expr = cast_expr();
     /*
     Valid forms:
     FUNC()
@@ -465,6 +465,16 @@ std::shared_ptr<Expr> Parser::call_expr() {
         expr = std::make_shared<Expr::Call>(expr, paren, arguments);
     }
 
+    return expr;
+}
+
+std::shared_ptr<Expr> Parser::cast_expr() {
+    std::shared_ptr<Expr> expr = primary_expr();
+    if (match({KW_AS})) {
+        Token op = previous();
+        std::shared_ptr<Annotation> type_annotation = annotation();
+        expr = std::make_shared<Expr::Cast>(expr, op, type_annotation);
+    }
     return expr;
 }
 

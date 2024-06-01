@@ -299,6 +299,11 @@ std::any CodeGenerator::visit_dereference_expr(Expr::Dereference*) {
     return nullptr;
 }
 
+std::any CodeGenerator::visit_access_expr(Expr::Access*) {
+    // TODO: Implement access expressions
+    return nullptr;
+}
+
 std::any CodeGenerator::visit_call_expr(Expr::Call* expr) {
     llvm::Value* ret;
     // Get the function
@@ -314,9 +319,22 @@ std::any CodeGenerator::visit_call_expr(Expr::Call* expr) {
     return ret;
 }
 
-std::any CodeGenerator::visit_access_expr(Expr::Access*) {
-    // TODO: Implement access expressions
-    return nullptr;
+std::any CodeGenerator::visit_cast_expr(Expr::Cast* expr) {
+    auto left_value = std::any_cast<llvm::Value*>(expr->expression->accept(this));
+    auto left_type = expr->expression->type;
+    auto target_type = expr->type;
+    if (left_type->is_int() && target_type->is_int()) {
+        return builder->CreateIntCast(left_value, target_type->to_llvm_type(context), true);
+    } else if (left_type->is_float() && target_type->is_float()) {
+        return builder->CreateFPCast(left_value, target_type->to_llvm_type(context));
+    } else if (left_type->is_int() && target_type->is_float()) {
+        return builder->CreateSIToFP(left_value, target_type->to_llvm_type(context));
+    } else if (left_type->is_float() && target_type->is_int()) {
+        return builder->CreateFPToSI(left_value, target_type->to_llvm_type(context));
+    } else {
+        ErrorLogger::inst().log_error(expr->location, E_UNREACHABLE, "Code generator could not perform cast from " + left_type->to_string() + " to " + target_type->to_string() + ".");
+        throw CodeGenException();
+    }
 }
 
 std::any CodeGenerator::visit_grouping_expr(Expr::Grouping* expr) {
