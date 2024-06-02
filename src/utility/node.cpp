@@ -66,7 +66,7 @@ Node::Variable::Variable(
     std::shared_ptr<Scope> parent,
     Decl::VarDeclarable* declaration
 ) : decl(declaration) {
-    this->location = location;
+    this->location = declaration->location;
     this->parent = parent;
     unique_name = parent->unique_name + "::" + declaration->name.lexeme;
 }
