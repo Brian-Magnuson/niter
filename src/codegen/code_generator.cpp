@@ -284,14 +284,98 @@ std::any CodeGenerator::visit_logical_expr(Expr::Logical*) {
     return nullptr;
 }
 
-std::any CodeGenerator::visit_binary_expr(Expr::Binary*) {
-    // TODO: Implement binary expressions
-    return nullptr;
+std::any CodeGenerator::visit_binary_expr(Expr::Binary* expr) {
+    // There are 12 binary operators: `+`, `-`, `*`, `/`, `%`, `^`, `==`, `!=`, `<`, `<=`, `>`, `>=`
+    // TOK_PLUS, TOK_MINUS, TOK_STAR, TOK_SLASH, TOK_PERCENT, TOK_CARET, TOK_EQ_EQ, TOK_NE, TOK_LT, TOK_LE, TOK_GT, TOK_GE
+    auto left_val = std::any_cast<llvm::Value*>(expr->left->accept(this));
+    auto right_val = std::any_cast<llvm::Value*>(expr->right->accept(this));
+
+    if (expr->op.tok_type == TOK_CARET) {
+        // This is exponentiation, not bitwise XOR
+        // Get the function; declare it if it doesn't exist
+        auto pow_fun = ir_module->getFunction("pow");
+        if (pow_fun == nullptr) {
+            std::vector<llvm::Type*> pow_args = {llvm::Type::getDoubleTy(*context), llvm::Type::getDoubleTy(*context)};
+            llvm::FunctionType* pow_type = llvm::FunctionType::get(llvm::Type::getDoubleTy(*context), pow_args, false);
+            pow_fun = llvm::Function::Create(pow_type, llvm::Function::ExternalLinkage, "pow", ir_module.get());
+        }
+        // If the operands are ints, convert them to doubles
+        if (left_val->getType()->isIntegerTy()) {
+            left_val = builder->CreateSIToFP(left_val, llvm::Type::getDoubleTy(*context));
+            right_val = builder->CreateSIToFP(right_val, llvm::Type::getDoubleTy(*context));
+        }
+        // Call the function
+        std::vector<llvm::Value*> args = {left_val, right_val};
+        llvm::Value* ret = builder->CreateCall(pow_fun, args);
+        return ret;
+    }
+
+    if (expr->left->type->is_int()) {
+        if (expr->op.tok_type == TOK_PLUS) {
+            return builder->CreateAdd(left_val, right_val);
+        } else if (expr->op.tok_type == TOK_MINUS) {
+            return builder->CreateSub(left_val, right_val);
+        } else if (expr->op.tok_type == TOK_STAR) {
+            return builder->CreateMul(left_val, right_val);
+        } else if (expr->op.tok_type == TOK_SLASH) {
+            return builder->CreateSDiv(left_val, right_val);
+        } else if (expr->op.tok_type == TOK_PERCENT) {
+            return builder->CreateSRem(left_val, right_val);
+        } else if (expr->op.tok_type == TOK_EQ_EQ) {
+            return builder->CreateICmpEQ(left_val, right_val);
+        } else if (expr->op.tok_type == TOK_BANG_EQ) {
+            return builder->CreateICmpNE(left_val, right_val);
+        } else if (expr->op.tok_type == TOK_LT) {
+            return builder->CreateICmpSLT(left_val, right_val);
+        } else if (expr->op.tok_type == TOK_LE) {
+            return builder->CreateICmpSLE(left_val, right_val);
+        } else if (expr->op.tok_type == TOK_GT) {
+            return builder->CreateICmpSGT(left_val, right_val);
+        } else if (expr->op.tok_type == TOK_GE) {
+            return builder->CreateICmpSGE(left_val, right_val);
+        }
+    } else if (expr->left->type->is_float()) {
+        if (expr->op.tok_type == TOK_PLUS) {
+            return builder->CreateFAdd(left_val, right_val);
+        } else if (expr->op.tok_type == TOK_MINUS) {
+            return builder->CreateFSub(left_val, right_val);
+        } else if (expr->op.tok_type == TOK_STAR) {
+            return builder->CreateFMul(left_val, right_val);
+        } else if (expr->op.tok_type == TOK_SLASH) {
+            return builder->CreateFDiv(left_val, right_val);
+        } else if (expr->op.tok_type == TOK_EQ_EQ) {
+            return builder->CreateFCmpOEQ(left_val, right_val);
+        } else if (expr->op.tok_type == TOK_BANG_EQ) {
+            return builder->CreateFCmpONE(left_val, right_val);
+        } else if (expr->op.tok_type == TOK_LT) {
+            return builder->CreateFCmpOLT(left_val, right_val);
+        } else if (expr->op.tok_type == TOK_LE) {
+            return builder->CreateFCmpOLE(left_val, right_val);
+        } else if (expr->op.tok_type == TOK_GT) {
+            return builder->CreateFCmpOGT(left_val, right_val);
+        } else if (expr->op.tok_type == TOK_GE) {
+            return builder->CreateFCmpOGE(left_val, right_val);
+        }
+    }
+
+    ErrorLogger::inst().log_error(expr->location, E_UNREACHABLE, "Code generator could not perform binary operation.");
+    throw CodeGenException();
 }
 
-std::any CodeGenerator::visit_unary_expr(Expr::Unary*) {
-    // TODO: Implement unary expressions
-    return nullptr;
+std::any CodeGenerator::visit_unary_expr(Expr::Unary* expr) {
+    auto right_val = std::any_cast<llvm::Value*>(expr->right->accept(this));
+    if (expr->op.tok_type == TOK_BANG) {
+        return builder->CreateICmpEQ(right_val, llvm::ConstantInt::get(right_val->getType(), 0));
+    } else if (expr->op.tok_type == TOK_MINUS) {
+        return builder->CreateNeg(right_val);
+    } else if (expr->op.tok_type == TOK_AMP) {
+        llvm::Value* alloc = builder->CreateAlloca(right_val->getType());
+        builder->CreateStore(right_val, alloc);
+        return alloc;
+    } else {
+        ErrorLogger::inst().log_error(expr->location, E_UNREACHABLE, "Code generator could not perform unary operation.");
+        throw CodeGenException();
+    }
 }
 
 std::any CodeGenerator::visit_dereference_expr(Expr::Dereference*) {

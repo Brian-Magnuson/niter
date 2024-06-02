@@ -154,6 +154,14 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
 
     std::any visit_logical_expr(Expr::Logical* expr) override;
     std::any visit_binary_expr(Expr::Binary* expr) override;
+
+    /**
+     * @brief Visits a unary expression.
+     *
+     * @param expr The unary expression to visit.
+     * @return std::any An llvm::Value* representing the result of the unary operation.
+     * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
+     */
     std::any visit_unary_expr(Expr::Unary* expr) override;
     std::any visit_dereference_expr(Expr::Dereference* expr) override;
     std::any visit_access_expr(Expr::Access* expr) override;

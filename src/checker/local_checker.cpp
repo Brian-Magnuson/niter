@@ -319,7 +319,7 @@ std::any LocalChecker::visit_binary_expr(Expr::Binary* expr) {
 
     TokenType op = expr->op.tok_type;
 
-    if (check_token(op, {TOK_PLUS, TOK_MINUS, TOK_STAR, TOK_SLASH, TOK_CARET})) {
+    if (check_token(op, {TOK_PLUS, TOK_MINUS, TOK_STAR, TOK_SLASH})) {
         // For PLUS, MINUS, STAR, SLASH the operands must be equal and must be of type `int` or `float` and the result is of the same type
 
         if (!Type::are_compatible(l_type, r_type)) {
@@ -373,7 +373,7 @@ std::any LocalChecker::visit_binary_expr(Expr::Binary* expr) {
 }
 
 std::any LocalChecker::visit_unary_expr(Expr::Unary* expr) {
-    // There are 4 unary operators: `!`, `-`, `*`, and `&`
+    // There are 3 unary operators: `!`, `-`, and `&`
 
     auto operand_type = std::any_cast<std::shared_ptr<Type>>(expr->right->accept(this));
 
