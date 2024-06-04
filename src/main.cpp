@@ -1,4 +1,4 @@
-#include "pipeline/pipeline.h"
+#include "compiler/compiler.h"
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -11,34 +11,42 @@ int main(int argc, char** argv) {
         return 2;
     }
 
-    CompilerState state;
+    Compiler compiler;
+    bool target_set = false;
+    bool ir_target_set = false;
+    bool run_linker_set = false;
 
     for (int i = 1; i < argc; i++) {
         auto str = std::make_shared<std::string>(argv[i]);
 
         if (str->at(0) == '-') {
             if (*str == "-o") {
-                if (state.target_destination != nullptr) {
+                if (target_set) {
                     std::cerr << "Multiple output files specified" << std::endl;
                     return 2;
                 } else if (i + 1 < argc) {
                     i++;
-                    auto output = std::make_shared<std::string>(argv[i]);
-                    state.target_destination = output;
+                    compiler.set_target_destination(argv[i]);
+                    target_set = true;
                 } else {
                     std::cerr << "Expected output file after -o" << std::endl;
                     return 2;
                 }
             } else if (*str == "-c") {
-                state.run_linker = false;
+                if (run_linker_set) {
+                    std::cerr << "Multiple -c flags specified" << std::endl;
+                    return 2;
+                }
+                compiler.set_run_linker(false);
+                run_linker_set = true;
             } else if (*str == "-dump-ir") {
-                if (state.ir_target_destination != "") {
+                if (ir_target_set) {
                     std::cerr << "Multiple IR output files specified" << std::endl;
                     return 2;
                 } else if (i + 1 < argc) {
                     i++;
-                    auto output = std::make_shared<std::string>(argv[i]);
-                    state.ir_target_destination = *output;
+                    compiler.set_ir_target_destination(argv[i]);
+                    ir_target_set = true;
                 } else {
                     std::cerr << "Expected IR output file after -dump-ir" << std::endl;
                     return 2;
@@ -51,30 +59,18 @@ int main(int argc, char** argv) {
             continue;
         }
 
-        std::ifstream file(*str);
-        if (!file.is_open()) {
-            std::cerr << "Could not open file: " << *str << std::endl;
+        try {
+            compiler.add_file(*str);
+        } catch (const std::runtime_error& e) {
+            std::cerr << e.what() << std::endl;
             return 3;
         }
-        auto src = std::make_shared<std::string>((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-        file.close();
-
-        state.file_names.push_back(str);
-        state.src_codes.push_back(src);
     }
 
-    if (state.file_names.empty()) {
+    if (!compiler.has_input()) {
         std::cerr << "No input files specified" << std::endl;
         return 2;
     }
 
-    if (state.target_destination == nullptr) {
-        if (state.run_linker) {
-            state.target_destination = std::make_shared<std::string>("out");
-        } else {
-            state.target_destination = std::make_shared<std::string>("out.o");
-        }
-    }
-
-    return compile(state);
+    return compiler.compile();
 }
