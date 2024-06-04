@@ -3,10 +3,11 @@
 A fast, statically-typed, programming language with a simple compiler built on LLVM.
 
 ```
-using std::Console
+extern variadic fun printf(char*): i32;
 
 fun main() {
-    Console::println("Hello, World")
+    const message = "World"
+    printf("Hello, %s!\n", message)
     return 0
 }
 ```
@@ -32,7 +33,37 @@ Compiling Niter generally requires the following dependencies to be installed:
 - gdb
 - make
 
-This project is primarily being developed on Windows. More detailed instructions for other platforms will be added as development progresses.
+### Linux
+
+Compiling Niter has been tested on Ubuntu 22.04. Other distributions may require different packages to be installed and different package managers to be used.
+
+On Debian-based systems, the following command can be used to install the required dependencies:
+```sh
+sudo apt-get install clang lldb lldb-mi gcc gdb make
+```
+
+LLVM is an exception; the required version of LLVM may not be available in the default package repositories. Version 17 is recommended. If your package manager provides this version, you can install it as normal.
+You can check the your installed version of LLVM by running:
+```sh
+llvm-config --version
+```
+Visit the [LLVM website](https://llvm.org/) for more information on how to install LLVM.
+
+To build `bin/niterc`, the Niter compiler, navigate to the project root and run:
+```sh
+make bin/niterc
+```
+
+This project uses Catch2 for unit testing. To build and run the tests, run:
+```sh
+make test
+```
+This command may take some time on the first run as Catch2 will need to be compiled.
+
+To try out the Niter compiler, edit the `sandbox/src/main.nit` file and run:
+```sh
+cd sandbox && make
+```
 
 ### Windows
 
@@ -59,7 +90,7 @@ Note: `make` is the only dependency that should explicitly be installed in the M
 
 To build `bin/niterc`, the Niter compiler, navigate to the project root and run:
 ```sh
-make
+make bin/niterc
 ```
 
 This project uses Catch2 for unit testing. To build and run the tests, run:
