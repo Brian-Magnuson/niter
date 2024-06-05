@@ -208,9 +208,14 @@ std::any CodeGenerator::visit_fun_decl(Decl::Fun* decl) {
     if (decl->return_var != nullptr) {
         decl->return_var->accept(this);
     }
+
+    auto llvm_arg_iter = fun->arg_begin();
     // Visit each parameter
     for (auto& param : decl->parameters) {
         param->accept(this);
+        auto var_node = Environment::inst().get_variable({param->name});
+        builder->CreateStore(&*llvm_arg_iter, llvm::cast<llvm::AllocaInst>(var_node->llvm_allocation));
+        llvm_arg_iter++;
     }
 
     // Increase scope again
