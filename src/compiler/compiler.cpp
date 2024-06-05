@@ -89,7 +89,7 @@ int Compiler::compile() {
     }
 
     if (this->run_linker) {
-        std::string cmd = "clang -lm -o " + *(this->target_destination) + " " + *(this->target_destination) + ".o";
+        std::string cmd = "clang -lc -lm -o " + *(this->target_destination) + " " + *(this->target_destination) + ".o";
         int status = system(cmd.c_str());
         if (status != 0) {
             std::cerr << "Linking failed with exit code " << status << std::endl;

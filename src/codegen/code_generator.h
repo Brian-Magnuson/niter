@@ -49,6 +49,13 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
     void declare_all_structs();
 
     /**
+     * @brief Goes through all the functions in the namespace tree and creates the function prototypes.
+     * This allows functions to be called before they are defined.
+     *
+     */
+    void declare_all_functions();
+
+    /**
      * @brief Visits a declaration statement.
      *
      * @param stmt The declaration statement to visit.
@@ -129,13 +136,11 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
     std::any visit_fun_decl(Decl::Fun* decl) override;
 
     /**
-     * @brief Visits an external function declaration.
-     * All external functions have their linkage set to external.
-     * Additionally, their names are based strictly on the name of the function, not the unique name in the tree.
+     * @brief Does nothing and returns nullptr.
+     * External functions are declared using the `declare_all_functions` function.
      *
      * @param decl The external function declaration to visit.
      * @return std::any nullptr always.
-     * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
      */
     std::any visit_extern_fun_decl(Decl::ExternFun* decl) override;
 

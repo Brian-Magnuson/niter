@@ -27,6 +27,10 @@ class Environment {
     std::shared_ptr<Node::RootScope> global_tree;
     // The current scope in the namespace tree.
     std::shared_ptr<Node::Scope> current_scope;
+    // A list of functions declared in the global scope. Useful for making function prototypes.
+    std::vector<std::shared_ptr<Node::Variable>> global_functions;
+    // A list of struct scopes declared in the global scope. Useful for creating forward declarations.
+    std::vector<std::shared_ptr<Node::StructScope>> struct_scopes;
 
     // A list of deferred declarations to be resolved later.
     std::vector<std::pair<Decl::VarDeclarable*, std::shared_ptr<Node::Scope>>>
@@ -200,6 +204,26 @@ public:
      * @return std::shared_ptr<Type> A pointer to the type object. nullptr if the type cannot be resolved.
      */
     std::shared_ptr<Type> get_type(const std::string& name);
+
+    /**
+     * @brief Get the global functions object.
+     * The list of global functions is used to create function prototypes.
+     *
+     * @return std::vector<std::shared_ptr<Node::Variable>> The list of nodes representing global functions.
+     */
+    std::vector<std::shared_ptr<Node::Variable>> get_global_functions() {
+        return global_functions;
+    }
+
+    /**
+     * @brief Get the struct scopes object.
+     * The list of struct scopes is used to create forward declarations.
+     *
+     * @return std::vector<std::shared_ptr<Node::StructScope>> The list of nodes representing struct scopes.
+     */
+    std::vector<std::shared_ptr<Node::StructScope>> get_struct_scopes() {
+        return struct_scopes;
+    }
 
     /**
      * @brief Iterates through the list of deferred types and verifies them.

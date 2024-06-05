@@ -10,6 +10,9 @@
 #include <iostream>
 
 void CodeGenerator::declare_all_structs() {
+    // FIXME: Not sure what this code is doing here.
+    // Also, we have a new Environment::get_struct_scopes() function, so we should use that instead.
+
     // First loop for opaque declarations
     auto root = Environment::inst().get_global_tree();
     std::vector<std::shared_ptr<Node::Scope>> stack;
@@ -39,6 +42,29 @@ void CodeGenerator::declare_all_structs() {
                 stack.push_back(child_scope);
             }
         }
+    }
+}
+
+void CodeGenerator::declare_all_functions() {
+    auto fun_nodes = Environment::inst().get_global_functions();
+
+    for (auto& fun_node : fun_nodes) {
+        // Create the function type
+        llvm::FunctionType* fun_type = llvm::cast<llvm::FunctionType>(fun_node->decl->type->to_llvm_type(context));
+
+        auto llvm_safe_name = fun_node->unique_name;
+        std::replace(llvm_safe_name.begin(), llvm_safe_name.end(), ':', '_');
+
+        // Create the function
+        // If the declaration is an extern function, create an external function
+        llvm::Function* fun;
+        if (dynamic_cast<Decl::ExternFun*>(fun_node->decl) != nullptr) {
+            llvm_safe_name = fun_node->decl->name.lexeme;
+            fun = llvm::Function::Create(fun_type, llvm::Function::ExternalLinkage, llvm_safe_name, ir_module.get());
+        } else {
+            fun = llvm::Function::Create(fun_type, llvm::Function::InternalLinkage, llvm_safe_name, ir_module.get());
+        }
+        fun_node->llvm_allocation = fun;
     }
 }
 
@@ -182,14 +208,8 @@ std::any CodeGenerator::visit_fun_decl(Decl::Fun* decl) {
     auto fun_node = Environment::inst().get_variable({decl->name});
     // This should never be nullptr
 
-    // Create the function type
-    llvm::FunctionType* fun_type = llvm::cast<llvm::FunctionType>(fun_node->decl->type->to_llvm_type(context));
-
-    auto llvm_safe_name = fun_node->unique_name;
-    std::replace(llvm_safe_name.begin(), llvm_safe_name.end(), ':', '_');
-
-    // Create the function
-    llvm::Function* fun = llvm::Function::Create(fun_type, llvm::Function::InternalLinkage, llvm_safe_name, ir_module.get());
+    // The function is already created
+    auto fun = llvm::cast<llvm::Function>(fun_node->llvm_allocation);
 
     // If the function is named `main`, set the linkage to external
     if (decl->name.lexeme == "main") {
@@ -242,25 +262,11 @@ std::any CodeGenerator::visit_fun_decl(Decl::Fun* decl) {
     Environment::inst().exit_scope();
     Environment::inst().exit_scope();
 
-    fun_node->llvm_allocation = fun;
-
     return nullptr;
 }
 
-std::any CodeGenerator::visit_extern_fun_decl(Decl::ExternFun* decl) {
-    // Get the function node from the environment tree
-    auto fun_node = Environment::inst().get_variable({decl->name});
-    // This should never be nullptr
-
-    // Create the function type
-    llvm::FunctionType* fun_ll_type = llvm::cast<llvm::FunctionType>(fun_node->decl->type->to_llvm_type(context));
-    // This should never be nullptr
-
-    // External function names are based strictly on the name of the function, not the unique name in the tree.
-    llvm::Function* fun = llvm::Function::Create(fun_ll_type, llvm::Function::ExternalLinkage, decl->name.lexeme, ir_module.get());
-
-    fun_node->llvm_allocation = fun;
-
+std::any CodeGenerator::visit_extern_fun_decl(Decl::ExternFun*) {
+    // The function is already declared; we don't need to do anything here.
     return nullptr;
 }
 
@@ -497,10 +503,11 @@ CodeGenerator::CodeGenerator() {
     context = Environment::inst().get_llvm_context();
     builder = std::make_shared<llvm::IRBuilder<>>(*context);
     ir_module = std::make_shared<llvm::Module>("main", *context);
-    declare_all_structs();
+    // declare_all_structs();
 }
 
 std::shared_ptr<llvm::Module> CodeGenerator::generate(std::vector<std::shared_ptr<Stmt>> stmts, const std::string& ir_target_destination) {
+    declare_all_functions();
     try {
         // Visit each statement
         for (auto& stmt : stmts) {

@@ -29,6 +29,7 @@ std::pair<std::shared_ptr<Node::Locatable>, ErrorCode> Environment::add_struct(c
             auto new_scope = std::make_shared<Node::StructScope>(location, current_scope, name);
             current_scope->children[name] = new_scope;
             current_scope = new_scope;
+            struct_scopes.push_back(new_scope);
             return {new_scope, (ErrorCode)0};
         }
     }
@@ -107,8 +108,15 @@ std::pair<std::shared_ptr<Node::Locatable>, ErrorCode> Environment::declare_vari
                 // This is to prevent users from mutating the object that the pointer points to.
                 ptr_type->declarer = decl->declarer;
             }
+
             auto new_variable = std::make_shared<Node::Variable>(current_scope, decl);
             current_scope->children[decl->name.lexeme] = new_variable;
+
+            // If the type is a function, add it to the function list.
+            if (type->kind() == Type::Kind::FUNCTION) {
+                global_functions.push_back(new_variable);
+            }
+
             return {new_variable, (ErrorCode)0};
         }
     }
