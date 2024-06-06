@@ -148,6 +148,7 @@ public:
      * If the variable type could not be resolved, the pair will contain nullptr and E_UNKNOWN_TYPE.
      * If the variable is already declared, the pair will contain the existing node and E_SYMBOL_ALREADY_DECLARED.
      * If the variable was deferred successfully, the pair will contain nullptr and 0.
+     * If the variable was marked as an instance member, but the current scope is not a struct, the pair will contain nullptr and E_INSTANCE_MEMBER_OUTSIDE_STRUCT.
      */
     std::pair<std::shared_ptr<Node::Locatable>, ErrorCode> declare_variable(Decl::VarDeclarable* decl, bool allow_deferral = false);
 

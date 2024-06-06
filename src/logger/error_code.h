@@ -116,6 +116,8 @@ enum ErrorCode {
     E_INVALID_MAIN_SIGNATURE,
     // A namespace was introduced in a struct
     E_NAMESPACE_IN_STRUCT,
+    // An extern function was declared in a struct
+    E_EXTERN_FUN_IN_STRUCT,
     // A struct was declared with the same name in the same scope
     E_STRUCT_ALREADY_DECLARED,
     // An expression statement was found in global space
@@ -220,6 +222,8 @@ enum ErrorCode {
     E_EXITED_ROOT_SCOPE,
     // An expression was interpreted as a literal, but the literal was not recognized
     E_UNRECOGNIZED_LITERAL,
+    // A declaration was marked as an instance member of a struct, but the containing scope was not a struct
+    E_INSTANCE_MEMBER_OUTSIDE_STRUCT,
     // The llvm::Module could not be verified
     E_UNVERIFIED_MODULE,
 

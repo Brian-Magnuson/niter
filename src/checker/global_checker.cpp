@@ -1,6 +1,8 @@
 #include "global_checker.h"
+
 #include "../logger/error_code.h"
 #include "../logger/logger.h"
+#include "../utility/utils.h"
 #include <iostream>
 
 std::any GlobalChecker::visit_declaration_stmt(Stmt::Declaration* stmt) {
@@ -123,8 +125,40 @@ std::any GlobalChecker::visit_extern_fun_decl(Decl::ExternFun* decl) {
 }
 
 std::any GlobalChecker::visit_struct_decl(Decl::Struct* decl) {
-    // TODO: Implement
-    ErrorLogger::inst().log_error(decl->name.location, E_UNIMPLEMENTED, "Struct declarations are not yet implemented.");
+    auto [node, ec] = Environment::inst().add_struct(decl->location, decl->name.lexeme);
+    if (ec == E_STRUCT_ALREADY_DECLARED) {
+        ErrorLogger::inst().log_error(decl->name.location, ec, "A struct with the same name has already been declared in this scope.");
+        ErrorLogger::inst().log_note(node->location, "Previous declaration was here.");
+        throw GlobalTypeException();
+    } else if (ec != 0) {
+        ErrorLogger::inst().log_error(decl->name.location, E_IMPOSSIBLE, "Function `add_struct` issued error " + std::to_string(ec) + " in global type checking.");
+        throw GlobalTypeException();
+    }
+    auto struct_node = std::dynamic_pointer_cast<Node::StructScope>(node);
+
+    /*
+    For each declaration:
+        Visit the declaration, and...
+        If the declaration is a Decl::Var:
+            Add it to the struct's instance members (static members are for later)
+        If the declaration is a Decl::Fun:
+            Add it to the struct's static members (children)
+            In Niter, "instance methods" are actually static functions that take a pointer to the struct as their first argument
+        If the declaration is a Decl::ExternFun:
+            Throw an error, extern functions are not allowed in structs
+        If the declaration is a Decl::Struct:
+            Add it to the struct's children as a new StructScope Node.
+    */
+
+    for (auto& declaration : decl->declarations) {
+        if (IS_TYPE(declaration, Decl::ExternFun)) {
+            ErrorLogger::inst().log_error(declaration->location, E_EXTERN_FUN_IN_STRUCT, "Extern functions are not allowed in structs.");
+            throw GlobalTypeException();
+        }
+        declaration->accept(this);
+    }
+
+    Environment::inst().exit_scope();
     return std::any();
 }
 

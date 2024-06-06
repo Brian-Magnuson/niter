@@ -37,6 +37,8 @@ public:
     // The type of the variable. nullptr if the type was not resolved.
     // To be set by the type checker.
     std::shared_ptr<Type> type = nullptr;
+    // Whether the variable is an instance member of a struct.
+    bool is_instance_member = false;
 };
 
 class Expr;

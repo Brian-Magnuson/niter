@@ -48,6 +48,7 @@ void Environment::install_primitive_types() {
 
     for (auto& type : primitive_types) {
         auto new_struct = std::make_shared<Node::StructScope>(Location(), global_tree, type.first, type.second);
+        new_struct->is_primitive = true;
         global_tree->children[type.first] = new_struct;
     }
 }
@@ -110,7 +111,15 @@ std::pair<std::shared_ptr<Node::Locatable>, ErrorCode> Environment::declare_vari
             }
 
             auto new_variable = std::make_shared<Node::Variable>(current_scope, decl);
-            current_scope->children[decl->name.lexeme] = new_variable;
+            if (decl->is_instance_member) {
+                auto struct_scope = std::dynamic_pointer_cast<Node::StructScope>(current_scope);
+                if (struct_scope == nullptr) {
+                    return {nullptr, E_INSTANCE_MEMBER_OUTSIDE_STRUCT};
+                }
+                struct_scope->instance_members[decl->name.lexeme] = new_variable;
+            } else {
+                current_scope->children[decl->name.lexeme] = new_variable;
+            }
 
             // If the type is a function, add it to the function list.
             if (type->kind() == Type::Kind::FUNCTION) {

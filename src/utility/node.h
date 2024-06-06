@@ -97,7 +97,7 @@ public:
     std::unordered_map<std::string, std::shared_ptr<Node::Variable>> instance_members;
 
     llvm::Type* ir_type = nullptr;
-    bool is_primitive = true;
+    bool is_primitive = false;
 
     StructScope(const Location& location, std::shared_ptr<Scope> parent, const std::string& name, llvm::Type* llvm_type = nullptr);
 };

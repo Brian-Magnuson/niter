@@ -316,6 +316,13 @@ std::shared_ptr<Decl> Parser::struct_decl() {
             ErrorLogger::inst().log_error(peek().location, E_IMPOSSIBLE, "declaration_statement did not return a declaration in struct declaration.");
             throw ParserException();
         }
+        // If the declaration is a variable, mark it as an instance member
+        // TODO: Implement static members later.
+        auto var_decl = std::dynamic_pointer_cast<Decl::Var>(stmt->declaration);
+        if (var_decl != nullptr) {
+            var_decl->is_instance_member = true;
+        }
+
         declarations.push_back(stmt->declaration);
         while (match({TOK_NEWLINE}))
             ; // Skip over newlines
