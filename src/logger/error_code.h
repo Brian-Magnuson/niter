@@ -55,6 +55,8 @@ enum ErrorCode {
     E_MISSING_STMT_END,
     // A statement was found where an expression was expected
     E_NOT_AN_EXPRESSION,
+    // A statement was found where a declaration was expected
+    E_NOT_A_DECLARATION,
     // A list of arguments was found without matching parentheses
     E_UNMATCHED_PAREN_IN_ARGS,
     // A grouping expression was found without matching parentheses

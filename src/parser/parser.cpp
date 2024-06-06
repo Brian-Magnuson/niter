@@ -137,9 +137,7 @@ std::shared_ptr<Stmt> Parser::declaration_statement() {
     } else if (match({KW_STRUCT})) {
         decl = struct_decl();
     } else {
-        // This function is called in statement where it is verified that the current token signifies a declaration.
-        // Therefore, this should be unreachable.
-        ErrorLogger::inst().log_error(peek().location, E_UNREACHABLE, "Unreachable code reached in declaration statement.");
+        ErrorLogger::inst().log_error(peek().location, E_NOT_A_DECLARATION, "Expected a declaration.");
         throw ParserException();
     }
     return std::make_shared<Stmt::Declaration>(decl);
@@ -744,6 +742,9 @@ std::vector<std::shared_ptr<Stmt>> Parser::parse() {
             ; // Skip over newlines
         while (!is_at_end()) {
             statements.push_back(statement());
+            // Note: Theoretically, we could enforce "declarations only" by calling declaration_statement() here
+            // However, this would make the parser less flexible and harder to test.
+            // We enforce this in the type checker instead; errors usually begin with "E_GLOBAL_".
             while (match({TOK_NEWLINE}))
                 ; // Skip over newlines
         }

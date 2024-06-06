@@ -637,3 +637,57 @@ TEST_CASE("Logger no declarer after extern", "[logger]") {
 
     logger.reset();
 }
+
+TEST_CASE("Logger no lbrace in struct", "[logger]") {
+    std::string source_code = "struct Foo var x: i32; }";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/no_lbrace_in_struct_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+    Parser parser;
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse(scanner.get_tokens());
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_NO_LBRACE_IN_STRUCT_DECL);
+
+    logger.reset();
+}
+
+TEST_CASE("Logger unmatched brace in struct", "[logger]") {
+    std::string source_code = "struct Foo { var x: i32; ";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/unmatched_brace_in_struct_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+    Parser parser;
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse(scanner.get_tokens());
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_UNMATCHED_BRACE_IN_STRUCT_DECL);
+
+    logger.reset();
+}
+
+TEST_CASE("Logger non decl in struct", "[logger]") {
+    std::string source_code = "struct Foo { x = 5; }";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/non_decl_in_struct_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+    Parser parser;
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse(scanner.get_tokens());
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_NOT_A_DECLARATION);
+
+    logger.reset();
+}
