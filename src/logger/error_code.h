@@ -99,6 +99,12 @@ enum ErrorCode {
     E_UNMATCHED_BRACE_IN_FUN_DECL,
     // The extern keyword was found without a valid declarer
     E_NO_DECLARER_AFTER_EXTERN,
+    // A struct declaration was found without an identifier
+    E_UNNAMED_STRUCT,
+    // A struct declaration was found without a left brace
+    E_NO_LBRACE_IN_STRUCT_DECL,
+    // A struct declaration was found without a right brace
+    E_UNMATCHED_BRACE_IN_STRUCT_DECL,
 
     // Global type errors
     E_GLOBAL_TYPE = 4000,

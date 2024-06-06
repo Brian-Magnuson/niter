@@ -88,7 +88,7 @@ void Parser::synchronize() {
 
 std::shared_ptr<Stmt> Parser::statement() {
     try {
-        if (check({KW_VAR, KW_CONST, KW_FUN, KW_EXTERN})) {
+        if (check({KW_VAR, KW_CONST, KW_FUN, KW_EXTERN, KW_STRUCT})) {
             return declaration_statement();
         }
         // if (match({KW_IF})) {
@@ -134,6 +134,8 @@ std::shared_ptr<Stmt> Parser::declaration_statement() {
             ErrorLogger::inst().log_error(peek().location, E_MISSING_STMT_END, "Expected newline or ';' after declaration.");
             throw ParserException();
         }
+    } else if (match({KW_STRUCT})) {
+        decl = struct_decl();
     } else {
         // This function is called in statement where it is verified that the current token signifies a declaration.
         // Therefore, this should be unreachable.
@@ -297,6 +299,32 @@ std::shared_ptr<Decl> Parser::extern_fun_decl(bool is_variadic) {
     // There is no return variable for extern functions
 
     return std::make_shared<Decl::ExternFun>(declarer, name, type_annotation);
+}
+
+std::shared_ptr<Decl> Parser::struct_decl() {
+    // Should be KW_STRUCT
+    TokenType declarer = previous().tok_type;
+    // Get the struct name
+    Token name = consume(TOK_IDENT, E_UNNAMED_STRUCT, "Expected identifier in struct declaration.");
+
+    std::vector<std::shared_ptr<Decl>> declarations;
+
+    consume(TOK_LEFT_BRACE, E_NO_LBRACE_IN_STRUCT_DECL, "Expected '{' before struct body.");
+    while (match({TOK_NEWLINE}))
+        ; // Skip over newlines
+    while (!check({TOK_RIGHT_BRACE}) && !is_at_end()) {
+        auto stmt = std::dynamic_pointer_cast<Stmt::Declaration>(declaration_statement());
+        if (stmt == nullptr) {
+            ErrorLogger::inst().log_error(peek().location, E_IMPOSSIBLE, "declaration_statement did not return a declaration in struct declaration.");
+            throw ParserException();
+        }
+        declarations.push_back(stmt->declaration);
+        while (match({TOK_NEWLINE}))
+            ; // Skip over newlines
+    }
+    consume(TOK_RIGHT_BRACE, E_UNMATCHED_BRACE_IN_STRUCT_DECL, "Expected '}' after struct body.");
+
+    return std::make_shared<Decl::Struct>(declarer, name, declarations);
 }
 
 // MARK: Expressions

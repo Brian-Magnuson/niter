@@ -160,6 +160,16 @@ class Parser {
      */
     std::shared_ptr<Decl> extern_fun_decl(bool is_variadic = false);
 
+    /**
+     * @brief Parses a struct declaration.
+     * Struct declarations begin with "struct" followed by an identifier and a set of braces containing member declarations.
+     * Struct scopes are considered global space, so functions may be declared inside a struct.
+     * Unlike other global scopes, the requirement of "declarations only" can be enforced here in the parser.
+     *
+     * @return std::shared_ptr<Decl> A pointer to the parsed struct declaration.
+     */
+    std::shared_ptr<Decl> struct_decl();
+
     // MARK: Expressions
 
     /**

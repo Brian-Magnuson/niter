@@ -240,8 +240,8 @@ TEST_CASE("Parser extern fun decls", "[parser]") {
 
     Scanner scanner;
     scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
-    Parser parser(scanner.get_tokens());
-    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+    Parser parser;
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse(scanner.get_tokens());
 
     AstPrinter printer;
     REQUIRE(stmts.size() == 2);
@@ -255,12 +255,42 @@ TEST_CASE("Parser extern fun decls 2", "[parser]") {
 
     Scanner scanner;
     scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
-    Parser parser(scanner.get_tokens());
-    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+    Parser parser;
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse(scanner.get_tokens());
 
     AstPrinter printer;
     REQUIRE(stmts.size() == 2);
     CHECK(printer.print(stmts.at(0)) == "(decl:extern_fun foo fun(i32) => i32)");
+    CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
+}
+
+TEST_CASE("Parser struct decls", "[parser]") {
+    std::string source_code = "struct Foo {}";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/extern_fun_decls_test_2.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+    Parser parser;
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse(scanner.get_tokens());
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 2);
+    CHECK(printer.print(stmts.at(0)) == "(decl:struct Foo { })");
+    CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
+}
+
+TEST_CASE("Parser struct decls 2", "[parser]") {
+    std::string source_code = "struct Foo { var x: i32; var y: i32; }";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/extern_fun_decls_test_2.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+    Parser parser;
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse(scanner.get_tokens());
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 2);
+    CHECK(printer.print(stmts.at(0)) == "(decl:struct Foo { (decl:var x i32) (decl:var y i32) })");
     CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
 }
 

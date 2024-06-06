@@ -114,11 +114,13 @@ public:
 /**
  * @brief A class representing a struct declaration.
  * E.g. struct Point { x: int; y: int; }
+ * Note: A struct contains a list of declarations, which can be VarDeclarables or other Structs.
  *
  */
 class Decl::Struct : public Decl {
 public:
-    Struct(TokenType declarer, Token name, std::vector<std::shared_ptr<Decl::Var>> fields) : declarer(declarer), name(name), fields(fields) {
+    Struct(TokenType declarer, Token name, std::vector<std::shared_ptr<Decl>> declarations)
+        : declarer(declarer), name(name), declarations(declarations) {
         location = name.location;
     }
 
@@ -130,8 +132,8 @@ public:
     TokenType declarer;
     // The name of the struct.
     Token name;
-    // The fields of the struct.
-    std::vector<std::shared_ptr<Decl::Var>> fields;
+    // The declarations of the struct.
+    std::vector<std::shared_ptr<Decl>> declarations;
 };
 
 #endif // DECL_H

@@ -159,9 +159,25 @@ std::any AstPrinter::visit_extern_fun_decl(Decl::ExternFun* decl) {
     */
 }
 
-std::any AstPrinter::visit_struct_decl(Decl::Struct* /*decl*/) {
-    // TODO: Implement this
-    return std::any();
+std::any AstPrinter::visit_struct_decl(Decl::Struct* decl) {
+    std::string result = "(decl:struct ";
+    result += decl->name.lexeme;
+    result += " { ";
+    for (const auto& decl : decl->declarations) {
+        result += std::any_cast<std::string>(decl->accept(this));
+        result += " ";
+    }
+    result += "})";
+    return result;
+    /*
+    Example:
+    struct Point {
+        x: int
+        y: int
+    }
+    ->
+    (decl:struct Point { (decl:var x int nil) (decl:var y int nil) })
+    */
 }
 
 std::any AstPrinter::visit_assign_expr(Expr::Assign* expr) {
