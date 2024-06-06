@@ -294,6 +294,48 @@ TEST_CASE("Parser struct decls 2", "[parser]") {
     CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
 }
 
+TEST_CASE("Parser struct decls 3", "[parser]") {
+    std::string source_code = R"(
+struct Bar {
+    var x: i32
+    fun f() {}
+}
+)";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/extern_fun_decls_test_3.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+    Parser parser;
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse(scanner.get_tokens());
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 2);
+    CHECK(printer.print(stmts.at(0)) == "(decl:struct Bar { (decl:var x i32) (decl:fun f fun() => void { }) })");
+    CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
+}
+
+TEST_CASE("Parser struct decls 4", "[parser]") {
+    std::string source_code = R"(
+struct Foo {
+    var x: i32
+    struct Bar {
+        var y: i32
+    }
+}
+)";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/extern_fun_decls_test_4.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+    Parser parser;
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse(scanner.get_tokens());
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 2);
+    CHECK(printer.print(stmts.at(0)) == "(decl:struct Foo { (decl:var x i32) (decl:struct Bar { (decl:var y i32) }) })");
+    CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
+}
+
 // MARK: Error tests
 
 TEST_CASE("Logger invalid type annotation", "[logger]") {

@@ -138,7 +138,7 @@ std::any AstPrinter::visit_fun_decl(Decl::Fun* decl) {
         return a + b;
     }
     ->
-    (decl:fun add int (decl:var a int nil) (decl:var b int nil) { (stmt:return (expr:+ (expr:identifier a) (expr:identifier b))) })
+    (decl:fun add fun(int, int) => int { (stmt:return (expr:+ (expr:identifier a) (expr:identifier b))) })
     */
 }
 
