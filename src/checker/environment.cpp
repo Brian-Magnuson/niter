@@ -19,6 +19,8 @@ ErrorCode Environment::add_namespace(const Location& location, const std::string
 
 std::pair<std::shared_ptr<Node::Locatable>, ErrorCode> Environment::add_struct(const Location& location, const std::string& name) {
     if (IS_TYPE(current_scope, Node::LocalScope)) {
+        // It's actually impossible for this case to occur in our current implementation.
+        // The GlobalChecker never enters local scope and the LocalChecker never calls this function.
         return {nullptr, E_STRUCT_IN_LOCAL_SCOPE};
     } else {
         auto iter = current_scope->children.find(name);
