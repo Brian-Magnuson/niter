@@ -16,6 +16,13 @@ llvm::Value* Expr::Dereference::get_llvm_allocation(CodeGenerator* code_generato
 }
 
 TokenType Expr::Access::get_lvalue_declarer() {
+    // An access expression is const if any part of it is const.
+    auto left_lvalue = std::dynamic_pointer_cast<Expr::LValue>(left);
+    // This should never be nullptr
+    if (left_lvalue->get_lvalue_declarer() == KW_CONST) {
+        return KW_CONST;
+    }
+    // If the left side is not const, then the declarer is the declarer of the right side.
     auto l_struct_type = std::dynamic_pointer_cast<Type::Struct>(left->type);
     auto member_name = std::dynamic_pointer_cast<Expr::Identifier>(right)->to_string();
     auto var_node = Environment::inst().get_instance_variable(l_struct_type, member_name);
