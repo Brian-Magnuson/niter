@@ -223,7 +223,7 @@ TEST_CASE("Parser access exprs", "[parser]") {
     AstPrinter printer;
     REQUIRE(stmts.size() == 4);
     CHECK(printer.print(stmts.at(0)) == "(. foo bar)");
-    CHECK(printer.print(stmts.at(1)) == "(-> foo bar)");
+    CHECK(printer.print(stmts.at(1)) == "(. (* foo) bar)");
     CHECK(printer.print(stmts.at(2)) == "([] foo 1)");
     CHECK(printer.print(stmts.at(3)) == "(stmt:eof)");
 }
@@ -241,7 +241,7 @@ TEST_CASE("Parser chained access exprs", "[parser]") {
     AstPrinter printer;
     REQUIRE(stmts.size() == 4);
     CHECK(printer.print(stmts.at(0)) == "(. (. foo bar) baz)");
-    CHECK(printer.print(stmts.at(1)) == "(-> (-> foo bar) baz)");
+    CHECK(printer.print(stmts.at(1)) == "(. (* (. (* foo) bar)) baz)");
     CHECK(printer.print(stmts.at(2)) == "([] ([] foo 1) 2)");
     CHECK(printer.print(stmts.at(3)) == "(stmt:eof)");
 }
@@ -259,7 +259,7 @@ TEST_CASE("Parser chained access with grouping", "[parser]") {
     AstPrinter printer;
     REQUIRE(stmts.size() == 4);
     CHECK(printer.print(stmts.at(0)) == "(. foo (. bar baz))");
-    CHECK(printer.print(stmts.at(1)) == "(-> foo (-> bar baz))");
+    CHECK(printer.print(stmts.at(1)) == "(. (* foo) (. (* bar) baz))");
     CHECK(printer.print(stmts.at(2)) == "([] foo ([] foo 1))");
     CHECK(printer.print(stmts.at(3)) == "(stmt:eof)");
 }
@@ -276,7 +276,7 @@ TEST_CASE("Parser chained access exprs 2", "[parser]") {
 
     AstPrinter printer;
     REQUIRE(stmts.size() == 2);
-    CHECK(printer.print(stmts.at(0)) == "(-> ([] (. ([] (-> (. one two) three) four) five) six) seven)");
+    CHECK(printer.print(stmts.at(0)) == "(. (* ([] (. ([] (. (* (. one two)) three) four) five) six)) seven)");
     CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
 }
 

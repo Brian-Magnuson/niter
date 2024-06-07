@@ -197,11 +197,11 @@ std::any AstPrinter::visit_unary_expr(Expr::Unary* expr) {
 }
 
 std::any AstPrinter::visit_dereference_expr(Expr::Dereference* expr) {
-    return parenthesize(expr->op.lexeme, {expr->right});
+    return parenthesize("*", {expr->right});
 }
 
 std::any AstPrinter::visit_access_expr(Expr::Access* expr) {
-    return parenthesize(expr->op.lexeme, {expr->left, expr->right});
+    return parenthesize(".", {expr->left, expr->right});
 }
 
 std::any AstPrinter::visit_index_expr(Expr::Index* expr) {
