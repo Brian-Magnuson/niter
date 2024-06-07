@@ -175,8 +175,8 @@ public:
  */
 class Expr::Access : public Expr::LValue {
 public:
-    Access(std::shared_ptr<Expr> left, Token op, std::shared_ptr<Expr> right)
-        : left(left), op(op), right(right) {
+    Access(std::shared_ptr<Expr> left, Token op, Token ident)
+        : left(left), op(op), ident(ident) {
         location = op.location;
     }
 
@@ -188,8 +188,8 @@ public:
     std::shared_ptr<Expr> left;
     // The token representing the operator.
     Token op;
-    // The expression on the right side.
-    std::shared_ptr<Expr> right;
+    // The ident token on the right side.
+    Token ident;
 
     TokenType get_lvalue_declarer() override;
     llvm::Value* get_llvm_allocation(CodeGenerator* code_generator) override;

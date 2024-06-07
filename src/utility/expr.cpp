@@ -24,14 +24,14 @@ TokenType Expr::Access::get_lvalue_declarer() {
     }
     // If the left side is not const, then the declarer is the declarer of the right side.
     auto l_struct_type = std::dynamic_pointer_cast<Type::Struct>(left->type);
-    auto member_name = std::dynamic_pointer_cast<Expr::Identifier>(right)->to_string();
+    auto member_name = ident.lexeme;
     auto var_node = Environment::inst().get_instance_variable(l_struct_type, member_name);
     return var_node->decl->declarer;
 }
 
 llvm::Value* Expr::Access::get_llvm_allocation(CodeGenerator* /* code_generator */) {
     auto l_struct_type = std::dynamic_pointer_cast<Type::Struct>(left->type);
-    auto member_name = std::dynamic_pointer_cast<Expr::Identifier>(right)->to_string();
+    auto member_name = ident.lexeme;
     auto var_node = Environment::inst().get_instance_variable(l_struct_type, member_name);
     return var_node->llvm_allocation;
 }

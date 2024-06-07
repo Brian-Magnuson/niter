@@ -428,7 +428,11 @@ std::any LocalChecker::visit_dereference_expr(Expr::Dereference* expr) {
     // The operand must be a pointer type
     auto operand_ptr_type = std::dynamic_pointer_cast<Type::Pointer>(operand_type);
     if (operand_ptr_type == nullptr) {
-        ErrorLogger::inst().log_error(expr->location, E_DEREFERENCE_NON_POINTER, "Cannot dereference non-pointer type " + operand_type->to_string() + ".");
+        ErrorLogger::inst().log_error(expr->right->location, E_DEREFERENCE_NON_POINTER, "Cannot dereference non-pointer type " + operand_type->to_string() + ".");
+        // If the operator is `->`, we can give a more specific error message
+        if (expr->op.tok_type == TOK_ARROW) {
+            ErrorLogger::inst().log_note(expr->op.location, "Did you mean to use '.' instead of '->'?");
+        }
         throw LocalTypeException();
     }
     // The type of the expression is the type of the pointer
@@ -440,63 +444,27 @@ std::any LocalChecker::visit_dereference_expr(Expr::Dereference* expr) {
 std::any LocalChecker::visit_access_expr(Expr::Access* expr) {
     auto left_type = std::any_cast<std::shared_ptr<Type>>(expr->left->accept(this));
 
-    if (expr->op.tok_type == TOK_DOT) {
-        std::shared_ptr<Expr::Identifier> right = std::dynamic_pointer_cast<Expr::Identifier>(expr->right);
-
-        if (right == nullptr) {
-            ErrorLogger::inst().log_error(expr->location, E_NO_IDENT_AFTER_DOT, "Expected identifier after '.'.");
-            throw LocalTypeException();
+    // The left side of the access must be a struct type
+    auto left_seg_type = std::dynamic_pointer_cast<Type::Struct>(left_type);
+    if (left_seg_type == nullptr) {
+        ErrorLogger::inst().log_error(expr->location, E_ACCESS_ON_NON_STRUCT, "Cannot access member of non-struct type.");
+        // If the left side is a pointer, but the operator is `.`, we can give a more specific error message
+        if (IS_TYPE(left_type, Type::Pointer) && expr->op.tok_type == TOK_DOT) {
+            ErrorLogger::inst().log_note(expr->op.location, "Did you mean to use '->' instead of '.'?");
         }
-        auto left_seg_type = std::dynamic_pointer_cast<Type::Struct>(left_type);
-        if (left_seg_type == nullptr) {
-            if (IS_TYPE(left_type, Type::Pointer)) {
-                // This is still an error, but we can give a more specific error message
-                ErrorLogger::inst().log_error(expr->location, E_ACCESS_ON_NON_STRUCT, "Cannot access member of non-struct type. Did you mean to use '->' instead of '.'?");
-                throw LocalTypeException();
-            }
-            ErrorLogger::inst().log_error(expr->location, E_ACCESS_ON_NON_STRUCT, "Cannot access member of non-struct type.");
-            throw LocalTypeException();
-        }
-
-        expr->type = Environment::inst().get_instance_variable(left_seg_type, right->to_string())->decl->type;
-        // If this returns nullptr, the member was not found
-        if (expr->type == nullptr) {
-            ErrorLogger::inst().log_error(expr->location, E_INVALID_STRUCT_MEMBER, "Struct type " + left_seg_type->to_string() + " does not have member " + right->to_string() + ".");
-            throw LocalTypeException();
-        }
-
-        return expr->type;
-    } else if (expr->op.tok_type == TOK_ARROW) {
-        // Pretty much the same as the dot operator, but the left side is dereferenced first
-        auto left_ptr_type = std::dynamic_pointer_cast<Type::Pointer>(left_type);
-        if (left_ptr_type == nullptr) {
-            ErrorLogger::inst().log_error(expr->location, E_DEREFERENCE_NON_POINTER, "Cannot dereference non-pointer type. Did you mean to use '.' instead of '->'?");
-            throw LocalTypeException();
-        }
-        std::shared_ptr<Expr::Identifier> right = std::dynamic_pointer_cast<Expr::Identifier>(expr->right);
-        if (right == nullptr) {
-            ErrorLogger::inst().log_error(expr->location, E_NO_IDENT_AFTER_DOT, "Expected identifier after '->'.");
-            throw LocalTypeException();
-        }
-        auto left_seg_type = std::dynamic_pointer_cast<Type::Struct>(left_ptr_type->inner_type);
-        if (left_seg_type == nullptr) {
-            ErrorLogger::inst().log_error(expr->location, E_ACCESS_ON_NON_STRUCT, "Cannot access member of non-struct type.");
-            throw LocalTypeException();
-        }
-
-        expr->type = Environment::inst().get_instance_variable(left_seg_type, right->to_string())->decl->type;
-        // If this returns nullptr, the member was not found
-        if (expr->type == nullptr) {
-            ErrorLogger::inst().log_error(expr->location, E_INVALID_STRUCT_MEMBER, "Struct type " + left_seg_type->to_string() + " does not have member " + right->to_string() + ".");
-            throw LocalTypeException();
-        }
-
-        return expr->type;
-    } else {
-        // Unreachable
-        ErrorLogger::inst().log_error(expr->location, E_UNREACHABLE, "Unknown access operator.");
         throw LocalTypeException();
     }
+
+    // The right side of the access is an identifier
+    auto var_node = Environment::inst().get_instance_variable(left_seg_type, expr->ident.lexeme);
+    if (var_node == nullptr) {
+        ErrorLogger::inst().log_error(expr->location, E_INVALID_STRUCT_MEMBER, "Struct type " + left_seg_type->to_string() + " does not have member " + expr->ident.lexeme + ".");
+        throw LocalTypeException();
+    }
+
+    // The type of the expression is the type of the instance variable
+    expr->type = var_node->decl->type;
+    return expr->type;
 }
 
 std::any LocalChecker::visit_index_expr(Expr::Index* expr) {

@@ -247,7 +247,7 @@ TEST_CASE("Parser chained access exprs", "[parser]") {
 }
 
 TEST_CASE("Parser chained access with grouping", "[parser]") {
-    std::string source_code = "foo.(bar.baz); foo->(bar->baz); foo[foo[1]];";
+    std::string source_code = "foo[foo[1]];";
     std::shared_ptr file_name = std::make_shared<std::string>("test_files/chained_access_with_grouping_test.nit");
 
     Scanner scanner;
@@ -257,11 +257,9 @@ TEST_CASE("Parser chained access with grouping", "[parser]") {
     std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
 
     AstPrinter printer;
-    REQUIRE(stmts.size() == 4);
-    CHECK(printer.print(stmts.at(0)) == "(. foo (. bar baz))");
-    CHECK(printer.print(stmts.at(1)) == "(. (* foo) (. (* bar) baz))");
-    CHECK(printer.print(stmts.at(2)) == "([] foo ([] foo 1))");
-    CHECK(printer.print(stmts.at(3)) == "(stmt:eof)");
+    REQUIRE(stmts.size() == 2);
+    CHECK(printer.print(stmts.at(0)) == "([] foo ([] foo 1))");
+    CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
 }
 
 TEST_CASE("Parser chained access exprs 2", "[parser]") {
@@ -767,6 +765,42 @@ return c
     CHECK(printer.print(stmts.at(2)) == "(decl:var c auto ([] b a))");
     CHECK(printer.print(stmts.at(3)) == "(stmt:return c)");
     CHECK(printer.print(stmts.at(4)) == "(stmt:eof)");
+
+    logger.reset();
+}
+
+TEST_CASE("Logger no ident after dot", "[logger]") {
+    std::string source_code = "foo.true";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/no_ident_after_dot_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+    Parser parser;
+    parser.parse(scanner.get_tokens());
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_NO_IDENT_AFTER_DOT);
+
+    logger.reset();
+}
+
+TEST_CASE("Logger no ident after arrow", "[logger]") {
+    std::string source_code = "foo->true";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/no_ident_after_arrow_test.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+    Parser parser;
+    parser.parse(scanner.get_tokens());
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_NO_IDENT_AFTER_DOT);
 
     logger.reset();
 }

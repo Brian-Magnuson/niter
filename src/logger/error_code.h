@@ -69,8 +69,10 @@ enum ErrorCode {
     E_TOO_MANY_ARGS,
     // A variable declaration was found without an identifier
     E_UNNAMED_VAR,
-    // A scope resolution operator was found without a valid right-hand side
+    // An identifier was expected, but not found
     E_NOT_AN_IDENTIFIER,
+    // A dot-access expression was found without an identifier after the dot
+    E_NO_IDENT_AFTER_DOT,
     // A type annotation was found that did not start with a valid token
     E_INVALID_TYPE_ANNOTATION,
     // No identifier was found after the colon in a type annotation
@@ -161,8 +163,6 @@ enum ErrorCode {
     E_RETURN_IN_VOID_FUN,
     // A return statement was not found in a non-void function
     E_NO_RETURN_IN_NON_VOID_FUN,
-    // A dot-access expression was found without an identifier after the dot
-    E_NO_IDENT_AFTER_DOT,
     // An attempt was made to dereference a non-pointer
     E_DEREFERENCE_NON_POINTER,
     // A dot-access expression was found on a non-struct type

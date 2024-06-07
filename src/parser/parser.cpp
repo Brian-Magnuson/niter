@@ -449,14 +449,16 @@ std::shared_ptr<Expr> Parser::access_index_expr() {
     while (true) {
         if (match({TOK_DOT})) {
             Token op = previous();
-            std::shared_ptr<Expr> right = call_expr();
-            expr = std::make_shared<Expr::Access>(expr, op, right);
+            // The right side of the dot operator must be an identifier
+            Token name = consume(TOK_IDENT, E_NO_IDENT_AFTER_DOT, "Expected identifier after '.'.");
+            expr = std::make_shared<Expr::Access>(expr, op, name);
         } else if (match({TOK_ARROW})) {
             // The single arrow operator is syntactic sugar for dereferencing and then accessing
             Token op = previous();
-            std::shared_ptr<Expr> right = call_expr();
+            // The right side of the arrow operator must be an identifier
+            Token name = consume(TOK_IDENT, E_NO_IDENT_AFTER_DOT, "Expected identifier after '->'.");
             auto deref_expr = std::make_shared<Expr::Dereference>(op, expr);
-            expr = std::make_shared<Expr::Access>(deref_expr, op, right);
+            expr = std::make_shared<Expr::Access>(deref_expr, op, name);
         } else if (match({TOK_LEFT_SQUARE})) {
             Token op = previous();
             grouping_tokens.push(TOK_RIGHT_SQUARE);

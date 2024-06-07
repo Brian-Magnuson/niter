@@ -201,7 +201,12 @@ std::any AstPrinter::visit_dereference_expr(Expr::Dereference* expr) {
 }
 
 std::any AstPrinter::visit_access_expr(Expr::Access* expr) {
-    return parenthesize(".", {expr->left, expr->right});
+    std::string result = "(. ";
+    result += std::any_cast<std::string>(expr->left->accept(this));
+    result += " ";
+    result += expr->ident.lexeme;
+    result += ")";
+    return result;
 }
 
 std::any AstPrinter::visit_index_expr(Expr::Index* expr) {

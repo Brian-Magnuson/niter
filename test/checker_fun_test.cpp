@@ -604,36 +604,36 @@ TEST_CASE("Local checker return in void fun", "[checker]") {
     env.reset();
 }
 
-TEST_CASE("Local checker no ident after dot") {
-    std::string source_code = "fun main(): i32 { var a: i32; a.true; return 0; }";
-    auto file_name = std::make_shared<std::string>("test_files/no_ident_after_dot.nit");
+// TEST_CASE("Local checker no ident after dot") {
+//     std::string source_code = "fun main(): i32 { var a: i32; a.true; return 0; }";
+//     auto file_name = std::make_shared<std::string>("test_files/no_ident_after_dot.nit");
 
-    ErrorLogger& logger = ErrorLogger::inst();
-    logger.set_printing_enabled(false);
+//     ErrorLogger& logger = ErrorLogger::inst();
+//     logger.set_printing_enabled(false);
 
-    Scanner scanner;
-    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+//     Scanner scanner;
+//     scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
 
-    Parser parser(scanner.get_tokens());
-    auto stmts = parser.parse();
+//     Parser parser(scanner.get_tokens());
+//     auto stmts = parser.parse();
 
-    Environment& env = Environment::inst();
+//     Environment& env = Environment::inst();
 
-    GlobalChecker global_checker;
-    global_checker.type_check(stmts);
+//     GlobalChecker global_checker;
+//     global_checker.type_check(stmts);
 
-    LocalChecker local_checker;
-    local_checker.type_check(stmts);
+//     LocalChecker local_checker;
+//     local_checker.type_check(stmts);
 
-    REQUIRE(logger.get_errors().size() >= 1);
-    CHECK(logger.get_errors().at(0) == E_NO_IDENT_AFTER_DOT);
+//     REQUIRE(logger.get_errors().size() >= 1);
+//     CHECK(logger.get_errors().at(0) == E_NO_IDENT_AFTER_DOT);
 
-    logger.reset();
-    env.reset();
-}
+//     logger.reset();
+//     env.reset();
+// }
 
 TEST_CASE("Local checker arrow on non-pointer", "[checker]") {
-    std::string source_code = "fun main(): i32 { var a: i32; a->\"hello\"; return 0; }";
+    std::string source_code = "fun main(): i32 { var a: i32; a->hello; return 0; }";
     auto file_name = std::make_shared<std::string>("test_files/no_ident_after_arrow.nit");
 
     ErrorLogger& logger = ErrorLogger::inst();
@@ -655,34 +655,6 @@ TEST_CASE("Local checker arrow on non-pointer", "[checker]") {
 
     REQUIRE(logger.get_errors().size() >= 1);
     CHECK(logger.get_errors().at(0) == E_DEREFERENCE_NON_POINTER);
-
-    logger.reset();
-    env.reset();
-}
-
-TEST_CASE("Local checker no ident after arrow", "[checker]") {
-    std::string source_code = "fun main(): i32 { var a: i32*; a->\"hello\"; return 0; }";
-    auto file_name = std::make_shared<std::string>("test_files/no_ident_after_arrow.nit");
-
-    ErrorLogger& logger = ErrorLogger::inst();
-    logger.set_printing_enabled(false);
-
-    Scanner scanner;
-    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
-
-    Parser parser(scanner.get_tokens());
-    auto stmts = parser.parse();
-
-    Environment& env = Environment::inst();
-
-    GlobalChecker global_checker;
-    global_checker.type_check(stmts);
-
-    LocalChecker local_checker;
-    local_checker.type_check(stmts);
-
-    REQUIRE(logger.get_errors().size() >= 1);
-    CHECK(logger.get_errors().at(0) == E_NO_IDENT_AFTER_DOT);
 
     logger.reset();
     env.reset();
