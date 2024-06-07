@@ -209,13 +209,21 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
 
     /**
      * @brief Visits an access expression and determines if the access expression is valid.
-     * Note: The access expression must be of type array or tuple.
      *
      * @param expr The access expression to visit.
      * @return An std::shared_ptr<Type> representing the type of the expression.
      * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_access_expr(Expr::Access* expr) override;
+
+    /**
+     * @brief Visits an index expression and determines if the index expression is valid.
+     *
+     * @param expr The index expression to visit.
+     * @return An std::shared_ptr<Type> representing the type of the expression.
+     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
+     */
+    std::any visit_index_expr(Expr::Index* expr) override;
 
     /**
      * @brief Visits a call expression and determines if the call expression is valid.

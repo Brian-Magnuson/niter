@@ -253,6 +253,7 @@ public:
     class Unary;
     class Dereference;
     class Access;
+    class Index;
     class Call;
     class Cast;
     class Grouping;
@@ -281,6 +282,7 @@ public:
         virtual std::any visit_unary_expr(Unary* expr) = 0;
         virtual std::any visit_dereference_expr(Dereference* expr) = 0;
         virtual std::any visit_access_expr(Access* expr) = 0;
+        virtual std::any visit_index_expr(Index* expr) = 0;
         virtual std::any visit_call_expr(Call* expr) = 0;
         virtual std::any visit_cast_expr(Cast* expr) = 0;
         virtual std::any visit_grouping_expr(Grouping* expr) = 0;

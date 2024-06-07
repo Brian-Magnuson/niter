@@ -492,16 +492,19 @@ std::any LocalChecker::visit_access_expr(Expr::Access* expr) {
         }
 
         return expr->type;
-    } else if (expr->op.tok_type == TOK_LEFT_SQUARE) {
-        // // Right now, this only works with arrays
-        auto left_arr_type = std::dynamic_pointer_cast<Type::Array>(left_type);
-        auto left_tuple_type = std::dynamic_pointer_cast<Type::Tuple>(left_type);
+    } else {
+        // Unreachable
+        ErrorLogger::inst().log_error(expr->location, E_UNREACHABLE, "Unknown access operator.");
+        throw LocalTypeException();
+    }
+}
 
-        if (left_arr_type == nullptr && left_tuple_type == nullptr) {
-            ErrorLogger::inst().log_error(expr->location, E_INDEX_ON_NON_ARRAY, "Subscript operator can only be used on arrays and tuples.");
-            throw LocalTypeException();
-        }
+std::any LocalChecker::visit_index_expr(Expr::Index* expr) {
+    auto left_type = std::any_cast<std::shared_ptr<Type>>(expr->left->accept(this));
 
+    // First, handle the case where expr is an array
+    auto left_arr_type = std::dynamic_pointer_cast<Type::Array>(left_type);
+    if (left_arr_type != nullptr) {
         // The index must be an integer
         auto index_type = std::any_cast<std::shared_ptr<Type>>(expr->right->accept(this));
         if (index_type != nullptr && index_type->to_string() != "::i32") {
@@ -510,29 +513,32 @@ std::any LocalChecker::visit_access_expr(Expr::Access* expr) {
         }
 
         // The type of the expression is the type of the array elements
-        if (left_arr_type != nullptr) {
-            expr->type = left_arr_type->inner_type;
-        } else {
-            // For tuples, the index must be a literal integer
-            auto index_expr = std::dynamic_pointer_cast<Expr::Literal>(expr->right);
-            if (index_expr == nullptr || index_expr->token.tok_type != TOK_INT) {
-                ErrorLogger::inst().log_error(expr->location, E_NO_LITERAL_INDEX_ON_TUPLE, "Index must be a literal integer.");
-                throw LocalTypeException();
-            }
-            auto index = std::any_cast<int>(index_expr->token.literal);
-            if (index < 0 || index >= left_tuple_type->elements.size()) {
-                ErrorLogger::inst().log_error(expr->location, E_TUPLE_INDEX_OUT_OF_RANGE, "Index out of range for tuple of size " + std::to_string(left_tuple_type->elements.size()) + ".");
-                throw LocalTypeException();
-            }
-            expr->type = left_tuple_type->elements[index];
-        }
-
+        expr->type = left_arr_type->inner_type;
         return expr->type;
-    } else {
-        // Unreachable
-        ErrorLogger::inst().log_error(expr->location, E_UNREACHABLE, "Unknown access operator.");
-        throw LocalTypeException();
     }
+
+    // Then, handle the case where expr is a tuple
+    auto left_tuple_type = std::dynamic_pointer_cast<Type::Tuple>(left_type);
+    if (left_tuple_type != nullptr) {
+        // The index must be a literal integer
+        auto index_expr = std::dynamic_pointer_cast<Expr::Literal>(expr->right);
+        // A literal is required to verify the type at compile time
+        if (index_expr == nullptr || index_expr->token.tok_type != TOK_INT) {
+            ErrorLogger::inst().log_error(expr->location, E_NO_LITERAL_INDEX_ON_TUPLE, "Index must be a literal integer.");
+            throw LocalTypeException();
+        }
+        auto index = std::any_cast<int>(index_expr->token.literal);
+        if (index < 0 || index >= left_tuple_type->elements.size()) {
+            ErrorLogger::inst().log_error(expr->location, E_TUPLE_INDEX_OUT_OF_RANGE, "Index out of range for tuple of size " + std::to_string(left_tuple_type->elements.size()) + ".");
+            throw LocalTypeException();
+        }
+        expr->type = left_tuple_type->elements[index];
+        return expr->type;
+    }
+
+    // If neither of the above cases are true, the expression is invalid
+    ErrorLogger::inst().log_error(expr->location, E_INDEX_ON_NON_ARRAY, "Subscript operator can only be used on arrays and tuples.");
+    throw LocalTypeException();
 }
 
 std::any LocalChecker::visit_call_expr(Expr::Call* expr) {

@@ -399,6 +399,11 @@ std::any CodeGenerator::visit_access_expr(Expr::Access*) {
     return nullptr;
 }
 
+std::any CodeGenerator::visit_index_expr(Expr::Index*) {
+    // TODO: Implement index expressions
+    return nullptr;
+}
+
 std::any CodeGenerator::visit_call_expr(Expr::Call* expr) {
     llvm::Value* ret;
     // Get the function

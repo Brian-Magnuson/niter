@@ -441,25 +441,27 @@ std::shared_ptr<Expr> Parser::unary_expr() {
         std::shared_ptr<Expr> right = unary_expr();
         return std::make_shared<Expr::Dereference>(op, right);
     }
-    return access_expr();
+    return access_index_expr();
 }
 
-std::shared_ptr<Expr> Parser::access_expr() {
+std::shared_ptr<Expr> Parser::access_index_expr() {
     std::shared_ptr<Expr> expr = call_expr();
-    while (match({TOK_DOT, TOK_ARROW, TOK_LEFT_SQUARE})) {
-        Token op = previous();
-        std::shared_ptr<Expr> right;
-        if (op.tok_type == TOK_LEFT_SQUARE) {
+    while (true) {
+        if (match({TOK_DOT, TOK_ARROW})) {
+            Token op = previous();
+            std::shared_ptr<Expr> right = call_expr();
+            expr = std::make_shared<Expr::Access>(expr, op, right);
+        } else if (match({TOK_LEFT_SQUARE})) {
+            Token op = previous();
             grouping_tokens.push(TOK_RIGHT_SQUARE);
             while (match({TOK_NEWLINE}))
                 ; // Skip over newlines
-            // If we have [] access, any expression is allowed
-            right = expression();
+            std::shared_ptr<Expr> right = expression();
             consume(TOK_RIGHT_SQUARE, E_UNMATCHED_LEFT_SQUARE, "Expected ']' after expression.");
+            expr = std::make_shared<Expr::Index>(expr, op, right);
         } else {
-            right = call_expr();
+            break;
         }
-        expr = std::make_shared<Expr::Access>(expr, op, right);
     }
     return expr;
 }

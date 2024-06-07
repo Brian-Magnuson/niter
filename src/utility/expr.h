@@ -168,8 +168,9 @@ public:
 /**
  * @brief A class representing an access expression.
  * An access expression is an expression where a member of an object is accessed.
- * This could be using the dot, single arrow, or subscript operators.
- * (. or -> or [])
+ * This could be using the dot or single arrow operator.
+ * (. or ->)
+ * Note: A single error operator simply dereferences the pointer and accesses the member.
  *
  */
 class Expr::Access : public Expr::LValue {
@@ -187,6 +188,34 @@ public:
     std::shared_ptr<Expr> left;
     // The token representing the operator.
     Token op;
+    // The expression on the right side.
+    std::shared_ptr<Expr> right;
+
+    TokenType get_lvalue_declarer() override;
+    llvm::Value* get_llvm_allocation(CodeGenerator* code_generator) override;
+};
+
+/**
+ * @brief A class representing an index expression.
+ * An index expression is an expression where an element of a collection is accessed.
+ * It specifically uses the subscript operator ([]).
+ *
+ */
+class Expr::Index : public Expr::LValue {
+public:
+    Index(std::shared_ptr<Expr> left, Token bracket, std::shared_ptr<Expr> right)
+        : left(left), bracket(bracket), right(right) {
+        location = bracket.location;
+    }
+
+    std::any accept(Visitor* visitor) override {
+        return visitor->visit_index_expr(this);
+    }
+
+    // The expression on the left side.
+    std::shared_ptr<Expr> left;
+    // The token representing the opening bracket.
+    Token bracket;
     // The expression on the right side.
     std::shared_ptr<Expr> right;
 

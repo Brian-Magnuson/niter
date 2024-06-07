@@ -170,6 +170,7 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
     std::any visit_unary_expr(Expr::Unary* expr) override;
     std::any visit_dereference_expr(Expr::Dereference* expr) override;
     std::any visit_access_expr(Expr::Access* expr) override;
+    std::any visit_index_expr(Expr::Index* expr) override;
 
     /**
      * @brief Visits a call expression.

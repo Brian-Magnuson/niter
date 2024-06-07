@@ -201,11 +201,11 @@ std::any AstPrinter::visit_dereference_expr(Expr::Dereference* expr) {
 }
 
 std::any AstPrinter::visit_access_expr(Expr::Access* expr) {
-    if (expr->op.tok_type == TOK_LEFT_SQUARE) {
-        return parenthesize("[]", {expr->left, expr->right});
-    } else {
-        return parenthesize(expr->op.lexeme, {expr->left, expr->right});
-    }
+    return parenthesize(expr->op.lexeme, {expr->left, expr->right});
+}
+
+std::any AstPrinter::visit_index_expr(Expr::Index* expr) {
+    return parenthesize("[]", {expr->left, expr->right});
 }
 
 std::any AstPrinter::visit_call_expr(Expr::Call* expr) {

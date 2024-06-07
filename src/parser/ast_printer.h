@@ -214,6 +214,14 @@ public:
     std::any visit_access_expr(Expr::Access* expr) override;
 
     /**
+     * @brief Visits an index expression and returns a string representation of it.
+     *
+     * @param expr The index expression to visit.
+     * @return std::any An any object containing the string representation of the expression.
+     */
+    std::any visit_index_expr(Expr::Index* expr) override;
+
+    /**
      * @brief Visits a call expression and returns a string representation of it.
      *
      * @param expr The call expression to visit.
