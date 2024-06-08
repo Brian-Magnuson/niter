@@ -1,5 +1,6 @@
 #include "parser.h"
 #include "../logger/logger.h"
+#include <unordered_map>
 
 #include <exception>
 
@@ -548,6 +549,11 @@ std::shared_ptr<Expr> Parser::primary_expr() {
             Token name = consume(TOK_IDENT, E_NOT_AN_IDENTIFIER, "Expected identifier after '::'.");
             expr->tokens.push_back(name);
         }
+        // If there is a left brace, this is an object expression
+        if (match({TOK_LEFT_BRACE})) {
+            return object_expr(expr);
+        }
+
         return expr;
     }
     if (check({TOK_LEFT_SQUARE})) {
@@ -596,6 +602,26 @@ std::shared_ptr<Expr> Parser::primary_expr() {
     }
     ErrorLogger::inst().log_error(peek().location, E_NOT_AN_EXPRESSION, "Expected expression.");
     throw ParserException();
+}
+
+std::shared_ptr<Expr> Parser::object_expr(std::shared_ptr<Expr::Identifier> identifier) {
+    std::unordered_map<std::string, std::shared_ptr<Expr>> fields;
+
+    while (match({TOK_NEWLINE}))
+        ; // Skip over newlines
+
+    while (!check({TOK_RIGHT_BRACE}) && !is_at_end()) {
+        Token name = consume(TOK_IDENT, E_NO_IDENT_IN_OBJ, "Expected identifier in object expression.");
+        consume(TOK_COLON, E_MISSING_COLON_IN_OBJ, "Expected ':' after object field name.");
+        std::shared_ptr<Expr> value = expression();
+        fields[name.lexeme] = value;
+        while (match({TOK_NEWLINE}) || match({TOK_COMMA}))
+            ; // Skip over newlines or commas
+    }
+
+    consume(TOK_RIGHT_BRACE, E_UNMATCHED_BRACE_IN_OBJ_EXPR, "Expected '}' after object expression.");
+
+    return std::make_shared<Expr::Object>(identifier, fields);
 }
 
 // MARK: Annotations

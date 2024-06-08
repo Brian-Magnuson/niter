@@ -662,6 +662,12 @@ std::any LocalChecker::visit_tuple_expr(Expr::Tuple* expr) {
     return expr->type;
 }
 
+std::any LocalChecker::visit_object_expr(Expr::Object* expr) {
+    // TODO: Implement object expressions
+    ErrorLogger::inst().log_error(expr->location, E_UNIMPLEMENTED, "Object expressions are not yet implemented.");
+    return std::any();
+}
+
 void LocalChecker::type_check(std::vector<std::shared_ptr<Stmt>> stmts) {
     for (auto stmt : stmts) {
         try {

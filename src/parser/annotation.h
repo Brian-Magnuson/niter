@@ -3,6 +3,7 @@
 
 #include "../scanner/token.h"
 #include "../utility/utils.h"
+
 #include <memory>
 #include <string>
 #include <vector>

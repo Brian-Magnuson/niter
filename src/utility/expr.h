@@ -9,6 +9,7 @@
 #include "llvm/IR/Value.h"
 #include <any>
 #include <memory>
+#include <unordered_map>
 #include <vector>
 
 class CodeGenerator;
@@ -393,6 +394,29 @@ public:
     std::vector<std::shared_ptr<Expr>> elements;
     // The token representing the opening parenthesis.
     Token paren;
+};
+
+/**
+ * @brief A class representing an object expression.
+ * An object expression is a collection of key-value pairs used to initialize a struct.
+ * E.g. Point { x: 1, y: 2 }
+ *
+ */
+class Expr::Object : public Expr {
+public:
+    Object(std::shared_ptr<Expr::Identifier> struct_name, std::unordered_map<std::string, std::shared_ptr<Expr>> key_values)
+        : struct_name(struct_name), key_values(key_values) {
+        location = struct_name->tokens.front().location;
+    }
+
+    std::any accept(Visitor* visitor) override {
+        return visitor->visit_object_expr(this);
+    }
+
+    // The identifier representing the struct name.
+    std::shared_ptr<Expr::Identifier> struct_name;
+    // The key-value pairs of the object.
+    std::unordered_map<std::string, std::shared_ptr<Expr>> key_values;
 };
 
 #endif // EXPR_H

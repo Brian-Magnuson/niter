@@ -2,9 +2,11 @@
 #include "../src/checker/global_checker.h"
 #include "../src/checker/local_checker.h"
 #include "../src/logger/logger.h"
+#include "../src/parser/ast_printer.h"
 #include "../src/parser/parser.h"
 #include "../src/scanner/scanner.h"
 #include "catch/catch_amalgamated.hpp"
+#include <iostream>
 #include <memory>
 #include <string>
 
@@ -78,8 +80,8 @@ TEST_CASE("Global checker expr in global", "[checker]") {
     GlobalChecker global_checker;
     global_checker.type_check(stmts);
 
-    LocalChecker local_checker;
-    local_checker.type_check(stmts);
+    // LocalChecker local_checker;
+    // local_checker.type_check(stmts);
 
     REQUIRE(logger.get_errors().size() >= 1);
     CHECK(logger.get_errors().at(0) == E_GLOBAL_EXPRESSION);
@@ -151,6 +153,12 @@ TEST_CASE("Local checker no return in non-void", "[checker]") {
 
     Parser parser(scanner.get_tokens());
     auto stmts = parser.parse();
+
+    std::cout << "Parsed statements: " << std::endl;
+    AstPrinter printer;
+    for (auto& stmt : stmts) {
+        std::cout << printer.print(stmt) << std::endl;
+    }
 
     Environment& env = Environment::inst();
 

@@ -292,6 +292,20 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      */
     std::any visit_tuple_expr(Expr::Tuple* expr) override;
 
+    /**
+     * @brief Visits an object expression and determines if the object expression is valid.
+     * An object expression is valid if:
+     * - The struct exists
+     * - The object expression has the same fields as the struct
+     * - The types of the fields match the types of the struct fields
+     * - Any fields missing from the object have default values in the struct declaration
+     *
+     * @param expr The object expression to visit.
+     * @return std::any An std::shared_ptr<Type> representing the type of the object.
+     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
+     */
+    std::any visit_object_expr(Expr::Object* expr) override;
+
 public:
     /**
      * @brief Runs the local type checker on a list of statements.

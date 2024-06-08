@@ -261,6 +261,7 @@ public:
     class Literal;
     class Array;
     class Tuple;
+    class Object;
 
     // The type of the expression. Set to nullptr, to be filled in by the type checker.
     std::shared_ptr<Type> type = nullptr;
@@ -290,6 +291,7 @@ public:
         virtual std::any visit_literal_expr(Literal* expr) = 0;
         virtual std::any visit_array_expr(Array* expr) = 0;
         virtual std::any visit_tuple_expr(Tuple* expr) = 0;
+        virtual std::any visit_object_expr(Object* expr) = 0;
     };
 
     /**

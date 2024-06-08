@@ -276,6 +276,14 @@ public:
      * @return std::any An any object containing the string representation of the expression.
      */
     std::any visit_tuple_expr(Expr::Tuple* expr) override;
+
+    /**
+     * @brief Visits an object expression and returns a string representation of it.
+     *
+     * @param expr The object expression to visit.
+     * @return std::any An any object containing the string representation of the expression.
+     */
+    std::any visit_object_expr(Expr::Object* expr) override;
 };
 
 #endif // AST_PRINTER_H

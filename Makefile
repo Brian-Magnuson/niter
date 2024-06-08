@@ -4,10 +4,15 @@
 # LLVM libraries to link against
 LLVM_LIBS = `llvm-config --cxxflags --ldflags --system-libs --libs core orcjit native` -fexceptions
 
+
 # The core source files, i.e. files of the form src/*/*.cpp
 OBJ_DIR = build
 CORE_SRCS = $(wildcard src/*/*.cpp)
 CORE_OBJS = $(patsubst src/%.cpp, $(OBJ_DIR)/%.o, $(CORE_SRCS))
+
+# The core header files, i.e. files of the form src/*/*.h
+CORE_HEADERS = $(wildcard src/*/*.h)
+# If any header file changes, rebuild all source files
 
 # The test source files, i.e. files of the form test/*.cpp
 TEST_OBJ_DIR = test/build
@@ -36,7 +41,7 @@ clean:
 # Recipes
 
 # Builds the core source files
-$(OBJ_DIR)/%.o: src/%.cpp
+$(OBJ_DIR)/%.o: src/%.cpp $(CORE_HEADERS)
 	@echo "\033[0;35mCompiling $<\033[0m"
 	mkdir -p $(@D)
 	clang++ -std=c++17 -O0 -Wall -g -c -o $@ $<

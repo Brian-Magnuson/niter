@@ -223,6 +223,7 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
     std::any visit_literal_expr(Expr::Literal* expr) override;
     std::any visit_array_expr(Expr::Array* expr) override;
     std::any visit_tuple_expr(Expr::Tuple* expr) override;
+    std::any visit_object_expr(Expr::Object* expr) override;
 
 public:
     CodeGenerator();

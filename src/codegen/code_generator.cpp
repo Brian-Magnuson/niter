@@ -504,6 +504,11 @@ std::any CodeGenerator::visit_tuple_expr(Expr::Tuple*) {
     return nullptr;
 }
 
+std::any CodeGenerator::visit_object_expr(Expr::Object*) {
+    // TODO: Implement object expressions
+    return nullptr;
+}
+
 CodeGenerator::CodeGenerator() {
     context = Environment::inst().get_llvm_context();
     builder = std::make_shared<llvm::IRBuilder<>>(*context);
