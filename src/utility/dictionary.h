@@ -12,10 +12,11 @@
  *
  * @tparam K The key type. Must be hashable.
  * @tparam V The value type.
+ * @tparam Hash The hash function for the keys. Defaults to std::hash<K>.
  */
-template <typename K, typename V>
+template <typename K, typename V, typename Hash = std::hash<K>>
 class Dictionary {
-    std::unordered_map<K, V> map;
+    std::unordered_map<K, V, Hash> map;
     std::vector<K> keys;
 
 public:

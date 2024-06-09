@@ -721,6 +721,7 @@ std::any LocalChecker::visit_object_expr(Expr::Object* expr) {
         auto field_type = std::any_cast<std::shared_ptr<Type>>(field.second->accept(this));
         if (!Type::are_compatible(field_type, field_node->decl->type)) {
             ErrorLogger::inst().log_error(field.second->location, E_INCOMPATIBLE_TYPES, "Cannot convert from " + field_type->to_string() + " to " + field_node->decl->type->to_string() + ".");
+            ErrorLogger::inst().log_note(field_node->location, "Field declared here with type " + field_node->decl->type->to_string() + ".");
             throw LocalTypeException();
         }
     }
