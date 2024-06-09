@@ -185,6 +185,10 @@ enum ErrorCode {
     E_TUPLE_INDEX_OUT_OF_RANGE,
     // A struct member could not be found
     E_INVALID_STRUCT_MEMBER,
+    // An instance member was expected in an object expression, but a static member was found
+    E_STATIC_FIELD_IN_OBJ,
+    // A specific instance member was expected in an object expression, but not found
+    E_MISSING_FIELD_IN_OBJ,
     // A function call was found on a non-function type
     E_CALL_ON_NON_FUN,
     // A function call was found with an incorrect number of arguments

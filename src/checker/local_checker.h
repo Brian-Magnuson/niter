@@ -297,6 +297,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      * An object expression is valid if:
      * - The struct exists
      * - The object expression has the same fields as the struct
+     * - The object expression does not have any extra fields or static fields
      * - The types of the fields match the types of the struct fields
      * - Any fields missing from the object have default values in the struct declaration
      * (We currently do not support default values in struct declarations, so this is not implemented yet.)

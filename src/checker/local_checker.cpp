@@ -5,6 +5,7 @@
 #include "../utility/utils.h"
 #include <iostream>
 #include <tuple>
+#include <unordered_set>
 
 bool LocalChecker::check_token(TokenType token, const std::vector<TokenType>& types) const {
     for (auto type : types) {
@@ -667,21 +668,75 @@ std::any LocalChecker::visit_object_expr(Expr::Object* expr) {
      * An object expression is valid if:
      * - The struct exists
      * - The object expression has the same fields as the struct
+     * - The object expression does not have any extra fields or static fields
      * - The types of the fields match the types of the struct fields
      * - Any fields missing from the object have default values in the struct declaration
      */
 
     // Get the struct type
-    auto struct_type = Environment::inst().get_type(expr->struct_annotation);
-    auto struct_type_ptr = std::dynamic_pointer_cast<Type::Struct>(struct_type);
-    if (struct_type_ptr == nullptr) {
+    auto type = Environment::inst().get_type(expr->struct_annotation);
+    auto struct_type = std::dynamic_pointer_cast<Type::Struct>(type);
+    if (struct_type == nullptr) {
         ErrorLogger::inst().log_error(expr->location, E_UNKNOWN_TYPE, "Struct type `" + expr->struct_annotation->to_string() + "` was not declared.");
         throw LocalTypeException();
     }
 
-    // TODO: Implement the rest
-    ErrorLogger::inst().log_error(expr->location, E_UNIMPLEMENTED, "Object expressions are not yet implemented.");
-    throw LocalTypeException();
+    // Create a set of the required fields
+    std::unordered_set<std::string> required_fields;
+    for (auto& field : struct_type->struct_scope->instance_members) {
+        auto vardeclarable_decl = field.second->decl;
+        auto var_decl = dynamic_cast<Decl::Var*>(vardeclarable_decl);
+        if (var_decl == nullptr) {
+            // This should never happen, since all instance members are variables
+            ErrorLogger::inst().log_error(field.second->location, E_IMPOSSIBLE, "Instance member is not a variable.");
+            throw LocalTypeException();
+        }
+        if (var_decl->initializer == nullptr) {
+            required_fields.insert(field.first);
+        } else {
+            // If the field has a default value, check that the default value is valid
+            // TODO: Implement this
+        }
+    }
+
+    // Check that the object expression has the same fields as the struct
+    for (auto& field : expr->key_values) {
+        if (!HAS_KEY(struct_type->struct_scope->instance_members, field.first)) {
+            // If the field is actually a static field, we can give a more specific error message
+            if (HAS_KEY(struct_type->struct_scope->children, field.first)) {
+                ErrorLogger::inst().log_error(field.second->location, E_STATIC_FIELD_IN_OBJ, "Cannot assign to static field `" + field.first + "` in object expression.");
+            } else {
+                ErrorLogger::inst().log_error(field.second->location, E_INVALID_STRUCT_MEMBER, "Struct type `" + struct_type->to_string() + "` does not have instance member `" + field.first + "`.");
+            }
+            throw LocalTypeException();
+        }
+
+        // Remove the field from the set of required fields
+        required_fields.erase(field.first);
+        auto field_node = struct_type->struct_scope->instance_members.at(field.first);
+        // This should always be valid, since the required fields were taken from the struct's instance members
+
+        // Check that the types of the fields match
+        auto field_type = std::any_cast<std::shared_ptr<Type>>(field.second->accept(this));
+        if (!Type::are_compatible(field_type, field_node->decl->type)) {
+            ErrorLogger::inst().log_error(field.second->location, E_INCOMPATIBLE_TYPES, "Cannot convert from " + field_type->to_string() + " to " + field_node->decl->type->to_string() + ".");
+            throw LocalTypeException();
+        }
+    }
+
+    // If there are any required fields left, the object expression is invalid
+    if (!required_fields.empty()) {
+        ErrorLogger::inst().log_error(expr->location, E_MISSING_FIELD_IN_OBJ, "Object expression is missing required fields.");
+        for (auto& field : required_fields) {
+            auto field_node = struct_type->struct_scope->instance_members.at(field);
+            ErrorLogger::inst().log_note(field_node->decl->location, "This field is required.");
+        }
+        throw LocalTypeException();
+    }
+
+    // The object expression is valid
+    expr->type = struct_type;
+    return expr->type;
 }
 
 void LocalChecker::type_check(std::vector<std::shared_ptr<Stmt>> stmts) {

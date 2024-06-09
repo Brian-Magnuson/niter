@@ -54,7 +54,7 @@ test/build/catch/catch_amalgamated.o: test/catch/catch_amalgamated.cpp test/catc
 	clang++ -std=c++17 -O0 -Wall -Wextra -g -c -o test/build/catch/catch_amalgamated.o test/catch/catch_amalgamated.cpp
 
 # Builds the test source files
-$(TEST_OBJ_DIR)/%.o: test/%.cpp
+$(TEST_OBJ_DIR)/%.o: test/%.cpp $(CORE_HEADERS)
 	@echo "\033[0;36mCompiling $<\033[0m"
 	mkdir -p $(@D)
 	clang++ -std=c++17 -O0 -Wall -g -c -o $@ $<
