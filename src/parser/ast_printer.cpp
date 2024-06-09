@@ -272,13 +272,15 @@ std::any AstPrinter::visit_object_expr(Expr::Object* expr) {
     std::string result = "(object ";
     result += expr->struct_annotation->to_string();
     result += " {";
-    for (unsigned i = 0; i < expr->key_values.size(); i++) {
-        result += expr->key_values[i].first;
+    unsigned i = 0;
+    for (const auto& field : expr->key_values) {
+        result += field.first;
         result += ": ";
-        result += std::any_cast<std::string>(expr->key_values[i].second->accept(this));
+        result += std::any_cast<std::string>(field.second->accept(this));
         if (i != expr->key_values.size() - 1) {
             result += ", ";
         }
+        i++;
     }
     result += "})";
     return result;

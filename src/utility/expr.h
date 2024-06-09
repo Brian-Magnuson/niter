@@ -5,6 +5,7 @@
 
 #include "../parser/annotation.h"
 #include "../scanner/token.h"
+#include "../utility/dictionary.h"
 #include "type.h"
 #include "llvm/IR/Value.h"
 #include <any>
@@ -404,7 +405,7 @@ public:
  */
 class Expr::Object : public Expr {
 public:
-    Object(Token colon, std::shared_ptr<Annotation::Segmented> struct_annotation, std::vector<std::pair<std::string, std::shared_ptr<Expr>>>& key_values)
+    Object(Token colon, std::shared_ptr<Annotation::Segmented> struct_annotation, Dictionary<std::string, std::shared_ptr<Expr>>& key_values)
         : colon(colon), struct_annotation(struct_annotation), key_values(key_values) {
         location = colon.location;
     }
@@ -418,7 +419,7 @@ public:
     // The annotation representing the struct name.
     std::shared_ptr<Annotation::Segmented> struct_annotation;
     // The key-value pairs of the object.
-    std::vector<std::pair<std::string, std::shared_ptr<Expr>>> key_values;
+    Dictionary<std::string, std::shared_ptr<Expr>> key_values;
 };
 
 #endif // EXPR_H

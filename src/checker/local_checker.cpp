@@ -692,10 +692,11 @@ std::any LocalChecker::visit_object_expr(Expr::Object* expr) {
             throw LocalTypeException();
         }
         if (var_decl->initializer == nullptr) {
+            // If the field does not have a default value, it is required
             required_fields.insert(field.first);
-        } else {
-            // If the field has a default value, check that the default value is valid
-            // TODO: Implement this
+        } else if (!HAS_KEY(expr->key_values, field.first)) {
+            // If the field has a default value, and the object expression does not have that field, add the default value to the object expression
+            expr->key_values[field.first] = var_decl->initializer;
         }
     }
 

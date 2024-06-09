@@ -1,5 +1,7 @@
 #include "parser.h"
+
 #include "../logger/logger.h"
+#include "../utility/dictionary.h"
 #include <unordered_map>
 
 #include <exception>
@@ -617,7 +619,7 @@ std::shared_ptr<Expr> Parser::object_expr() {
     // Consume the left brace
     consume(TOK_LEFT_BRACE, E_NO_LBRACE_IN_OBJ_EXPR, "Expected '{' before object expression.");
 
-    std::vector<std::pair<std::string, std::shared_ptr<Expr>>> fields;
+    Dictionary<std::string, std::shared_ptr<Expr>> fields;
 
     while (match({TOK_NEWLINE}))
         ; // Skip over newlines
@@ -626,7 +628,7 @@ std::shared_ptr<Expr> Parser::object_expr() {
         Token name = consume(TOK_IDENT, E_NO_IDENT_IN_OBJ, "Expected identifier in object expression.");
         consume(TOK_COLON, E_MISSING_COLON_IN_OBJ, "Expected ':' after object field name.");
         std::shared_ptr<Expr> value = expression();
-        fields.push_back(std::make_pair(name.lexeme, value));
+        fields.insert(name.lexeme, value);
         while (match({TOK_NEWLINE}) || match({TOK_COMMA}))
             ; // Skip over newlines or commas
     }
