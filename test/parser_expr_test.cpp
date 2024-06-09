@@ -482,7 +482,7 @@ TEST_CASE("Parser cast exprs", "[parser]") {
 }
 
 TEST_CASE("Parser object exprs", "[parser]") {
-    std::string source_code = "Point {x: 1, y: 2};";
+    std::string source_code = ":Point {x: 1, y: 2};";
     std::shared_ptr file_name = std::make_shared<std::string>("test_files/object_exprs.nit");
 
     Scanner scanner;
@@ -498,7 +498,7 @@ TEST_CASE("Parser object exprs", "[parser]") {
 }
 
 TEST_CASE("Parser object exprs 2", "[parser]") {
-    std::string source_code = "Point {y: 2, x: 1, z: 3,}; Nothing {};";
+    std::string source_code = ":Point {y: 2, x: 1, z: 3,}; :Nothing {};";
     std::shared_ptr file_name = std::make_shared<std::string>("test_files/object_exprs_2.nit");
 
     Scanner scanner;

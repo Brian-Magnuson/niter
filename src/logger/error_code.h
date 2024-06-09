@@ -109,10 +109,14 @@ enum ErrorCode {
     E_NO_LBRACE_IN_STRUCT_DECL,
     // A struct declaration was found without a right brace
     E_UNMATCHED_BRACE_IN_STRUCT_DECL,
+    // An object expression was found without a valid type annotation
+    E_INVALID_OBJ_TYPE,
     // An identifier was expected in an object expression, but not found
     E_NO_IDENT_IN_OBJ,
     // A colon was expected in an object expression, but not found
     E_MISSING_COLON_IN_OBJ,
+    // An object expression was found without a left brace
+    E_NO_LBRACE_IN_OBJ_EXPR,
     // An object expression was found without a matching right brace
     E_UNMATCHED_BRACE_IN_OBJ_EXPR,
 

@@ -404,17 +404,19 @@ public:
  */
 class Expr::Object : public Expr {
 public:
-    Object(std::shared_ptr<Expr::Identifier> struct_name, std::vector<std::pair<std::string, std::shared_ptr<Expr>>>& key_values)
-        : struct_name(struct_name), key_values(key_values) {
-        location = struct_name->tokens.front().location;
+    Object(Token colon, std::shared_ptr<Annotation::Segmented> struct_annotation, std::vector<std::pair<std::string, std::shared_ptr<Expr>>>& key_values)
+        : colon(colon), struct_annotation(struct_annotation), key_values(key_values) {
+        location = colon.location;
     }
 
     std::any accept(Visitor* visitor) override {
         return visitor->visit_object_expr(this);
     }
 
-    // The identifier representing the struct name.
-    std::shared_ptr<Expr::Identifier> struct_name;
+    // The token representing the colon.
+    Token colon;
+    // The annotation representing the struct name.
+    std::shared_ptr<Annotation::Segmented> struct_annotation;
     // The key-value pairs of the object.
     std::vector<std::pair<std::string, std::shared_ptr<Expr>>> key_values;
 };

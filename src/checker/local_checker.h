@@ -299,6 +299,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      * - The object expression has the same fields as the struct
      * - The types of the fields match the types of the struct fields
      * - Any fields missing from the object have default values in the struct declaration
+     * (We currently do not support default values in struct declarations, so this is not implemented yet.)
      *
      * @param expr The object expression to visit.
      * @return std::any An std::shared_ptr<Type> representing the type of the object.

@@ -663,9 +663,25 @@ std::any LocalChecker::visit_tuple_expr(Expr::Tuple* expr) {
 }
 
 std::any LocalChecker::visit_object_expr(Expr::Object* expr) {
-    // TODO: Implement object expressions
+    /*
+     * An object expression is valid if:
+     * - The struct exists
+     * - The object expression has the same fields as the struct
+     * - The types of the fields match the types of the struct fields
+     * - Any fields missing from the object have default values in the struct declaration
+     */
+
+    // Get the struct type
+    auto struct_type = Environment::inst().get_type(expr->struct_annotation);
+    auto struct_type_ptr = std::dynamic_pointer_cast<Type::Struct>(struct_type);
+    if (struct_type_ptr == nullptr) {
+        ErrorLogger::inst().log_error(expr->location, E_UNKNOWN_TYPE, "Struct type `" + expr->struct_annotation->to_string() + "` was not declared.");
+        throw LocalTypeException();
+    }
+
+    // TODO: Implement the rest
     ErrorLogger::inst().log_error(expr->location, E_UNIMPLEMENTED, "Object expressions are not yet implemented.");
-    return std::any();
+    throw LocalTypeException();
 }
 
 void LocalChecker::type_check(std::vector<std::shared_ptr<Stmt>> stmts) {

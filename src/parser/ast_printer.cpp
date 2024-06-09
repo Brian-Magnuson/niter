@@ -270,7 +270,7 @@ std::any AstPrinter::visit_tuple_expr(Expr::Tuple* expr) {
 
 std::any AstPrinter::visit_object_expr(Expr::Object* expr) {
     std::string result = "(object ";
-    result += std::any_cast<std::string>(expr->struct_name->accept(this));
+    result += expr->struct_annotation->to_string();
     result += " {";
     for (unsigned i = 0; i < expr->key_values.size(); i++) {
         result += expr->key_values[i].first;

@@ -162,7 +162,7 @@ struct Point {
 }
 
 fun main(): i32 {
-    var a: Point = Point {x: 1, y: 2};
+    var a = :Point {x: 1, y: 2};
     return 0; 
 }
 )";

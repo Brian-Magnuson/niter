@@ -549,11 +549,6 @@ std::shared_ptr<Expr> Parser::primary_expr() {
             Token name = consume(TOK_IDENT, E_NOT_AN_IDENTIFIER, "Expected identifier after '::'.");
             expr->tokens.push_back(name);
         }
-        // If there is a left brace, this is an object expression
-        if (match({TOK_LEFT_BRACE})) {
-            return object_expr(expr);
-        }
-
         return expr;
     }
     if (check({TOK_LEFT_SQUARE})) {
@@ -574,7 +569,6 @@ std::shared_ptr<Expr> Parser::primary_expr() {
         consume(TOK_RIGHT_SQUARE, E_UNMATCHED_LEFT_SQUARE, "Expected ']' after array.");
         return std::make_shared<Expr::Array>(elements, bracket);
     }
-
     if (check({TOK_LEFT_PAREN})) {
         Token& paren = peek();
         grouping_tokens.push(TOK_RIGHT_PAREN);
@@ -600,11 +594,29 @@ std::shared_ptr<Expr> Parser::primary_expr() {
         consume(TOK_RIGHT_PAREN, E_UNMATCHED_PAREN_IN_GROUPING, "Expected ')' after expression.");
         return expressions[0];
     }
+    if (match({TOK_COLON})) {
+        return object_expr();
+    }
+
     ErrorLogger::inst().log_error(peek().location, E_NOT_AN_EXPRESSION, "Expected expression.");
     throw ParserException();
 }
 
-std::shared_ptr<Expr> Parser::object_expr(std::shared_ptr<Expr::Identifier> identifier) {
+std::shared_ptr<Expr> Parser::object_expr() {
+
+    Token& colon = previous();
+
+    auto type_annotation = annotation();
+    // This must be a segmented annotation
+    auto seg_type_annotation = std::dynamic_pointer_cast<Annotation::Segmented>(type_annotation);
+    if (seg_type_annotation == nullptr) {
+        ErrorLogger::inst().log_error(previous().location, E_INVALID_OBJ_TYPE, "Expected segmented type annotation.");
+        throw ParserException();
+    }
+
+    // Consume the left brace
+    consume(TOK_LEFT_BRACE, E_NO_LBRACE_IN_OBJ_EXPR, "Expected '{' before object expression.");
+
     std::vector<std::pair<std::string, std::shared_ptr<Expr>>> fields;
 
     while (match({TOK_NEWLINE}))
@@ -621,7 +633,7 @@ std::shared_ptr<Expr> Parser::object_expr(std::shared_ptr<Expr::Identifier> iden
 
     consume(TOK_RIGHT_BRACE, E_UNMATCHED_BRACE_IN_OBJ_EXPR, "Expected '}' after object expression.");
 
-    return std::make_shared<Expr::Object>(identifier, fields);
+    return std::make_shared<Expr::Object>(colon, seg_type_annotation, fields);
 }
 
 // MARK: Annotations

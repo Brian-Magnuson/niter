@@ -301,13 +301,13 @@ class Parser {
 
     /**
      * @brief Parses an object expression.
-     * An object expression is an identifier for a struct followed by a set of braces containing member initializers.
+     * An object expression is an annotation for a struct followed by a set of braces containing member initializers.
      * Object expressions are used to create instances of structs.
      *
      * @return std::shared_ptr<Expr> A pointer to the parsed object expression.
      * @throw ParserException If an error occurs while parsing the expression. Will be caught by the statement() function.
      */
-    std::shared_ptr<Expr> object_expr(std::shared_ptr<Expr::Identifier> identifier);
+    std::shared_ptr<Expr> object_expr();
 
     // MARK: Annotations
 

@@ -154,12 +154,6 @@ TEST_CASE("Local checker no return in non-void", "[checker]") {
     Parser parser(scanner.get_tokens());
     auto stmts = parser.parse();
 
-    std::cout << "Parsed statements: " << std::endl;
-    AstPrinter printer;
-    for (auto& stmt : stmts) {
-        std::cout << printer.print(stmt) << std::endl;
-    }
-
     Environment& env = Environment::inst();
 
     GlobalChecker global_checker;
