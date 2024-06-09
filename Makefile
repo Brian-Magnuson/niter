@@ -30,13 +30,7 @@ test: test/bin/test
 
 # The clean rule removes all build artifacts
 clean:
-	rm -rf bin
-	rm -rf build
-	rm -rf test/bin
-	rm -rf test/build
-	rm -rf test/temp
-	rm -rf sandbox/bin
-	rm -rf sandbox/debug
+	rm -rf bin build test/bin test/build test/temp sandbox/bin sandbox/debug
 
 # Recipes
 
@@ -51,6 +45,7 @@ bin/niterc: $(CORE_OBJS) src/main.cpp
 	@echo "\033[0;35mLinking $@\033[0m"
 	mkdir -p bin
 	clang++ -std=c++17 -O0 -Wall -g -o bin/niterc $(CORE_OBJS) src/main.cpp $(LLVM_LIBS)
+	@echo "\033[0;35mFinished building $@\033[0m"
 
 # Builds the catch_amalgamated object file
 test/build/catch/catch_amalgamated.o: test/catch/catch_amalgamated.cpp test/catch/catch_amalgamated.hpp
@@ -69,3 +64,4 @@ test/bin/test: $(CORE_OBJS) $(TEST_OBJS) test/build/catch/catch_amalgamated.o
 	@echo "\033[0;36mLinking $@\033[0m"
 	mkdir -p test/bin
 	clang++ -std=c++17 -O0 -Wall -g -o test/bin/test $(CORE_OBJS) $(TEST_OBJS) test/build/catch/catch_amalgamated.o $(LLVM_LIBS)
+	@echo "\033[0;36mFinished building $@\033[0m"

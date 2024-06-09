@@ -605,7 +605,7 @@ std::shared_ptr<Expr> Parser::primary_expr() {
 }
 
 std::shared_ptr<Expr> Parser::object_expr(std::shared_ptr<Expr::Identifier> identifier) {
-    std::unordered_map<std::string, std::shared_ptr<Expr>> fields;
+    std::vector<std::pair<std::string, std::shared_ptr<Expr>>> fields;
 
     while (match({TOK_NEWLINE}))
         ; // Skip over newlines
@@ -614,7 +614,7 @@ std::shared_ptr<Expr> Parser::object_expr(std::shared_ptr<Expr::Identifier> iden
         Token name = consume(TOK_IDENT, E_NO_IDENT_IN_OBJ, "Expected identifier in object expression.");
         consume(TOK_COLON, E_MISSING_COLON_IN_OBJ, "Expected ':' after object field name.");
         std::shared_ptr<Expr> value = expression();
-        fields[name.lexeme] = value;
+        fields.push_back(std::make_pair(name.lexeme, value));
         while (match({TOK_NEWLINE}) || match({TOK_COMMA}))
             ; // Skip over newlines or commas
     }

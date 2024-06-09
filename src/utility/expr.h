@@ -8,8 +8,8 @@
 #include "type.h"
 #include "llvm/IR/Value.h"
 #include <any>
+#include <map>
 #include <memory>
-#include <unordered_map>
 #include <vector>
 
 class CodeGenerator;
@@ -232,7 +232,7 @@ public:
  */
 class Expr::Call : public Expr {
 public:
-    Call(std::shared_ptr<Expr> callee, Token paren, std::vector<std::shared_ptr<Expr>> arguments)
+    Call(std::shared_ptr<Expr> callee, Token paren, std::vector<std::shared_ptr<Expr>>& arguments)
         : callee(callee), paren(paren), arguments(arguments) {
         location = paren.location;
     }
@@ -300,7 +300,7 @@ public:
  */
 class Expr::Identifier : public Expr::LValue {
 public:
-    Identifier(std::vector<Token> tokens) : tokens(tokens) {
+    Identifier(std::vector<Token>& tokens) : tokens(tokens) {
         location = tokens[0].location;
     }
     Identifier(Token token) : tokens({token}) {
@@ -357,7 +357,7 @@ public:
  */
 class Expr::Array : public Expr {
 public:
-    Array(std::vector<std::shared_ptr<Expr>> elements, Token bracket) : bracket(bracket), elements(elements) {
+    Array(std::vector<std::shared_ptr<Expr>>& elements, Token bracket) : bracket(bracket), elements(elements) {
         location = bracket.location;
     }
 
@@ -382,7 +382,7 @@ public:
  */
 class Expr::Tuple : public Expr {
 public:
-    Tuple(std::vector<std::shared_ptr<Expr>> elements, Token paren) : elements(elements), paren(paren) {
+    Tuple(std::vector<std::shared_ptr<Expr>>& elements, Token paren) : elements(elements), paren(paren) {
         location = paren.location;
     }
 
@@ -404,7 +404,7 @@ public:
  */
 class Expr::Object : public Expr {
 public:
-    Object(std::shared_ptr<Expr::Identifier> struct_name, std::unordered_map<std::string, std::shared_ptr<Expr>> key_values)
+    Object(std::shared_ptr<Expr::Identifier> struct_name, std::vector<std::pair<std::string, std::shared_ptr<Expr>>>& key_values)
         : struct_name(struct_name), key_values(key_values) {
         location = struct_name->tokens.front().location;
     }
@@ -416,7 +416,7 @@ public:
     // The identifier representing the struct name.
     std::shared_ptr<Expr::Identifier> struct_name;
     // The key-value pairs of the object.
-    std::unordered_map<std::string, std::shared_ptr<Expr>> key_values;
+    std::vector<std::pair<std::string, std::shared_ptr<Expr>>> key_values;
 };
 
 #endif // EXPR_H
