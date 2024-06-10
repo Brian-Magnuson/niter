@@ -156,11 +156,19 @@ public:
     }
 
     typename std::vector<std::pair<K, V>>::iterator find(K key) {
-        return keys.begin() + map.find(key)->second;
+        auto iter = map.find(key);
+        if (iter == map.end()) {
+            return keys.end();
+        }
+        return keys.begin() + iter->second;
     }
 
     typename std::vector<std::pair<K, V>>::const_iterator find(K key) const {
-        return keys.begin() + map.find(key)->second;
+        auto iter = map.find(key);
+        if (iter == map.end()) {
+            return keys.end();
+        }
+        return keys.begin() + iter->second;
     }
 };
 
