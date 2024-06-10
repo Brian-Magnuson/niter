@@ -457,14 +457,14 @@ std::any LocalChecker::visit_access_expr(Expr::Access* expr) {
     }
 
     // The right side of the access is an identifier
-    auto var_node = Environment::inst().get_instance_variable(left_seg_type, expr->ident.lexeme);
-    if (var_node == nullptr) {
+    auto decl = Environment::inst().get_instance_variable(left_seg_type, expr->ident.lexeme);
+    if (decl == nullptr) {
         ErrorLogger::inst().log_error(expr->location, E_INVALID_STRUCT_MEMBER, "Struct type " + left_seg_type->to_string() + " does not have member " + expr->ident.lexeme + ".");
         throw LocalTypeException();
     }
 
     // The type of the expression is the type of the instance variable
-    expr->type = var_node->decl->type;
+    expr->type = decl->type;
     return expr->type;
 }
 
@@ -684,7 +684,7 @@ std::any LocalChecker::visit_object_expr(Expr::Object* expr) {
     // Create a set of the required fields
     std::unordered_set<std::string> required_fields;
     for (auto& field : struct_type->struct_scope->instance_members) {
-        auto vardeclarable_decl = field.second->decl;
+        auto vardeclarable_decl = field.second;
         auto var_decl = dynamic_cast<Decl::Var*>(vardeclarable_decl);
         if (var_decl == nullptr) {
             // This should never happen, since all instance members are variables
@@ -714,14 +714,14 @@ std::any LocalChecker::visit_object_expr(Expr::Object* expr) {
 
         // Remove the field from the set of required fields
         required_fields.erase(field.first);
-        auto field_node = struct_type->struct_scope->instance_members.at(field.first);
+        auto field_decl = struct_type->struct_scope->instance_members.at(field.first);
         // This should always be valid, since the required fields were taken from the struct's instance members
 
         // Check that the types of the fields match
         auto field_type = std::any_cast<std::shared_ptr<Type>>(field.second->accept(this));
-        if (!Type::are_compatible(field_type, field_node->decl->type)) {
-            ErrorLogger::inst().log_error(field.second->location, E_INCOMPATIBLE_TYPES, "Cannot convert from " + field_type->to_string() + " to " + field_node->decl->type->to_string() + ".");
-            ErrorLogger::inst().log_note(field_node->location, "Field declared here with type " + field_node->decl->type->to_string() + ".");
+        if (!Type::are_compatible(field_type, field_decl->type)) {
+            ErrorLogger::inst().log_error(field.second->location, E_INCOMPATIBLE_TYPES, "Cannot convert from " + field_type->to_string() + " to " + field_decl->type->to_string() + ".");
+            ErrorLogger::inst().log_note(field_decl->location, "Field declared here with type " + field_decl->type->to_string() + ".");
             throw LocalTypeException();
         }
     }
@@ -730,8 +730,8 @@ std::any LocalChecker::visit_object_expr(Expr::Object* expr) {
     if (!required_fields.empty()) {
         ErrorLogger::inst().log_error(expr->location, E_MISSING_FIELD_IN_OBJ, "Object expression is missing required fields.");
         for (auto& field : required_fields) {
-            auto field_node = struct_type->struct_scope->instance_members.at(field);
-            ErrorLogger::inst().log_note(field_node->decl->location, "This field is required.");
+            auto field_decl = struct_type->struct_scope->instance_members.at(field);
+            ErrorLogger::inst().log_note(field_decl->location, "This field is required.");
         }
         throw LocalTypeException();
     }

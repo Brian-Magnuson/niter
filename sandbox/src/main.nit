@@ -1,10 +1,12 @@
 extern variadic fun printf(char*): i32
 
-fun main(): i32 {
-    printf("add(1, 2): %d\n", add(1, 2))
-    return 0
+struct Point {
+    var x: i32
+    var y: i32
 }
 
-fun add(a: i32, b: i32): i32 {
-    return a + b
+fun main(): i32 {
+    var p = :Point {x: 1, y: 2}
+    printf("Hello, world! (%d, %d)\n", p.x, p.y)
+    return 0
 }

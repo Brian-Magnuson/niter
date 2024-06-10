@@ -4,6 +4,7 @@
 #include "../utility/core.h"
 
 #include "../scanner/token.h"
+#include "../utility/dictionary.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Type.h"
 #include <algorithm>
@@ -90,11 +91,14 @@ public:
  * Has an extra map for instance members.
  * Its children represent static members.
  * Structs can contain variables, local scopes, and other structs, but not namespaces.
+ * Note: Instance members are not stored as Nodes;
+ * This is because instance members are not part of the namespace tree.
  *
  */
 class Node::StructScope : public Node::Scope, public Node::Locatable {
 public:
-    std::unordered_map<std::string, std::shared_ptr<Node::Variable>> instance_members;
+    // The instance members of the struct
+    Dictionary<std::string, Decl::VarDeclarable*> instance_members;
 
     llvm::Type* ir_type = nullptr;
     bool is_primitive = false;

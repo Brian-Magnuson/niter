@@ -125,7 +125,7 @@ std::any GlobalChecker::visit_extern_fun_decl(Decl::ExternFun* decl) {
 }
 
 std::any GlobalChecker::visit_struct_decl(Decl::Struct* decl) {
-    auto [node, ec] = Environment::inst().add_struct(decl->location, decl->name.lexeme);
+    auto [node, ec] = Environment::inst().add_struct(decl);
     if (ec == E_STRUCT_ALREADY_DECLARED) {
         ErrorLogger::inst().log_error(decl->name.location, ec, "A struct with the same name has already been declared in this scope.");
         ErrorLogger::inst().log_note(node->location, "Previous declaration was here.");

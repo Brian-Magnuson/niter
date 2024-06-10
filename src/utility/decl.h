@@ -136,6 +136,8 @@ public:
     Token name;
     // The declarations of the struct.
     std::vector<std::shared_ptr<Decl>> declarations;
+    // The type corresponding to the struct. Also contains a reference to the Node::StructScope.
+    std::shared_ptr<Type> struct_type = nullptr;
 };
 
 #endif // DECL_H

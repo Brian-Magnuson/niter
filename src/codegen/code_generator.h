@@ -31,8 +31,6 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
     std::shared_ptr<llvm::LLVMContext> context;
     // The LLVM module that will be generated.
     std::shared_ptr<llvm::Module> ir_module;
-    // The IR builder that will be used to generate the IR. Remember to always set the insertion point before using it.
-    std::shared_ptr<llvm::IRBuilder<>> builder;
 
     // The current function being generated.
     // llvm::Function* current_function;
@@ -144,6 +142,14 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
      */
     std::any visit_extern_fun_decl(Decl::ExternFun* decl) override;
 
+    /**
+     * @brief Visits a struct declaration.
+     * This function only visits the struct's children, i.e., its static members.
+     * All structs are declared in advance using the `declare_all_structs` function.
+     *
+     * @param decl The struct declaration to visit.
+     * @return std::any nullptr always.
+     */
     std::any visit_struct_decl(Decl::Struct* decl) override;
 
     /**
@@ -226,6 +232,9 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
     std::any visit_object_expr(Expr::Object* expr) override;
 
 public:
+    // The IR builder that will be used to generate the IR. Remember to always set the insertion point before using it.
+    std::shared_ptr<llvm::IRBuilder<>> builder;
+
     CodeGenerator();
 
     /**

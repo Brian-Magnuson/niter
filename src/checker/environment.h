@@ -81,14 +81,13 @@ public:
      * @brief Adds a struct to the current scope and enters it.
      * A struct can only be added if the current scope is the root, a namespace, or another struct.
      *
-     * @param location The location of the token that declared the struct.
-     * @param name The name of the struct to add.
+     * @param decl The struct declaration to add.
      * @return std::pair<std::shared_ptr<Node::Locatable>, ErrorCode> A pair containing a pointer to the struct node and an error code.
      * If the struct was added successfully, the pair will contain the struct node and 0.
      * If the struct is already declared, the pair will contain the existing node and E_STRUCT_ALREADY_DECLARED.
      * If the struct was added in a local scope, the pair will contain nullptr and E_STRUCT_IN_LOCAL_SCOPE.
      */
-    std::pair<std::shared_ptr<Node::Locatable>, ErrorCode> add_struct(const Location& location, const std::string& name);
+    std::pair<std::shared_ptr<Node::Locatable>, ErrorCode> add_struct(Decl::Struct* decl);
 
     /**
      * @brief Adds the primitive types to the global scope.
@@ -175,17 +174,13 @@ public:
     std::shared_ptr<Node::Variable> get_variable(const std::vector<std::string>& ident_strings);
 
     /**
-     * @brief Get the instance variable object for a given instance type and member name.
-     * The instance type must be a segmented annotation.
-     * If it is a pointer, it must be dereferenced first.
-     * If the instance_type references a valid struct, but the member is not found, the static members of the struct will be checked.
-     * If the member is not found in the struct, nullptr will be returned.
+     * @brief Get the declaration for a given instance type and member name.
      *
      * @param instance_type The type of the instance. Must reference a struct scope in the global tree.
      * @param member_name The name of the member to retrieve.
-     * @return std::shared_ptr<Node::Variable> A pointer to the variable node.
+     * @return Decl::VarDeclarable* The declaration of the instance variable. nullptr if the variable is not found.
      */
-    std::shared_ptr<Node::Variable> get_instance_variable(std::shared_ptr<Type::Struct> instance_type, const std::string& member_name);
+    Decl::VarDeclarable* get_instance_variable(std::shared_ptr<Type::Struct> instance_type, const std::string& member_name);
 
     /**
      * @brief Creates a type object from an annotation.
@@ -219,6 +214,8 @@ public:
     /**
      * @brief Get the struct scopes object.
      * The list of struct scopes is used to create forward declarations.
+     * Only includes structs that have been added via add_struct.
+     * Does not include primitive structs.
      *
      * @return std::vector<std::shared_ptr<Node::StructScope>> The list of nodes representing struct scopes.
      */

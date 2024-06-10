@@ -17,19 +17,21 @@ ErrorCode Environment::add_namespace(const Location& location, const std::string
     }
 }
 
-std::pair<std::shared_ptr<Node::Locatable>, ErrorCode> Environment::add_struct(const Location& location, const std::string& name) {
+std::pair<std::shared_ptr<Node::Locatable>, ErrorCode> Environment::add_struct(Decl::Struct* decl) {
     if (IS_TYPE(current_scope, Node::LocalScope)) {
         // It's actually impossible for this case to occur in our current implementation.
         // The GlobalChecker never enters local scope and the LocalChecker never calls this function.
         return {nullptr, E_STRUCT_IN_LOCAL_SCOPE};
     } else {
-        auto iter = current_scope->children.find(name);
+        auto iter = current_scope->children.find(decl->name.lexeme);
         if (iter != current_scope->children.end()) {
             auto locatable = std::dynamic_pointer_cast<Node::Locatable>(iter->second);
             return {locatable, E_STRUCT_ALREADY_DECLARED};
         } else {
-            auto new_scope = std::make_shared<Node::StructScope>(location, current_scope, name);
-            current_scope->children[name] = new_scope;
+            auto new_scope = std::make_shared<Node::StructScope>(decl->location, current_scope, decl->name.lexeme);
+            auto new_type = std::make_shared<Type::Struct>(new_scope);
+            decl->struct_type = new_type;
+            current_scope->children[decl->name.lexeme] = new_scope;
             current_scope = new_scope;
             struct_scopes.push_back(new_scope);
             return {new_scope, (ErrorCode)0};
@@ -118,7 +120,7 @@ std::pair<std::shared_ptr<Node::Locatable>, ErrorCode> Environment::declare_vari
                 if (struct_scope == nullptr) {
                     return {nullptr, E_INSTANCE_MEMBER_OUTSIDE_STRUCT};
                 }
-                struct_scope->instance_members[decl->name.lexeme] = new_variable;
+                struct_scope->instance_members[decl->name.lexeme] = decl;
             } else {
                 current_scope->children[decl->name.lexeme] = new_variable;
             }
@@ -156,7 +158,7 @@ std::shared_ptr<Node::Variable> Environment::get_variable(const std::vector<std:
     return std::dynamic_pointer_cast<Node::Variable>(found_node);
 }
 
-std::shared_ptr<Node::Variable> Environment::get_instance_variable(std::shared_ptr<Type::Struct> instance_type, const std::string& member_name) {
+Decl::VarDeclarable* Environment::get_instance_variable(std::shared_ptr<Type::Struct> instance_type, const std::string& member_name) {
     auto struct_node = instance_type->struct_scope;
     auto found_node_iter = struct_node->instance_members.find(member_name);
     if (found_node_iter != struct_node->instance_members.end()) {

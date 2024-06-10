@@ -2,7 +2,9 @@
 #define DICTIONARY_H
 
 #include <algorithm>
+#include <iterator>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 /**
@@ -16,52 +18,10 @@
  */
 template <typename K, typename V, typename Hash = std::hash<K>>
 class Dictionary {
-    std::unordered_map<K, V, Hash> map;
-    std::vector<K> keys;
+    std::unordered_map<K, unsigned, Hash> map;
+    std::vector<std::pair<K, V>> keys;
 
 public:
-    class iterator {
-        typename std::vector<K>::iterator it;
-        std::unordered_map<K, V>& map;
-
-    public:
-        iterator(typename std::vector<K>::iterator it, std::unordered_map<K, V>& map) : it(it), map(map) {}
-
-        std::pair<const K, V>& operator*() {
-            return *map.find(*it);
-        }
-
-        iterator& operator++() {
-            ++it;
-            return *this;
-        }
-
-        bool operator!=(const iterator& other) const {
-            return it != other.it;
-        }
-    };
-
-    class const_iterator {
-        typename std::vector<K>::const_iterator it;
-        const std::unordered_map<K, V>& map;
-
-    public:
-        const_iterator(typename std::vector<K>::const_iterator it, const std::unordered_map<K, V>& map) : it(it), map(map) {}
-
-        const std::pair<const K, V>& operator*() const {
-            return *map.find(*it);
-        }
-
-        const_iterator& operator++() {
-            ++it;
-            return *this;
-        }
-
-        bool operator!=(const const_iterator& other) const {
-            return it != other.it;
-        }
-    };
-
     Dictionary() = default;
 
     Dictionary(const Dictionary& other) = default;
@@ -75,10 +35,13 @@ public:
      * @param value The value.
      */
     void insert(K key, V value) {
-        if (!contains(key)) {
-            keys.push_back(key);
+        auto it = map.find(key);
+        if (it == map.end()) {
+            map[key] = keys.size();
+            keys.push_back({key, value});
+        } else {
+            keys.at(it->second).second = value;
         }
-        map[key] = value;
     }
 
     /**
@@ -89,8 +52,14 @@ public:
      * @return V& A reference to the value.
      */
     V& operator[](K key) {
-        insert(key, V());
-        return map[key];
+        auto it = map.find(key);
+        if (it == map.end()) {
+            map[key] = keys.size();
+            keys.push_back({key, V()});
+            return keys.back().second;
+        } else {
+            return keys.at(it->second).second;
+        }
     }
 
     /**
@@ -100,7 +69,7 @@ public:
      * @return const V& A const reference to the value.
      */
     const V& operator[](K key) const {
-        return map.at(key);
+        return keys.at(map.at(key)).second;
     }
 
     /**
@@ -111,7 +80,7 @@ public:
      * @throw std::out_of_range If the key is not in the dictionary.
      */
     V& at(K key) {
-        return map.at(key);
+        return keys.at(map.at(key)).second;
     }
 
     /**
@@ -122,7 +91,23 @@ public:
      * @throw std::out_of_range If the key is not in the dictionary.
      */
     const V& at(K key) const {
-        return map.at(key);
+        return keys.at(map.at(key)).second;
+    }
+
+    /**
+     * @brief Get the index of a key in the dictionary.
+     * If the key is not in the dictionary, returns -1.
+     *
+     * @param key The key.
+     * @return int The index of the key. -1 if the key is not in the dictionary.
+     */
+    int get_index(K key) {
+        auto it = map.find(key);
+        if (it == map.end()) {
+            return -1;
+        } else {
+            return (int)(it->second);
+        }
     }
 
     /**
@@ -154,42 +139,28 @@ public:
         keys.clear();
     }
 
-    iterator begin() {
-        return iterator(keys.begin(), map);
+    typename std::vector<std::pair<K, V>>::iterator begin() {
+        return keys.begin();
     }
 
-    iterator end() {
-        return iterator(keys.end(), map);
+    typename std::vector<std::pair<K, V>>::iterator end() {
+        return keys.end();
     }
 
-    const_iterator begin() const {
-        return const_iterator(keys.begin(), map);
+    typename std::vector<std::pair<K, V>>::const_iterator begin() const {
+        return keys.begin();
     }
 
-    const_iterator end() const {
-        return const_iterator(keys.end(), map);
+    typename std::vector<std::pair<K, V>>::const_iterator end() const {
+        return keys.end();
     }
 
-    /**
-     * @brief Finds a key in the dictionary.
-     *
-     * @param key The key to find.
-     * @return iterator An iterator containing a pair of the key and value if it is found, or end() if it is not found.
-     */
-    iterator find(K key) {
-        auto it = std::find(keys.begin(), keys.end(), key);
-        return iterator(it, map);
+    typename std::vector<std::pair<K, V>>::iterator find(K key) {
+        return keys.begin() + map.find(key)->second;
     }
 
-    /**
-     * @brief Finds a key in the dictionary.
-     *
-     * @param key The key to find.
-     * @return const_iterator An iterator containing a pair of the key and value if it is found, or end() if it is not found.
-     */
-    const_iterator find(K key) const {
-        auto it = std::find(keys.begin(), keys.end(), key);
-        return const_iterator(it, map);
+    typename std::vector<std::pair<K, V>>::const_iterator find(K key) const {
+        return keys.begin() + map.find(key)->second;
     }
 };
 

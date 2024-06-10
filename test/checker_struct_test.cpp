@@ -162,8 +162,8 @@ struct Point {
 }
 
 fun main(): i32 {
-    var a: Point = :Point {x: 1, y: 2};
-    return 0; 
+    var a: Point = :Point {x: 1, y: 2}
+    return 0
 }
 )";
     auto file_name = std::make_shared<std::string>("test_files/new_struct.nit");
@@ -194,8 +194,8 @@ struct Point {
 }
 
 fun main(): i32 {
-    var a: Point = :Point {x: 1, z: 2};
-    return 0; 
+    var a: Point = :Point {x: 1, z: 2}
+    return 0
 }
 )";
     auto file_name = std::make_shared<std::string>("test_files/new_struct_wrong_field.nit");
@@ -228,8 +228,8 @@ struct Point {
 }
 
 fun main(): i32 {
-    var a: Point = :Point {x: 1};
-    return 0; 
+    var a: Point = :Point {x: 1}
+    return 0
 }
 )";
     auto file_name = std::make_shared<std::string>("test_files/new_struct_missing_field.nit");
@@ -262,8 +262,8 @@ struct Point {
 }
 
 fun main(): i32 {
-    var a: Point = :Point {z: 1};
-    return 0; 
+    var a: Point = :Point {z: 1}
+    return 0
 }
 )";
     auto file_name = std::make_shared<std::string>("test_files/struct_fields_optional.nit");
@@ -294,8 +294,8 @@ struct Point {
 }
 
 fun main(): i32 {
-    var a: Point = :Point {x: 1, y: true};
-    return 0; 
+    var a: Point = :Point {x: 1, y: true}
+    return 0
 }
 )";
     auto file_name = std::make_shared<std::string>("test_files/struct_field_type_mismatch.nit");

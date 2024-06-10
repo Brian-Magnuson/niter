@@ -13,35 +13,26 @@ void CodeGenerator::declare_all_structs() {
     // FIXME: Not sure what this code is doing here.
     // Also, we have a new Environment::get_struct_scopes() function, so we should use that instead.
 
-    // First loop for opaque declarations
-    auto root = Environment::inst().get_global_tree();
-    std::vector<std::shared_ptr<Node::Scope>> stack;
-    stack.push_back(root);
-    while (!stack.empty()) {
-        // Pop the top scope from the stack
-        auto node = stack.back();
-        stack.pop_back();
+    auto struct_scopes = Environment::inst().get_struct_scopes();
+    // First pass: create all the struct types without bodies
+    for (auto& struct_scope : struct_scopes) {
+        auto llvm_safe_name = struct_scope->unique_name;
+        std::replace(llvm_safe_name.begin(), llvm_safe_name.end(), ':', '_');
+        llvm::StructType* llvm_struct_type = llvm::StructType::create(*context, llvm_safe_name);
+        struct_scope->ir_type = llvm_struct_type;
+    }
 
-        // If the node is a struct, declare it
-        auto node_struct = std::dynamic_pointer_cast<Node::StructScope>(node);
-        if (node_struct != nullptr && !node_struct->is_primitive) {
-            // Create the struct type
-            std::vector<llvm::Type*> member_types;
-            for (auto& [name, member] : node_struct->instance_members) {
-                member_types.push_back(member->decl->type->to_llvm_type(context));
-            }
-            // The struct type is already created. Just set the body.
-            auto llvm_struct_type = llvm::cast<llvm::StructType>(node_struct->ir_type);
-            llvm_struct_type->setBody(member_types);
+    // Second pass: set the bodies of all the struct types
+    for (auto& struct_scope : struct_scopes) {
+        std::vector<llvm::Type*> member_types;
+
+        for (auto& [name, decl] : struct_scope->instance_members) {
+            llvm::Type* member_type = decl->type->to_llvm_type(context);
+            member_types.push_back(member_type);
         }
 
-        // Add the children to the stack
-        for (auto& [_, child] : node->children) {
-            auto child_scope = std::dynamic_pointer_cast<Node::Scope>(child);
-            if (child_scope != nullptr) {
-                stack.push_back(child_scope);
-            }
-        }
+        auto llvm_struct_type = llvm::cast<llvm::StructType>(struct_scope->ir_type);
+        llvm_struct_type->setBody(member_types);
     }
 }
 
@@ -270,8 +261,16 @@ std::any CodeGenerator::visit_extern_fun_decl(Decl::ExternFun*) {
     return nullptr;
 }
 
-std::any CodeGenerator::visit_struct_decl(Decl::Struct*) {
-    // TODO: Implement struct declarations
+std::any CodeGenerator::visit_struct_decl(Decl::Struct* decl) {
+    // This function should visit all static members of the struct.
+    // Right now, that's just the declarations that are functions.
+
+    for (auto& declaration : decl->declarations) {
+        if (IS_TYPE(declaration, Decl::Fun)) {
+            declaration->accept(this);
+        }
+    }
+
     return nullptr;
 }
 
@@ -394,9 +393,24 @@ std::any CodeGenerator::visit_dereference_expr(Expr::Dereference*) {
     return nullptr;
 }
 
-std::any CodeGenerator::visit_access_expr(Expr::Access*) {
-    // TODO: Implement access expressions
-    return nullptr;
+std::any CodeGenerator::visit_access_expr(Expr::Access* expr) {
+    // First visit the left side of the access expression
+    auto left_lvalue = std::dynamic_pointer_cast<Expr::LValue>(expr->left);
+    auto left_value = left_lvalue->get_llvm_allocation(this);
+    // If this is a struct, which it should be, then this is the alloca inst representing the struct
+    // std::cout << *left_value->getType() << std::endl;
+    auto struct_type = std::dynamic_pointer_cast<Type::Struct>(expr->left->type);
+    // This should never be nullptr
+
+    auto member_name = expr->ident.lexeme;
+    // Get the index of the member in the struct
+    int index = struct_type->struct_scope->instance_members.get_index(member_name);
+
+    // std::cout << "Retrieving member " << member_name << " at index " << index << " from struct " << struct_type->struct_scope->unique_name << "." << std::endl;
+
+    llvm::Value* val = builder->CreateStructGEP(expr->left->type->to_llvm_type(context), left_value, index);
+    val = builder->CreateLoad(val->getType(), val);
+    return val;
 }
 
 std::any CodeGenerator::visit_index_expr(Expr::Index*) {
@@ -504,19 +518,42 @@ std::any CodeGenerator::visit_tuple_expr(Expr::Tuple*) {
     return nullptr;
 }
 
-std::any CodeGenerator::visit_object_expr(Expr::Object*) {
-    // TODO: Implement object expressions
-    return nullptr;
+std::any CodeGenerator::visit_object_expr(Expr::Object* expr) {
+    auto struct_type = std::dynamic_pointer_cast<Type::Struct>(expr->type);
+    // This should never be nullptr
+    auto struct_scope = struct_type->struct_scope;
+
+    // Create the struct
+    auto llvm_struct_type = llvm::cast<llvm::StructType>(struct_scope->ir_type);
+    auto struct_value = builder->CreateAlloca(llvm_struct_type);
+
+    unsigned i = 0;
+    for (auto& [name, val_expr] : expr->key_values) {
+        // Add the value to the struct
+        auto member_value = std::any_cast<llvm::Value*>(val_expr->accept(this));
+        auto member_alloc = builder->CreateStructGEP(llvm_struct_type, struct_value, i);
+        builder->CreateStore(member_value, member_alloc);
+
+        i++;
+    }
+
+    // Yes this load is necessary
+    llvm::Value* ret = builder->CreateLoad(struct_value->getType(), struct_value);
+    // When we create the struct, we actually allocate space for it and store the address of that space in the struct_value alloca
+    // But this is an object expression, so we want the value of the struct, not the address of the space where the struct is stored
+    // Without this load instruction, the code generator will attempt to store the address in a memory space meant for the full struct.
+
+    return ret;
 }
 
 CodeGenerator::CodeGenerator() {
     context = Environment::inst().get_llvm_context();
     builder = std::make_shared<llvm::IRBuilder<>>(*context);
     ir_module = std::make_shared<llvm::Module>("main", *context);
-    // declare_all_structs();
 }
 
 std::shared_ptr<llvm::Module> CodeGenerator::generate(std::vector<std::shared_ptr<Stmt>> stmts, const std::string& ir_target_destination) {
+    declare_all_structs();
     declare_all_functions();
     try {
         // Visit each statement
