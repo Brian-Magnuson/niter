@@ -459,7 +459,7 @@ std::any LocalChecker::visit_access_expr(Expr::Access* expr) {
     // The right side of the access is an identifier
     auto decl = Environment::inst().get_instance_variable(left_seg_type, expr->ident.lexeme);
     if (decl == nullptr) {
-        ErrorLogger::inst().log_error(expr->location, E_INVALID_STRUCT_MEMBER, "Struct type " + left_seg_type->to_string() + " does not have member " + expr->ident.lexeme + ".");
+        ErrorLogger::inst().log_error(expr->ident.location, E_INVALID_STRUCT_MEMBER, "Struct type " + left_seg_type->to_string() + " does not have member " + expr->ident.lexeme + ".");
         throw LocalTypeException();
     }
 
