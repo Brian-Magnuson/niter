@@ -395,21 +395,15 @@ std::any CodeGenerator::visit_dereference_expr(Expr::Dereference*) {
 
 std::any CodeGenerator::visit_access_expr(Expr::Access* expr) {
     // First visit the left side of the access expression
-    auto left_lvalue = std::dynamic_pointer_cast<Expr::LValue>(expr->left);
-    auto left_value = left_lvalue->get_llvm_allocation(this);
-    // If this is a struct, which it should be, then this is the alloca inst representing the struct
-    // std::cout << *left_value->getType() << std::endl;
+    auto left_value = std::any_cast<llvm::Value*>(expr->left->accept(this));
+    // This is a struct, not a pointer to a struct
+
     auto struct_type = std::dynamic_pointer_cast<Type::Struct>(expr->left->type);
     // This should never be nullptr
 
-    auto member_name = expr->ident.lexeme;
-    // Get the index of the member in the struct
-    int index = struct_type->struct_scope->instance_members.get_index(member_name);
+    int index = struct_type->struct_scope->instance_members.get_index(expr->ident.lexeme);
 
-    // std::cout << "Retrieving member " << member_name << " at index " << index << " from struct " << struct_type->struct_scope->unique_name << "." << std::endl;
-
-    llvm::Value* val = builder->CreateStructGEP(expr->left->type->to_llvm_type(context), left_value, index);
-    val = builder->CreateLoad(val->getType(), val);
+    llvm::Value* val = builder->CreateExtractValue(left_value, index);
     return val;
 }
 
