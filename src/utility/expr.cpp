@@ -15,9 +15,8 @@ llvm::Value* Expr::Dereference::get_llvm_allocation(CodeGenerator* code_generato
     return value;
 }
 
-TokenType Expr::Access::get_lvalue_declarer() {
+TokenType Expr::LAccess::get_lvalue_declarer() {
     // An access expression is const if any part of it is const.
-    auto left_lvalue = std::dynamic_pointer_cast<Expr::LValue>(left);
     // This should never be nullptr
     if (left_lvalue->get_lvalue_declarer() == KW_CONST) {
         return KW_CONST;
@@ -29,37 +28,28 @@ TokenType Expr::Access::get_lvalue_declarer() {
     return decl->declarer;
 }
 
-llvm::Value* Expr::Access::get_llvm_allocation(CodeGenerator* code_generator) {
-    // TODO: Make sure this works
-    auto l_struct_type = std::dynamic_pointer_cast<Type::Struct>(left->type);
-    auto llvm_type = l_struct_type->struct_scope->ir_type;
-    auto member_name = ident.lexeme;
-    auto l_llvm_value = std::any_cast<llvm::Value*>(left->accept(code_generator));
+llvm::Value* Expr::LAccess::get_llvm_allocation(CodeGenerator* code_generator) {
+    // Get the llvm allocation of the left side
+    auto l_llvm_allocation = left_lvalue->get_llvm_allocation(code_generator);
+    // This is the address of the struct
 
-    int index = l_struct_type->struct_scope->instance_members.get_index(member_name);
-    if (index == -1) {
-        // This should never happen
-        return nullptr;
-    }
-    auto gep = code_generator->builder->CreateStructGEP(llvm_type, l_llvm_value, index);
+    // Get the index of the member in the struct
+    auto l_struct_type = std::dynamic_pointer_cast<Type::Struct>(left->type);
+    auto l_llvm_type = l_struct_type->struct_scope->ir_type;
+    auto index = l_struct_type->struct_scope->instance_members.get_index(ident.lexeme);
+
+    // Create a GEP instruction to get the member
+    auto gep = code_generator->builder->CreateStructGEP(l_llvm_type, l_llvm_allocation, index);
+    // We use GEP to calculate the address of the member
     return gep;
 }
 
-TokenType Expr::Index::get_lvalue_declarer() {
-    // An access expression is const if any part of it is const.
-    auto left_lvalue = std::dynamic_pointer_cast<Expr::LValue>(left);
-    // This should never be nullptr
-    if (left_lvalue->get_lvalue_declarer() == KW_CONST) {
-        return KW_CONST;
-    }
-    // If the left side is not const, then the declarer is the declarer of the right side.
-    auto l_struct_type = std::dynamic_pointer_cast<Type::Struct>(left->type);
-    auto member_name = std::dynamic_pointer_cast<Expr::Identifier>(right)->to_string();
-    auto decl = Environment::inst().get_instance_variable(l_struct_type, member_name);
-    return decl->declarer;
+TokenType Expr::LIndex::get_lvalue_declarer() {
+    // An access expression is const if the left side is const.
+    return left_lvalue->get_lvalue_declarer();
 }
 
-llvm::Value* Expr::Index::get_llvm_allocation(CodeGenerator* /* code_generator */) {
+llvm::Value* Expr::LIndex::get_llvm_allocation(CodeGenerator* /* code_generator */) {
     // TODO: Implement this
     return nullptr;
 }

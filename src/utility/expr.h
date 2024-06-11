@@ -19,10 +19,10 @@ class CodeGenerator;
 /**
  * @brief A base class for lvalues, i.e., expressions that have a memory location.
  * Lvalues may be on the left side of an assignment, can be passed by reference, and can have their address taken.
- * These include Identifier, Access, and Dereference expressions.
+ * These include Identifier, LAccess, LIndex, and Dereference expressions.
  *
  */
-class Expr::LValue : public Expr {
+class Expr::LValue : virtual public Expr {
 protected:
     LValue() {}
 
@@ -175,7 +175,7 @@ public:
  * Note: A single error operator simply dereferences the pointer and accesses the member.
  *
  */
-class Expr::Access : public Expr::LValue {
+class Expr::Access : virtual public Expr {
 public:
     Access(std::shared_ptr<Expr> left, Token op, Token ident)
         : left(left), op(op), ident(ident) {
@@ -192,6 +192,27 @@ public:
     Token op;
     // The ident token on the right side.
     Token ident;
+};
+
+/**
+ * @brief A class representing an lvalue access expression.
+ * An lvalue access expression is an expression where a member of an object is accessed.
+ * An access expression is an lvalue if the left side is an lvalue.
+ * It is treated as an access expression when visited normally, but also implements the LValue interface.
+ *
+ */
+class Expr::LAccess : public Expr::LValue, public Expr::Access {
+public:
+    LAccess(std::shared_ptr<Expr::LValue> left, Token op, Token ident)
+        : Access(left, op, ident), left_lvalue(left) {
+    }
+
+    std::any accept(Visitor* visitor) override {
+        return visitor->visit_access_expr(this);
+    }
+
+    // A copy of the left side, casted to an lvalue for convenience.
+    std::shared_ptr<Expr::LValue> left_lvalue;
 
     TokenType get_lvalue_declarer() override;
     llvm::Value* get_llvm_allocation(CodeGenerator* code_generator) override;
@@ -203,7 +224,7 @@ public:
  * It specifically uses the subscript operator ([]).
  *
  */
-class Expr::Index : public Expr::LValue {
+class Expr::Index : virtual public Expr {
 public:
     Index(std::shared_ptr<Expr> left, Token bracket, std::shared_ptr<Expr> right)
         : left(left), bracket(bracket), right(right) {
@@ -220,6 +241,27 @@ public:
     Token bracket;
     // The expression on the right side.
     std::shared_ptr<Expr> right;
+};
+
+/**
+ * @brief A class representing an lvalue index expression.
+ * An lvalue index expression is an expression where an element of a collection is accessed.
+ * An index expression is an lvalue if the left side is an lvalue.
+ * It is treated as an index expression when visited normally, but also implements the LValue interface.
+ *
+ */
+class Expr::LIndex : public Expr::LValue, public Expr::Index {
+public:
+    LIndex(std::shared_ptr<Expr::LValue> left, Token bracket, std::shared_ptr<Expr> right)
+        : Index(left, bracket, right), left_lvalue(left) {
+    }
+
+    std::any accept(Visitor* visitor) override {
+        return visitor->visit_index_expr(this);
+    }
+
+    // A copy of the left side, casted to an lvalue for convenience.
+    std::shared_ptr<Expr::LValue> left_lvalue;
 
     TokenType get_lvalue_declarer() override;
     llvm::Value* get_llvm_allocation(CodeGenerator* code_generator) override;

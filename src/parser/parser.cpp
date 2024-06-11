@@ -454,14 +454,24 @@ std::shared_ptr<Expr> Parser::access_index_expr() {
             Token op = previous();
             // The right side of the dot operator must be an identifier
             Token name = consume(TOK_IDENT, E_NO_IDENT_AFTER_DOT, "Expected identifier after '.'.");
-            expr = std::make_shared<Expr::Access>(expr, op, name);
+
+            // If expr is an LValue, then we can use the LAccess expression
+            // Otherwise, we can use the Access expression
+            auto left_lvalue = std::dynamic_pointer_cast<Expr::LValue>(expr);
+            if (left_lvalue != nullptr) {
+                expr = std::make_shared<Expr::LAccess>(left_lvalue, op, name);
+            } else {
+                expr = std::make_shared<Expr::Access>(expr, op, name);
+            }
         } else if (match({TOK_ARROW})) {
             // The single arrow operator is syntactic sugar for dereferencing and then accessing
             Token op = previous();
             // The right side of the arrow operator must be an identifier
             Token name = consume(TOK_IDENT, E_NO_IDENT_AFTER_DOT, "Expected identifier after '->'.");
             auto deref_expr = std::make_shared<Expr::Dereference>(op, expr);
-            expr = std::make_shared<Expr::Access>(deref_expr, op, name);
+            // Arrow operator is equivalent to (*expr).name
+            // Access expressions of this form are always LValues
+            expr = std::make_shared<Expr::LAccess>(deref_expr, op, name);
         } else if (match({TOK_LEFT_SQUARE})) {
             Token op = previous();
             grouping_tokens.push(TOK_RIGHT_SQUARE);
@@ -469,7 +479,15 @@ std::shared_ptr<Expr> Parser::access_index_expr() {
                 ; // Skip over newlines
             std::shared_ptr<Expr> right = expression();
             consume(TOK_RIGHT_SQUARE, E_UNMATCHED_LEFT_SQUARE, "Expected ']' after expression.");
-            expr = std::make_shared<Expr::Index>(expr, op, right);
+
+            // If expr is an LValue, then we can use the LIndex expression
+            // Otherwise, we can use the Index expression
+            auto left_lvalue = std::dynamic_pointer_cast<Expr::LValue>(expr);
+            if (left_lvalue != nullptr) {
+                expr = std::make_shared<Expr::LIndex>(left_lvalue, op, right);
+            } else {
+                expr = std::make_shared<Expr::Index>(expr, op, right);
+            }
         } else {
             break;
         }

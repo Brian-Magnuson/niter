@@ -263,6 +263,9 @@ public:
     class Tuple;
     class Object;
 
+    class LAccess;
+    class LIndex;
+
     // The type of the expression. Set to nullptr, to be filled in by the type checker.
     std::shared_ptr<Type> type = nullptr;
 
