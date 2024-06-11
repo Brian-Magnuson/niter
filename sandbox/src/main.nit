@@ -7,6 +7,9 @@ struct Point {
 
 fun main(): i32 {
     var p = :Point {x: 1, y: 2}
-    printf("Hello, world! (%d, %d)\n", p.x, p.y)
+    printf("p is: (%d, %d)\n", p.x, p.y)
+    p.x = 3
+    p.y = 4
+    printf("p is: (%d, %d)\n", p.x, p.y)
     return 0
 }

@@ -63,7 +63,7 @@ public:
         return visitor->visit_assign_expr(this);
     }
 
-    // TODO: All lvalues inherit Expr::Locatable. Consider changinge the type of `left`.
+    // TODO: All lvalues inherit Expr::LValue. Consider changinge the type of `left`.
     // Note that doing so would mean lvalue errors are caught in the parser, not the type checker.
 
     // The expression on the left side.

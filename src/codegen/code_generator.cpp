@@ -10,8 +10,6 @@
 #include <iostream>
 
 void CodeGenerator::declare_all_structs() {
-    // FIXME: Not sure what this code is doing here.
-    // Also, we have a new Environment::get_struct_scopes() function, so we should use that instead.
 
     auto struct_scopes = Environment::inst().get_struct_scopes();
     // First pass: create all the struct types without bodies
