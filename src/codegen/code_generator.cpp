@@ -405,9 +405,23 @@ std::any CodeGenerator::visit_access_expr(Expr::Access* expr) {
     return val;
 }
 
-std::any CodeGenerator::visit_index_expr(Expr::Index*) {
-    // TODO: Implement index expressions
-    return nullptr;
+std::any CodeGenerator::visit_index_expr(Expr::Index* expr) {
+    // Currently, only tuples are supported
+    auto tuple_type = std::dynamic_pointer_cast<Type::Tuple>(expr->left->type);
+    if (tuple_type != nullptr) {
+        auto tuple_value = std::any_cast<llvm::Value*>(expr->left->accept(this));
+
+        auto literal_right = std::dynamic_pointer_cast<Expr::Literal>(expr->right);
+        // This should never be nullptr
+        auto index = std::any_cast<int>(literal_right->token.literal);
+
+        llvm::Value* ret = builder->CreateExtractValue(tuple_value, index);
+
+        return ret;
+    }
+
+    ErrorLogger::inst().log_error(expr->location, E_UNIMPLEMENTED, "Indexing is only supported for tuples.");
+    throw CodeGenException();
 }
 
 std::any CodeGenerator::visit_call_expr(Expr::Call* expr) {
@@ -505,18 +519,36 @@ std::any CodeGenerator::visit_array_expr(Expr::Array*) {
     return nullptr;
 }
 
-std::any CodeGenerator::visit_tuple_expr(Expr::Tuple*) {
-    // TODO: Implement tuple expressions
-    return nullptr;
+std::any CodeGenerator::visit_tuple_expr(Expr::Tuple* expr) {
+    auto tuple_type = std::dynamic_pointer_cast<Type::Tuple>(expr->type);
+
+    auto llvm_tuple_type = tuple_type->to_llvm_type(context);
+    auto tuple_value = builder->CreateAlloca(llvm_tuple_type);
+    // An llvm tuple is actually a struct
+    // Structs in llvm do not have member names
+    // Members are accessed by index, which is what we do for tuples anyway
+
+    unsigned i = 0;
+    for (auto& val_expr : expr->elements) {
+        auto member_value = std::any_cast<llvm::Value*>(val_expr->accept(this));
+        auto member_alloc = builder->CreateStructGEP(llvm_tuple_type, tuple_value, i);
+        builder->CreateStore(member_value, member_alloc);
+
+        i++;
+    }
+
+    llvm::Value* ret = builder->CreateLoad(tuple_value->getType(), tuple_value);
+    // Yes, we need this load, otherwise visit_var_decl will attempt to store the address of the tuple in a memory space meant for the full tuple.
+
+    return ret;
 }
 
 std::any CodeGenerator::visit_object_expr(Expr::Object* expr) {
     auto struct_type = std::dynamic_pointer_cast<Type::Struct>(expr->type);
     // This should never be nullptr
-    auto struct_scope = struct_type->struct_scope;
 
     // Create the struct
-    auto llvm_struct_type = llvm::cast<llvm::StructType>(struct_scope->ir_type);
+    auto llvm_struct_type = struct_type->to_llvm_type(context);
     auto struct_value = builder->CreateAlloca(llvm_struct_type);
 
     unsigned i = 0;

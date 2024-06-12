@@ -49,8 +49,26 @@ TokenType Expr::LIndex::get_lvalue_declarer() {
     return left_lvalue->get_lvalue_declarer();
 }
 
-llvm::Value* Expr::LIndex::get_llvm_allocation(CodeGenerator* /* code_generator */) {
-    // TODO: Implement this
+llvm::Value* Expr::LIndex::get_llvm_allocation(CodeGenerator* code_generator) {
+    // Currently only tuples are supported
+    auto tuple_type = std::dynamic_pointer_cast<Type::Tuple>(left->type);
+    if (tuple_type != nullptr) {
+
+        // Get the llvm allocation of the left side
+        auto l_llvm_allocation = left_lvalue->get_llvm_allocation(code_generator);
+        // This is the address of the tuple
+
+        // Get the index of the member in the tuple
+        auto literal_right = std::dynamic_pointer_cast<Expr::Literal>(right);
+        auto index = std::any_cast<int>(literal_right->token.literal);
+
+        auto context = Environment::inst().get_llvm_context();
+
+        // Create a GEP instruction to get the member
+        auto gep = code_generator->builder->CreateStructGEP(tuple_type->to_llvm_type(context), l_llvm_allocation, index);
+        // We use GEP to calculate the address of the member
+        return gep;
+    }
     return nullptr;
 }
 

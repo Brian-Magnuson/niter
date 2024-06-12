@@ -11,5 +11,12 @@ fun main(): i32 {
     p.x = 3
     p.y = 4
     printf("p is: (%d, %d)\n", p.x, p.y)
+
+    var pair: (i32, i32) = (5, 6)
+    printf("pair is: (%d, %d)\n", pair[0], pair[1])
+    pair[0] = 7
+    pair[1] = 8
+    printf("pair is: (%d, %d)\n", pair[0], pair[1])
+    
     return 0
 }
