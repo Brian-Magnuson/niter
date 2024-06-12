@@ -17,6 +17,7 @@ fun main(): i32 {
     pair[0] = 7
     pair[1] = 8
     printf("pair is: (%d, %d)\n", pair[0], pair[1])
-    
+
+
     return 0
 }

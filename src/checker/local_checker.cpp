@@ -493,7 +493,7 @@ std::any LocalChecker::visit_index_expr(Expr::Index* expr) {
         auto index_expr = std::dynamic_pointer_cast<Expr::Literal>(expr->right);
         // A literal is required to verify the type at compile time
         if (index_expr == nullptr || index_expr->token.tok_type != TOK_INT) {
-            ErrorLogger::inst().log_error(expr->location, E_NO_LITERAL_INDEX_ON_TUPLE, "Index must be a literal integer.");
+            ErrorLogger::inst().log_error(expr->right->location, E_NO_LITERAL_INDEX_ON_TUPLE, "Tuple index must be a literal integer.");
             throw LocalTypeException();
         }
         auto index = std::any_cast<int>(index_expr->token.literal);
