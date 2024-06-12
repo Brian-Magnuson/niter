@@ -134,6 +134,14 @@ std::any LocalChecker::visit_var_decl(Decl::Var* decl) {
 
     // Verify that the type of the initializer matches the type annotation
     if (!Type::are_compatible(init_type, variable->decl->type)) {
+        // If the error occurred because init_type is an array of blank types, give a more specific error message
+        auto init_array = std::dynamic_pointer_cast<Type::Array>(init_type);
+        if (init_array != nullptr && init_array->inner_type->kind() == Type::Kind::BLANK) {
+            ErrorLogger::inst().log_error(decl->initializer->location, E_INDETERMINATE_ARRAY_TYPE, "The type of this array could not be determined.");
+            ErrorLogger::inst().log_note(decl->name.location, "Missing type annotation.");
+            throw LocalTypeException();
+        }
+
         ErrorLogger::inst().log_error(decl->name.location, E_INCOMPATIBLE_TYPES, "Cannot convert from " + init_type->to_string() + " to " + variable->decl->type->to_string() + ".");
         throw LocalTypeException();
     }

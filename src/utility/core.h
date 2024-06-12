@@ -76,18 +76,7 @@ public:
      * @return true If the types are compatible.
      * @return false If the types are not compatible.
      */
-    static bool are_compatible(std::shared_ptr<Type>& a, std::shared_ptr<Type>& b) {
-        if (a->kind() == b->kind()) {
-            return a->to_string() == b->to_string();
-        } else if (a->kind() == Type::Kind::BLANK) {
-            a = b;
-            return true;
-        } else if (b->kind() == Type::Kind::BLANK) {
-            b = a;
-            return true;
-        }
-        return false;
-    }
+    static bool are_compatible(std::shared_ptr<Type>& a, std::shared_ptr<Type>& b);
 
     /**
      * @brief Checks if the type is a primitive integer type.

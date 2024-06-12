@@ -454,3 +454,54 @@ fun main(): i32 {
     logger.reset();
     env.reset();
 }
+
+TEST_CASE("Local checker inconsistent array types", "[checker]") {
+    std::string source_code = "fun main(): i32 { var arr = [1, 2, true]; return 0; }";
+    auto file_name = std::make_shared<std::string>("test_files/inconsistent_array_types.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+
+    Parser parser;
+    auto stmts = parser.parse(scanner.get_tokens());
+
+    Environment& env = Environment::inst();
+
+    GlobalChecker global_checker;
+    global_checker.type_check(stmts);
+
+    LocalChecker local_checker;
+    local_checker.type_check(stmts);
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_INCONSISTENT_ARRAY_TYPES);
+
+    logger.reset();
+    env.reset();
+}
+
+TEST_CASE("Local checker indeterminate array type", "[checker]") {
+    std::string source_code = "fun main(): i32 { var arr = []; return 0; }";
+    auto file_name = std::make_shared<std::string>("test_files/indeterminate_arr_type.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+    Parser parser;
+    auto stmts = parser.parse(scanner.get_tokens());
+    Environment& env = Environment::inst();
+    GlobalChecker global_checker;
+    global_checker.type_check(stmts);
+    LocalChecker local_checker;
+    local_checker.type_check(stmts);
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_INDETERMINATE_ARRAY_TYPE);
+
+    logger.reset();
+    env.reset();
+}
