@@ -211,6 +211,7 @@ std::shared_ptr<Decl> Parser::fun_decl() {
     consume(TOK_LEFT_PAREN, E_NO_LPAREN_IN_FUN_DECL, "Expected '(' after function name.");
     if (!check({TOK_RIGHT_PAREN})) {
         do {
+            match({KW_CONST, KW_VAR});
             auto variable = std::dynamic_pointer_cast<Decl::Var>(var_decl());
             if (variable == nullptr) {
                 ErrorLogger::inst().log_error(peek().location, E_IMPOSSIBLE, "var_decl did not return a variable in function declaration.");
