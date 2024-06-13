@@ -505,3 +505,80 @@ TEST_CASE("Local checker indeterminate array type", "[checker]") {
     logger.reset();
     env.reset();
 }
+
+TEST_CASE("Local checker new constructor", "[checker]") {
+    std::string source_code = R"(
+struct Point {
+    var x: i32
+    var y: i32
+
+    fun new(): Point {
+        return :Point {x: 0, y: 0}
+    }
+}
+
+fun main(): i32 {
+    var a: Point = Point::new()
+    return 0
+}
+)";
+    auto file_name = std::make_shared<std::string>("test_files/new_constructor.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(true);
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+    Parser parser;
+    auto stmts = parser.parse(scanner.get_tokens());
+
+    Environment& env = Environment::inst();
+    GlobalChecker global_checker;
+    global_checker.type_check(stmts);
+
+    LocalChecker local_checker;
+    local_checker.type_check(stmts);
+
+    REQUIRE(logger.get_errors().size() == 0);
+
+    logger.reset();
+    env.reset();
+}
+
+TEST_CASE("Local checker instance method", "[checker]") {
+    std::string source_code = R"(
+struct Point {
+    var x: i32
+    var y: i32
+
+    fun add_parts(this: Point*): i32 {
+        return this.x + this.y
+    }
+}
+
+fun main(): i32 {
+    var a: Point = :Point {x: 0, y: 0}
+    a.add_parts()
+    return 0
+}
+)";
+    auto file_name = std::make_shared<std::string>("test_files/instance_method.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(true);
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+    Parser parser;
+    auto stmts = parser.parse(scanner.get_tokens());
+
+    Environment& env = Environment::inst();
+    GlobalChecker global_checker;
+    global_checker.type_check(stmts);
+
+    LocalChecker local_checker;
+    local_checker.type_check(stmts);
+
+    REQUIRE(logger.get_errors().size() == 0);
+
+    logger.reset();
+    env.reset();
+}

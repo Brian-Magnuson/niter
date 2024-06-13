@@ -14,8 +14,6 @@
  *
  */
 class Scanner {
-    // A map of keywords to their respective token types. To be initialized in the source file.
-    static std::unordered_map<std::string, TokenType> keywords;
     // The source code to be scanned. A shared pointer is used to avoid copying the source code string.
     std::shared_ptr<std::string> source;
     // The name of the file where the source code is located. Used for error messages. A shared pointer is used to avoid copying the filename string.
@@ -171,6 +169,9 @@ class Scanner {
     void identifier();
 
 public:
+    // A map of keywords to their respective token types. To be initialized in the source file.
+    static std::unordered_map<std::string, TokenType> keywords;
+
     /**
      * @brief Construct a new Scanner object.
      *

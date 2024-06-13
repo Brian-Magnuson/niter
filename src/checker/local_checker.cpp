@@ -466,14 +466,22 @@ std::any LocalChecker::visit_access_expr(Expr::Access* expr) {
 
     // The right side of the access is an identifier
     auto decl = Environment::inst().get_instance_variable(left_seg_type, expr->ident.lexeme);
-    if (decl == nullptr) {
-        ErrorLogger::inst().log_error(expr->ident.location, E_INVALID_STRUCT_MEMBER, "Struct type " + left_seg_type->to_string() + " does not have member " + expr->ident.lexeme + ".");
-        throw LocalTypeException();
+    if (decl != nullptr) {
+        // The type of the expression is the type of the instance variable
+        expr->type = decl->type;
+        return expr->type;
+    }
+    // If the instance variable is not found, check static variables
+    auto struct_scope = left_seg_type->struct_scope;
+    auto static_var_iter = struct_scope->children.find(expr->ident.lexeme);
+    if (static_var_iter != struct_scope->children.end()) {
+        auto static_var = std::dynamic_pointer_cast<Node::Variable>(static_var_iter->second);
+        expr->type = static_var->decl->type;
+        return expr->type;
     }
 
-    // The type of the expression is the type of the instance variable
-    expr->type = decl->type;
-    return expr->type;
+    ErrorLogger::inst().log_error(expr->ident.location, E_INVALID_STRUCT_MEMBER, "Struct type " + left_seg_type->to_string() + " does not have member " + expr->ident.lexeme + ".");
+    throw LocalTypeException();
 }
 
 std::any LocalChecker::visit_index_expr(Expr::Index* expr) {

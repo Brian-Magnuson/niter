@@ -1,10 +1,10 @@
 #include "parser.h"
 
 #include "../logger/logger.h"
+#include "../scanner/scanner.h"
 #include "../utility/dictionary.h"
-#include <unordered_map>
-
 #include <exception>
+#include <unordered_map>
 
 Token& Parser::peek() {
     return *tokens[current];
@@ -444,11 +444,56 @@ std::shared_ptr<Expr> Parser::unary_expr() {
         std::shared_ptr<Expr> right = unary_expr();
         return std::make_shared<Expr::Dereference>(op, right);
     }
-    return access_index_expr();
+    return call_expr();
+}
+
+std::shared_ptr<Expr> Parser::call_expr() {
+    std::shared_ptr<Expr> expr = access_index_expr();
+    /*
+    Valid forms:
+    FUNC()
+    FUNC(ARG1)
+    FUNC(ARG1, ARG2)
+    FUNC(ARG1,)
+    FUNC(ARG1, ARG2,)
+    */
+    while (check({TOK_LEFT_PAREN})) {
+        grouping_tokens.push(TOK_RIGHT_PAREN);
+        advance();
+        Token& paren = previous();
+        std::vector<std::shared_ptr<Expr>> arguments;
+
+        // If the left expression is an access expression, then it is a method call
+        // Pass the address of the left expression as the first argument
+        auto left_access = std::dynamic_pointer_cast<Expr::Access>(expr);
+        if (left_access != nullptr) {
+            arguments.push_back(std::make_shared<Expr::Unary>(Token(TOK_AMP, "&", nullptr, left_access->location), left_access->left));
+        }
+
+        // If there are no arguments, we can just return the call expression
+        if (!check({TOK_RIGHT_PAREN})) {
+            arguments.push_back(expression());
+            while (match({TOK_COMMA})) {
+                if (check({TOK_RIGHT_PAREN})) {
+                    break;
+                }
+                arguments.push_back(expression());
+                if (arguments.size() > 255) {
+                    ErrorLogger::inst().log_error(peek().location, E_TOO_MANY_ARGS, "Cannot have more than 255 arguments.");
+                    throw ParserException();
+                }
+            }
+        }
+        consume(TOK_RIGHT_PAREN, E_UNMATCHED_PAREN_IN_ARGS, "Expected ')' after arguments.");
+
+        expr = std::make_shared<Expr::Call>(expr, paren, arguments);
+    }
+
+    return expr;
 }
 
 std::shared_ptr<Expr> Parser::access_index_expr() {
-    std::shared_ptr<Expr> expr = call_expr();
+    std::shared_ptr<Expr> expr = cast_expr();
     while (true) {
         if (match({TOK_DOT})) {
             Token op = previous();
@@ -492,43 +537,6 @@ std::shared_ptr<Expr> Parser::access_index_expr() {
             break;
         }
     }
-    return expr;
-}
-
-std::shared_ptr<Expr> Parser::call_expr() {
-    std::shared_ptr<Expr> expr = cast_expr();
-    /*
-    Valid forms:
-    FUNC()
-    FUNC(ARG1)
-    FUNC(ARG1, ARG2)
-    FUNC(ARG1,)
-    FUNC(ARG1, ARG2,)
-    */
-    while (check({TOK_LEFT_PAREN})) {
-        grouping_tokens.push(TOK_RIGHT_PAREN);
-        advance();
-        Token& paren = previous();
-        std::vector<std::shared_ptr<Expr>> arguments;
-        // If there are no arguments, we can just return the call expression
-        if (!check({TOK_RIGHT_PAREN})) {
-            arguments.push_back(expression());
-            while (match({TOK_COMMA})) {
-                if (check({TOK_RIGHT_PAREN})) {
-                    break;
-                }
-                arguments.push_back(expression());
-                if (arguments.size() > 255) {
-                    ErrorLogger::inst().log_error(peek().location, E_TOO_MANY_ARGS, "Cannot have more than 255 arguments.");
-                    throw ParserException();
-                }
-            }
-        }
-        consume(TOK_RIGHT_PAREN, E_UNMATCHED_PAREN_IN_ARGS, "Expected ')' after arguments.");
-
-        expr = std::make_shared<Expr::Call>(expr, paren, arguments);
-    }
-
     return expr;
 }
 
@@ -619,6 +627,9 @@ std::shared_ptr<Expr> Parser::primary_expr() {
     }
 
     ErrorLogger::inst().log_error(peek().location, E_NOT_AN_EXPRESSION, "Expected expression.");
+    if (Scanner::keywords.find(peek().lexeme) != Scanner::keywords.end()) {
+        ErrorLogger::inst().log_note(peek().location, "`" + peek().lexeme + "` is reserved.");
+    }
     throw ParserException();
 }
 
