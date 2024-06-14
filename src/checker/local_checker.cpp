@@ -273,7 +273,16 @@ std::any LocalChecker::visit_struct_decl(Decl::Struct* decl) {
         throw LocalTypeException();
     }
 
-    // No need to do further checks; we've already done that in the global checker
+    // Enter the struct scope
+    Environment::inst().enter_scope(decl->name.lexeme);
+
+    // We check only the static declarations of the struct
+    for (auto declaration : decl->declarations) {
+        if (IS_TYPE(declaration, Decl::Fun)) {
+            declaration->accept(this);
+        }
+    }
+
     return std::any();
 }
 

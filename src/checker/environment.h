@@ -105,6 +105,15 @@ public:
     void increase_local_scope();
 
     /**
+     * @brief Enters a scope with the given name, if it exists.
+     *
+     * @param name The name of the scope to enter.
+     * @return true If the scope was entered successfully.
+     * @return false If the scope does not exist.
+     */
+    bool enter_scope(const std::string& name);
+
+    /**
      * @brief Exits the current scope.
      * If the current scope is the root, it will not exit.
      * If the current scope is a local scope, the local scope will be removed.

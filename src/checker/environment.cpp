@@ -62,6 +62,16 @@ void Environment::increase_local_scope() {
     current_scope = local_scope;
 }
 
+bool Environment::enter_scope(const std::string& name) {
+    auto iter = current_scope->children.find(name);
+    if (iter != current_scope->children.end()) {
+        current_scope = std::dynamic_pointer_cast<Node::Scope>(iter->second);
+        return true;
+    } else {
+        return false;
+    }
+}
+
 ErrorCode Environment::exit_scope() {
     if (current_scope->parent == nullptr) {
         return E_EXITED_ROOT_SCOPE;
