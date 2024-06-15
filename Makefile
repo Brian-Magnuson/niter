@@ -1,8 +1,10 @@
 
 # This Makefile is used to build the niterc compiler and run tests.
 
+# Compiler and compiler options
 CC = clang++-18
-CC_OPTIONS = -std=c++17 -O0 -Wall -g
+CC_OPTIONS = -std=c++17 -O0 -Wall -g -D_GLIBCXX_DEBUG
+# Do not set -c or -o here; these are set per recipe
 
 # LLVM libraries to link against
 LLVM_INCLUDE = -I`llvm-config-18 --includedir`
