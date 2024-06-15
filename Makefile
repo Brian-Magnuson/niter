@@ -1,10 +1,12 @@
 
 # This Makefile is used to build the niterc compiler and run tests.
 
+CC = clang++-18
 CC_OPTIONS = -std=c++17 -O0 -Wall -g
 
 # LLVM libraries to link against
-LLVM_LIBS = `llvm-config --cxxflags --ldflags --system-libs --libs core orcjit native` -fexceptions
+LLVM_INCLUDE = -I`llvm-config-18 --includedir`
+LLVM_LIBS = `llvm-config-18 --cxxflags --ldflags --system-libs --libs core orcjit native` -fexceptions
 
 
 # The core source files, i.e. files of the form src/*/*.cpp
@@ -40,30 +42,30 @@ clean:
 $(OBJ_DIR)/%.o: src/%.cpp $(CORE_HEADERS)
 	@echo "\033[0;35mCompiling $<\033[0m"
 	mkdir -p $(@D)
-	clang++ $(CC_OPTIONS) -c -o $@ $<
+	$(CC) $(CC_OPTIONS) $(LLVM_INCLUDE) -c -o $@ $<
 
 # Builds the niterc compiler
 bin/niterc: $(CORE_OBJS) src/main.cpp
 	@echo "\033[0;35mLinking $@\033[0m"
 	mkdir -p bin
-	clang++ $(CC_OPTIONS) -o bin/niterc $(CORE_OBJS) src/main.cpp $(LLVM_LIBS)
+	$(CC) $(CC_OPTIONS) $(LLVM_INCLUDE) -o bin/niterc $(CORE_OBJS) src/main.cpp $(LLVM_LIBS)
 	@echo "\033[0;35mFinished building $@\033[0m"
 
 # Builds the catch_amalgamated object file
 test/build/catch/catch_amalgamated.o: test/catch/catch_amalgamated.cpp test/catch/catch_amalgamated.hpp
 	@echo "\033[0;36mCompiling $<\033[0m"
 	mkdir -p test/build/catch
-	clang++ $(CC_OPTIONS) -c -o test/build/catch/catch_amalgamated.o test/catch/catch_amalgamated.cpp
+	$(CC) $(CC_OPTIONS) -c -o test/build/catch/catch_amalgamated.o test/catch/catch_amalgamated.cpp
 
 # Builds the test source files
 $(TEST_OBJ_DIR)/%.o: test/%.cpp $(CORE_HEADERS)
 	@echo "\033[0;36mCompiling $<\033[0m"
 	mkdir -p $(@D)
-	clang++ $(CC_OPTIONS) -c -o $@ $<
+	$(CC) $(CC_OPTIONS) $(LLVM_INCLUDE) -c -o $@ $<
 
 # Builds the test runner
 test/bin/test: $(CORE_OBJS) $(TEST_OBJS) test/build/catch/catch_amalgamated.o
 	@echo "\033[0;36mLinking $@\033[0m"
 	mkdir -p test/bin
-	clang++ $(CC_OPTIONS) -o test/bin/test $(CORE_OBJS) $(TEST_OBJS) test/build/catch/catch_amalgamated.o $(LLVM_LIBS)
+	$(CC) $(CC_OPTIONS) $(LLVM_INCLUDE) -o test/bin/test $(CORE_OBJS) $(TEST_OBJS) test/build/catch/catch_amalgamated.o $(LLVM_LIBS)
 	@echo "\033[0;36mFinished building $@\033[0m"

@@ -22,7 +22,7 @@ void Emitter::emit(const std::shared_ptr<llvm::Module>& ir_module, const std::st
     }
 
     llvm::legacy::PassManager pass;
-    auto FileType = llvm::CGFT_ObjectFile;
+    auto FileType = llvm::CodeGenFileType::ObjectFile;
 
     std::error_code EC;
     llvm::raw_fd_ostream dest(target_destination, EC, llvm::sys::fs::OF_None);

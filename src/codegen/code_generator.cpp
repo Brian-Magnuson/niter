@@ -491,7 +491,7 @@ std::any CodeGenerator::visit_literal_expr(Expr::Literal* expr) {
     llvm::Value* ret;
 
     if (expr->token.tok_type == TOK_NIL) {
-        ret = llvm::Constant::getNullValue(llvm::Type::getInt8PtrTy(*context));
+        ret = llvm::Constant::getNullValue(llvm::PointerType::getUnqual(*context));
     } else if (expr->token.tok_type == TOK_BOOL) {
         ret = llvm::ConstantInt::get(llvm::Type::getInt1Ty(*context), expr->token.lexeme == "true", false);
     } else if (expr->token.tok_type == TOK_INT) {
