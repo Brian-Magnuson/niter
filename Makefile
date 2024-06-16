@@ -3,7 +3,7 @@
 
 # Compiler and compiler options
 CC = clang++-18
-CC_OPTIONS = -std=c++17 -O0 -Wall -g -D_GLIBCXX_DEBUG
+CC_OPTIONS = -std=c++17 -O0 -Wall -g
 # Do not set -c or -o here; these are set per recipe
 
 # LLVM libraries to link against
