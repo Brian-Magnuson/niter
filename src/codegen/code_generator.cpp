@@ -377,18 +377,24 @@ std::any CodeGenerator::visit_unary_expr(Expr::Unary* expr) {
     } else if (expr->op.tok_type == TOK_MINUS) {
         return builder->CreateNeg(right_val);
     } else if (expr->op.tok_type == TOK_AMP) {
-        llvm::Value* alloc = builder->CreateAlloca(right_val->getType());
-        builder->CreateStore(right_val, alloc);
-        return alloc;
+        auto right_lvalue = std::dynamic_pointer_cast<Expr::LValue>(expr->right);
+        // This should never be nullptr
+        return right_lvalue->get_llvm_allocation(this);
     } else {
         ErrorLogger::inst().log_error(expr->location, E_UNREACHABLE, "Code generator could not perform unary operation.");
         throw CodeGenException();
     }
 }
 
-std::any CodeGenerator::visit_dereference_expr(Expr::Dereference*) {
-    // TODO: Implement dereference expressions
-    return nullptr;
+std::any CodeGenerator::visit_dereference_expr(Expr::Dereference* expr) {
+    auto right_val = std::any_cast<llvm::Value*>(expr->right->accept(this));
+    std::shared_ptr<Type> right_type = expr->right->type;
+    auto right_ptr_type = std::dynamic_pointer_cast<Type::Pointer>(right_type);
+    // This should never be nullptr
+    auto right_inner_type = right_ptr_type->inner_type;
+
+    llvm::Value* ret = builder->CreateLoad(right_inner_type->to_llvm_type(context), right_val);
+    return ret;
 }
 
 std::any CodeGenerator::visit_access_expr(Expr::Access* expr) {
@@ -399,10 +405,26 @@ std::any CodeGenerator::visit_access_expr(Expr::Access* expr) {
     auto struct_type = std::dynamic_pointer_cast<Type::Struct>(expr->left->type);
     // This should never be nullptr
 
+    // Check if this is a struct member
     int index = struct_type->struct_scope->instance_members.get_index(expr->ident.lexeme);
+    if (index != -1) {
+        llvm::Value* ret = builder->CreateExtractValue(left_value, index);
+        return ret;
+    }
 
-    llvm::Value* val = builder->CreateExtractValue(left_value, index);
-    return val;
+    // Else, we are accessing a static member
+    auto node = struct_type->struct_scope->children.at(expr->ident.lexeme);
+    // This should never throw
+    auto var_node = std::dynamic_pointer_cast<Node::Variable>(node);
+    // This should never be nullptr
+
+    // If var_node is a function, the llvm_allocation is the function itself
+    if (var_node->decl->type->kind() == Type::Kind::FUNCTION) {
+        return var_node->llvm_allocation;
+    }
+    // Load the value from the variable
+    llvm::Value* ret = builder->CreateLoad(expr->type->to_llvm_type(context), var_node->llvm_allocation);
+    return ret;
 }
 
 std::any CodeGenerator::visit_index_expr(Expr::Index* expr) {
