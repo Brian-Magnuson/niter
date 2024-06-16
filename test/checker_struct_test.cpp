@@ -583,7 +583,7 @@ fun main(): i32 {
     env.reset();
 }
 
-TEST_CASE("Local checker mutating function immutable param", "[checker]") {
+TEST_CASE("Local checker mutating fun immutable param", "[checker]") {
     std::string source_code = R"(
 struct Point {
     var x: i32
@@ -617,6 +617,43 @@ fun main(): i32 {
 
     REQUIRE(logger.get_errors().size() >= 1);
     // CHECK(logger.get_errors().at(0) == E_MUTATING_IMMUTABLE_PARAM);
+
+    logger.reset();
+    env.reset();
+}
+
+TEST_CASE("Local checker mutating fun mutable param", "[checker]") {
+    std::string source_code = R"(
+struct Point {
+    var x: i32
+    var y: i32
+
+    fun reset_x(var this: Point*) {
+        this->x = 0
+    }
+}
+
+fun main(): i32 {
+    return 0
+}
+)";
+    auto file_name = std::make_shared<std::string>("test_files/mutating_function_mutable_param.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(true);
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+    Parser parser;
+    auto stmts = parser.parse(scanner.get_tokens());
+
+    Environment& env = Environment::inst();
+    GlobalChecker global_checker;
+    global_checker.type_check(stmts);
+
+    LocalChecker local_checker;
+    local_checker.type_check(stmts);
+
+    REQUIRE(logger.get_errors().size() == 0);
 
     logger.reset();
     env.reset();
