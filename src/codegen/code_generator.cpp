@@ -263,11 +263,15 @@ std::any CodeGenerator::visit_struct_decl(Decl::Struct* decl) {
     // This function should visit all static members of the struct.
     // Right now, that's just the declarations that are functions.
 
+    Environment::inst().enter_scope(decl->name.lexeme);
+
     for (auto& declaration : decl->declarations) {
         if (IS_TYPE(declaration, Decl::Fun)) {
             declaration->accept(this);
         }
     }
+
+    Environment::inst().exit_scope();
 
     return nullptr;
 }

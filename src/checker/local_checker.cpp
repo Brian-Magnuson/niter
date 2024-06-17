@@ -283,6 +283,9 @@ std::any LocalChecker::visit_struct_decl(Decl::Struct* decl) {
         }
     }
 
+    // Exit the struct scope
+    Environment::inst().exit_scope();
+
     return std::any();
 }
 
