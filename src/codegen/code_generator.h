@@ -160,10 +160,19 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
      *
      * @param expr The assign expression to visit.
      * @return std::any An llvm::Value* representing the result of the assignment.
+     * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
      */
     std::any visit_assign_expr(Expr::Assign* expr) override;
 
     std::any visit_logical_expr(Expr::Logical* expr) override;
+
+    /**
+     * @brief Visits a binary expression.
+     *
+     * @param expr The binary expression to visit.
+     * @return std::any An llvm::Value* representing the result of the binary operation.
+     * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
+     */
     std::any visit_binary_expr(Expr::Binary* expr) override;
 
     /**
@@ -174,7 +183,27 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
      * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
      */
     std::any visit_unary_expr(Expr::Unary* expr) override;
+
+    /**
+     * @brief Visits a dereference expression.
+     * Dereferencing is performed via the `load` instruction.
+     *
+     * @param expr The dereference expression to visit.
+     * @return std::any An llvm::Value* representing the value stored at the address.
+     * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
+     */
     std::any visit_dereference_expr(Expr::Dereference* expr) override;
+
+    /**
+     * @brief Visits an access expression.
+     * The left side must have a struct type.
+     * If the right side is an instance member, `CreateExtractValue` will be called.
+     * If the right side is a static member, `CreateLoad` will be called, similar to a variable.
+     *
+     * @param expr The access expression to visit.
+     * @return std::any An llvm::Value* representing the value of the accessed member.
+     * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
+     */
     std::any visit_access_expr(Expr::Access* expr) override;
     std::any visit_index_expr(Expr::Index* expr) override;
 
@@ -228,7 +257,27 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
      */
     std::any visit_literal_expr(Expr::Literal* expr) override;
     std::any visit_array_expr(Expr::Array* expr) override;
+
+    /**
+     * @brief Visits a tuple expression.
+     * Tuple expressions are represented as structs in LLVM IR.
+     *
+     * @param expr The tuple expression to visit.
+     * @return std::any An llvm::Value* representing the tuple.
+     * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
+     */
     std::any visit_tuple_expr(Expr::Tuple* expr) override;
+
+    /**
+     * @brief Visits an object expression.
+     * Object expressions are represented as structs in LLVM IR.
+     *
+     * @param expr The object expression to visit.
+     * @return std::any An llvm::Value* representing the object.
+     * Note: Space for structs is allocated using the `alloca` instruction, but the struct will be loaded before being returned.
+     * That is, the return value *is* the struct, not a pointer to the struct.
+     * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
+     */
     std::any visit_object_expr(Expr::Object* expr) override;
 
 public:

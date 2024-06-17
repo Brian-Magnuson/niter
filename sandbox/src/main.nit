@@ -26,6 +26,15 @@ fun main(): i32 {
     p.move(2, 1)
     printf("p is: (%d, %d)\n", p.x, p.y)
 
+    var i = 0;
+    var j = &i;
+    printf("i is: %d; j is: %d\n", i, *j)
+
+    i = 1
+    printf("i is: %d; j is: %d\n", i, *j)
+    *j = 2
+    printf("i is: %d; j is: %d\n", i, *j)
+
 
     return 0
 }
