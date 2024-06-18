@@ -28,3 +28,11 @@ bool Type::are_compatible(std::shared_ptr<Type>& a, std::shared_ptr<Type>& b) {
     }
     return false;
 }
+
+bool Type::is_aggregate() {
+    // FIXME: We have to do an extra check for structs because currently, primitives and non-primitives are stored as structs, meaning not all structs are aggregates.
+    if (auto struct_type = dynamic_cast<Struct*>(this)) {
+        return !struct_type->struct_scope->is_primitive;
+    }
+    return kind() == Type::Kind::ARRAY || kind() == Type::Kind::TUPLE;
+}

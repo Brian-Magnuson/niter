@@ -111,6 +111,17 @@ public:
     }
 
     /**
+     * @brief Get the key-value pair at an index.
+     *
+     * @param index The index.
+     * @return std::pair<K, V>& The key-value pair.
+     * @throw std::out_of_range If the index is out of bounds.
+     */
+    std::pair<K, V>& get_pair_at(size_t index) {
+        return keys.at(index);
+    }
+
+    /**
      * @brief Check if the dictionary contains a key.
      *
      * @param key The key to check.

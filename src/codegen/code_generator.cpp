@@ -180,10 +180,17 @@ std::any CodeGenerator::visit_var_decl(Decl::Var* decl) {
         std::replace(llvm_safe_name.begin(), llvm_safe_name.end(), ':', '_');
 
         // Create the alloca instruction for the variable.
-        llvm::AllocaInst* alloca = builder->CreateAlloca(var_node->decl->type->to_llvm_type(context), nullptr, llvm_safe_name);
-
-        // Store the value in the alloca instruction.
-        builder->CreateStore(initializer, alloca);
+        // llvm::AllocaInst* alloca = builder->CreateAlloca(var_node->decl->type->to_llvm_type(context), nullptr, llvm_safe_name);
+        llvm::AllocaInst* alloca;
+        if (var_node->decl->type->is_aggregate()) {
+            // For aggregate types, the initializer *is* the alloca
+            alloca = llvm::cast<llvm::AllocaInst>(initializer);
+        } else {
+            // For non-aggregate types, we create an alloca instruction for the type itself.
+            alloca = builder->CreateAlloca(var_node->decl->type->to_llvm_type(context), nullptr, llvm_safe_name);
+            // Store the value in the alloca instruction.
+            builder->CreateStore(initializer, alloca);
+        }
 
         // Save the alloca instruction in the variable node.
         var_node->llvm_allocation = alloca;
@@ -549,7 +556,7 @@ std::any CodeGenerator::visit_tuple_expr(Expr::Tuple* expr) {
     auto tuple_type = std::dynamic_pointer_cast<Type::Tuple>(expr->type);
 
     auto llvm_tuple_type = tuple_type->to_llvm_type(context);
-    auto tuple_value = builder->CreateAlloca(llvm_tuple_type);
+    auto tuple_alloca = builder->CreateAlloca(llvm_tuple_type);
     // An llvm tuple is actually a struct
     // Structs in llvm do not have member names
     // Members are accessed by index, which is what we do for tuples anyway
@@ -557,16 +564,13 @@ std::any CodeGenerator::visit_tuple_expr(Expr::Tuple* expr) {
     unsigned i = 0;
     for (auto& val_expr : expr->elements) {
         auto member_value = std::any_cast<llvm::Value*>(val_expr->accept(this));
-        auto member_alloc = builder->CreateStructGEP(llvm_tuple_type, tuple_value, i);
+        auto member_alloc = builder->CreateStructGEP(llvm_tuple_type, tuple_alloca, i);
         builder->CreateStore(member_value, member_alloc);
 
         i++;
     }
 
-    llvm::Value* ret = builder->CreateLoad(tuple_value->getType(), tuple_value);
-    // Yes, we need this load, otherwise visit_var_decl will attempt to store the address of the tuple in a memory space meant for the full tuple.
-
-    return ret;
+    return (llvm::Value*)tuple_alloca;
 }
 
 std::any CodeGenerator::visit_object_expr(Expr::Object* expr) {
@@ -575,25 +579,19 @@ std::any CodeGenerator::visit_object_expr(Expr::Object* expr) {
 
     // Create the struct
     auto llvm_struct_type = struct_type->to_llvm_type(context);
-    auto struct_value = builder->CreateAlloca(llvm_struct_type);
+    auto struct_alloca = builder->CreateAlloca(llvm_struct_type);
 
     unsigned i = 0;
     for (auto& [name, val_expr] : expr->key_values) {
         // Add the value to the struct
         auto member_value = std::any_cast<llvm::Value*>(val_expr->accept(this));
-        auto member_alloc = builder->CreateStructGEP(llvm_struct_type, struct_value, i);
+        auto member_alloc = builder->CreateStructGEP(llvm_struct_type, struct_alloca, i);
         builder->CreateStore(member_value, member_alloc);
 
         i++;
     }
 
-    // Yes this load is necessary
-    llvm::Value* ret = builder->CreateLoad(struct_value->getType(), struct_value);
-    // When we create the struct, we actually allocate space for it and store the address of that space in the struct_value alloca
-    // But this is an object expression, so we want the value of the struct, not the address of the space where the struct is stored
-    // Without this load instruction, the code generator will attempt to store the address in a memory space meant for the full struct.
-
-    return ret;
+    return (llvm::Value*)struct_alloca;
 }
 
 CodeGenerator::CodeGenerator() {
