@@ -50,24 +50,41 @@ TokenType Expr::LIndex::get_lvalue_declarer() {
 }
 
 llvm::Value* Expr::LIndex::get_llvm_allocation(CodeGenerator* code_generator) {
-    // Currently only tuples are supported
     auto tuple_type = std::dynamic_pointer_cast<Type::Tuple>(left->type);
     if (tuple_type != nullptr) {
-
-        // Get the llvm allocation of the left side
-        auto l_llvm_allocation = left_lvalue->get_llvm_allocation(code_generator);
-        // This is the address of the tuple
-
-        // Get the index of the member in the tuple
+        // Get the tuple alloca
+        auto tuple_alloca = std::any_cast<llvm::Value*>(left->accept(code_generator));
+        // Get the index
         auto literal_right = std::dynamic_pointer_cast<Expr::Literal>(right);
+        // This should never be nullptr
         auto index = std::any_cast<int>(literal_right->token.literal);
 
         auto context = Environment::inst().get_llvm_context();
-
         // Create a GEP instruction to get the member
-        auto gep = code_generator->builder->CreateStructGEP(tuple_type->to_llvm_type(context), l_llvm_allocation, index);
-        // We use GEP to calculate the address of the member
-        return gep;
+        llvm::Value* val = code_generator->builder->CreateStructGEP(
+            tuple_type->to_llvm_type(context),
+            tuple_alloca,
+            index
+        );
+        return val;
+        // It's pretty much like visiting an index expression, but we don't add the load instruction
+    }
+    auto array_type = std::dynamic_pointer_cast<Type::Array>(left->type);
+    if (array_type != nullptr) {
+        // Get the array alloca
+        auto array_alloca = std::any_cast<llvm::Value*>(left->accept(code_generator));
+        // Get the index
+        auto index_value = std::any_cast<llvm::Value*>(right->accept(code_generator));
+
+        auto context = Environment::inst().get_llvm_context();
+        // Create a GEP instruction to get the member
+        llvm::Value* val = code_generator->builder->CreateGEP(
+            array_type->to_llvm_type(context),
+            array_alloca,
+            {llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context), 0), index_value}
+        );
+        return val;
+        // It's pretty much like visiting an index expression, but we don't add the load instruction
     }
     return nullptr;
 }

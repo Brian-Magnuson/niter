@@ -93,7 +93,7 @@ class Type::Array : public Type {
 public:
     // The element type of the array.
     std::shared_ptr<Type> inner_type = nullptr;
-    // The size of the array. We might not use this.
+    // The size of the array. -1 if the size is not known.
     int size = -1;
 
     virtual ~Array() = default;
@@ -104,7 +104,7 @@ public:
         return llvm::ArrayType::get(inner_type->to_llvm_type(context), size);
     }
 
-    Array(std::shared_ptr<Type> inner_type) : inner_type(inner_type) {}
+    Array(std::shared_ptr<Type> inner_type, int size) : inner_type(inner_type), size(size) {}
 };
 
 /**

@@ -404,13 +404,19 @@ std::any CodeGenerator::visit_dereference_expr(Expr::Dereference* expr) {
     // This should never be nullptr
     auto right_inner_type = right_ptr_type->inner_type;
 
+    // If the inner type is an aggregate type, the llvm type should be an unqualified pointer to the struct type
+    if (right_inner_type->is_aggregate()) {
+        llvm::Value* ret = builder->CreateLoad(llvm::PointerType::getUnqual(right_inner_type->to_llvm_type(context)), right_val);
+        return ret;
+    }
+
     llvm::Value* ret = builder->CreateLoad(right_inner_type->to_llvm_type(context), right_val);
     return ret;
 }
 
 std::any CodeGenerator::visit_access_expr(Expr::Access* expr) {
     // First visit the left side of the access expression
-    auto left_value = std::any_cast<llvm::Value*>(expr->left->accept(this));
+    auto struct_alloca = std::any_cast<llvm::Value*>(expr->left->accept(this));
     // This is a struct, not a pointer to a struct
 
     auto struct_type = std::dynamic_pointer_cast<Type::Struct>(expr->left->type);
@@ -419,7 +425,9 @@ std::any CodeGenerator::visit_access_expr(Expr::Access* expr) {
     // Check if this is a struct member
     int index = struct_type->struct_scope->instance_members.get_index(expr->ident.lexeme);
     if (index != -1) {
-        llvm::Value* ret = builder->CreateExtractValue(left_value, index);
+        // Create a GEP instruction to get the member
+        auto gep = builder->CreateStructGEP(struct_type->to_llvm_type(context), struct_alloca, index);
+        llvm::Value* ret = builder->CreateLoad(expr->type->to_llvm_type(context), gep);
         return ret;
     }
 
@@ -439,21 +447,35 @@ std::any CodeGenerator::visit_access_expr(Expr::Access* expr) {
 }
 
 std::any CodeGenerator::visit_index_expr(Expr::Index* expr) {
-    // Currently, only tuples are supported
     auto tuple_type = std::dynamic_pointer_cast<Type::Tuple>(expr->left->type);
     if (tuple_type != nullptr) {
-        auto tuple_value = std::any_cast<llvm::Value*>(expr->left->accept(this));
+        auto tuple_alloca = std::any_cast<llvm::Value*>(expr->left->accept(this));
 
         auto literal_right = std::dynamic_pointer_cast<Expr::Literal>(expr->right);
         // This should never be nullptr
         auto index = std::any_cast<int>(literal_right->token.literal);
 
-        llvm::Value* ret = builder->CreateExtractValue(tuple_value, index);
+        llvm::Value* val = builder->CreateStructGEP(tuple_type->to_llvm_type(context), tuple_alloca, index);
+        llvm::Value* ret = builder->CreateLoad(tuple_type->elements[index]->to_llvm_type(context), val);
 
         return ret;
     }
 
-    ErrorLogger::inst().log_error(expr->location, E_UNIMPLEMENTED, "Indexing is only supported for tuples.");
+    auto array_type = std::dynamic_pointer_cast<Type::Array>(expr->left->type);
+    if (array_type != nullptr) {
+        auto array_alloca = std::any_cast<llvm::Value*>(expr->left->accept(this));
+        auto index_value = std::any_cast<llvm::Value*>(expr->right->accept(this));
+
+        llvm::Value* val = builder->CreateGEP(
+            array_type->to_llvm_type(context),
+            array_alloca,
+            {llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context), 0), index_value}
+        );
+        llvm::Value* ret = builder->CreateLoad(array_type->inner_type->to_llvm_type(context), val);
+        return ret;
+    }
+
+    ErrorLogger::inst().log_error(expr->location, E_UNREACHABLE, "Code generator could not perform index operation.");
     throw CodeGenException();
 }
 
@@ -505,6 +527,10 @@ std::any CodeGenerator::visit_identifier_expr(Expr::Identifier* expr) {
     if (var_node->decl->type->kind() == Type::Kind::FUNCTION) {
         return var_node->llvm_allocation;
     }
+    // If var_node is an aggregate type, the llvm_allocation is the alloca instruction
+    if (var_node->decl->type->is_aggregate()) {
+        return var_node->llvm_allocation;
+    }
 
     // Load the value from the variable
 
@@ -547,9 +573,28 @@ std::any CodeGenerator::visit_literal_expr(Expr::Literal* expr) {
     return ret;
 }
 
-std::any CodeGenerator::visit_array_expr(Expr::Array*) {
-    // TODO: Implement array expressions
-    return nullptr;
+std::any CodeGenerator::visit_array_expr(Expr::Array* expr) {
+    auto array_type = std::dynamic_pointer_cast<Type::Array>(expr->type);
+
+    auto llvm_array_type = array_type->to_llvm_type(context);
+    auto array_alloca = builder->CreateAlloca(llvm_array_type);
+
+    unsigned i = 0;
+    for (auto& val_expr : expr->elements) {
+        auto member_value = std::any_cast<llvm::Value*>(val_expr->accept(this));
+        auto member_alloc = builder->CreateGEP(
+            llvm_array_type,
+            array_alloca,
+            {llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context), 0),
+             llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context), i)}
+
+        );
+        builder->CreateStore(member_value, member_alloc);
+
+        i++;
+    }
+
+    return (llvm::Value*)array_alloca;
 }
 
 std::any CodeGenerator::visit_tuple_expr(Expr::Tuple* expr) {

@@ -251,7 +251,8 @@ std::shared_ptr<Type> Environment::get_type(const std::shared_ptr<Annotation>& a
         if (ret == nullptr) {
             return nullptr;
         }
-        return std::make_shared<Type::Array>(ret);
+        // FIXME: We should probably make array sizes a part of the type.
+        return std::make_shared<Type::Array>(ret, -1);
     } else if (IS_TYPE(annotation, Annotation::Pointer)) {
         // Annotations of the form `t*`
         auto ptr_annotation = std::dynamic_pointer_cast<Annotation::Pointer>(annotation);

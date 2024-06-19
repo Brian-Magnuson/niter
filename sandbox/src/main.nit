@@ -31,18 +31,25 @@ fun main(): i32 {
     triple[1] = 13
     triple[2] = 14
     printf("triple is: (%d, %d, %d)\n", triple[0], triple[1], triple[2])
-//
-//    p.move(2, 1)
-//    printf("p is: (%d, %d)\n", p.x, p.y)
-//
-//    var i = 0;
-//    var j = &i;
-//    printf("i is: %d; j is: %d\n", i, *j)
-//
-//    i = 1
-//    printf("i is: %d; j is: %d\n", i, *j)
-//    *j = 2
-//    printf("i is: %d; j is: %d\n", i, *j)
+
+    p.move(2, 1)
+    printf("p is: (%d, %d)\n", p.x, p.y)
+
+    var i = 0;
+    var j = &i;
+    printf("i is: %d; j is: %d\n", i, *j)
+
+    i = 1
+    printf("i is: %d; j is: %d\n", i, *j)
+    *j = 2
+    printf("i is: %d; j is: %d\n", i, *j)
+
+    var arr = [1, 2, 3]
+    printf("arr is: [%d, %d, %d]\n", arr[0], arr[1], arr[2])
+    arr[0] = 4
+    arr[1] = 5
+    arr[2] = 6
+    printf("arr is: [%d, %d, %d]\n", arr[0], arr[1], arr[2])
 
 
     return 0

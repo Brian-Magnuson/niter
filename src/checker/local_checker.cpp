@@ -661,23 +661,23 @@ std::any LocalChecker::visit_array_expr(Expr::Array* expr) {
     // Handle the case where the array is empty
     if (expr->elements.empty()) {
         expr->type = std::make_shared<Type::Blank>();
-        expr->type = std::make_shared<Type::Array>(expr->type);
+        expr->type = std::make_shared<Type::Array>(expr->type, 0);
         return expr->type;
     } else {
         // Ensure all elements have the same type
-        std::shared_ptr<Type> type = std::any_cast<std::shared_ptr<Type>>(expr->elements[0]->accept(this));
+        std::shared_ptr<Type> inner_type = std::any_cast<std::shared_ptr<Type>>(expr->elements[0]->accept(this));
         // In the case that this element is an `auto` type, the repeated compatibility checks in the following loop will build the type until it is complete.
         for (auto& elem : expr->elements) {
             auto elem_type = std::any_cast<std::shared_ptr<Type>>(elem->accept(this));
-            if (Type::are_compatible(type, elem_type) == false) {
-                ErrorLogger::inst().log_error(elem->location, E_INCONSISTENT_ARRAY_TYPES, "Array elements must have the same type. Expected " + type->to_string() + ", found " + elem_type->to_string() + ".");
+            if (Type::are_compatible(inner_type, elem_type) == false) {
+                ErrorLogger::inst().log_error(elem->location, E_INCONSISTENT_ARRAY_TYPES, "Array elements must have the same type. Expected " + inner_type->to_string() + ", found " + elem_type->to_string() + ".");
                 throw LocalTypeException();
             }
         }
         // If, after this loop, the type still contains `auto`, it will later be checked against the type annotation on the left-hand side of the assignment
-        auto arr_type = std::make_shared<Type::Array>(type);
+        auto arr_type = std::make_shared<Type::Array>(inner_type, expr->elements.size());
         expr->type = arr_type;
-        return type;
+        return expr->type;
     }
 }
 
@@ -769,9 +769,13 @@ std::any LocalChecker::visit_object_expr(Expr::Object* expr) {
     return expr->type;
 }
 
+#include "../parser/ast_printer.h"
+
 void LocalChecker::type_check(std::vector<std::shared_ptr<Stmt>> stmts) {
+    AstPrinter printer;
     for (auto stmt : stmts) {
         try {
+            std::cout << printer.print(stmt) << std::endl;
             stmt->accept(this);
         } catch (const LocalTypeException&) {
             Environment::inst().exit_all_local_scopes();
