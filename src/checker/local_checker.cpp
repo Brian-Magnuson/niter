@@ -466,7 +466,7 @@ std::any LocalChecker::visit_access_expr(Expr::Access* expr) {
     auto left_type = std::any_cast<std::shared_ptr<Type>>(expr->left->accept(this));
 
     // The left side of the access must be a struct type
-    auto left_seg_type = std::dynamic_pointer_cast<Type::Struct>(left_type);
+    auto left_seg_type = std::dynamic_pointer_cast<Type::Named>(left_type);
     if (left_seg_type == nullptr) {
         ErrorLogger::inst().log_error(expr->location, E_ACCESS_ON_NON_STRUCT, "Cannot access member of non-struct type.");
         // If the left side is a pointer, but the operator is `.`, we can give a more specific error message
@@ -703,7 +703,7 @@ std::any LocalChecker::visit_object_expr(Expr::Object* expr) {
 
     // Get the struct type
     auto type = Environment::inst().get_type(expr->struct_annotation);
-    auto struct_type = std::dynamic_pointer_cast<Type::Struct>(type);
+    auto struct_type = std::dynamic_pointer_cast<Type::Named>(type);
     if (struct_type == nullptr) {
         ErrorLogger::inst().log_error(expr->location, E_UNKNOWN_TYPE, "Struct type `" + expr->struct_annotation->to_string() + "` was not declared.");
         throw LocalTypeException();

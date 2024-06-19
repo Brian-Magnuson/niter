@@ -181,16 +181,20 @@ std::any CodeGenerator::visit_var_decl(Decl::Var* decl) {
 
         // Create the alloca instruction for the variable.
         // llvm::AllocaInst* alloca = builder->CreateAlloca(var_node->decl->type->to_llvm_type(context), nullptr, llvm_safe_name);
-        llvm::AllocaInst* alloca;
-        if (var_node->decl->type->is_aggregate()) {
-            // For aggregate types, the initializer *is* the alloca
-            alloca = llvm::cast<llvm::AllocaInst>(initializer);
-        } else {
-            // For non-aggregate types, we create an alloca instruction for the type itself.
-            alloca = builder->CreateAlloca(var_node->decl->type->to_llvm_type(context), nullptr, llvm_safe_name);
-            // Store the value in the alloca instruction.
-            builder->CreateStore(initializer, alloca);
-        }
+        // llvm::AllocaInst* alloca;
+        // if (var_node->decl->type->is_aggregate()) {
+        //     // For aggregate types, the initializer *is* the alloca
+        //     alloca = llvm::cast<llvm::AllocaInst>(initializer);
+        // } else {
+        //     // For non-aggregate types, we create an alloca instruction for the type itself.
+        //     alloca = builder->CreateAlloca(var_node->decl->type->to_llvm_type(context), nullptr, llvm_safe_name);
+        //     // Store the value in the alloca instruction.
+        //     builder->CreateStore(initializer, alloca);
+        // }
+
+        llvm::AllocaInst* alloca = builder->CreateAlloca(var_node->decl->type->to_llvm_type(context), nullptr, llvm_safe_name);
+        // Store the value in the alloca instruction.
+        builder->CreateStore(initializer, alloca);
 
         // Save the alloca instruction in the variable node.
         var_node->llvm_allocation = alloca;
@@ -404,12 +408,6 @@ std::any CodeGenerator::visit_dereference_expr(Expr::Dereference* expr) {
     // This should never be nullptr
     auto right_inner_type = right_ptr_type->inner_type;
 
-    // If the inner type is an aggregate type, the llvm type should be an unqualified pointer to the struct type
-    if (right_inner_type->is_aggregate()) {
-        llvm::Value* ret = builder->CreateLoad(llvm::PointerType::getUnqual(right_inner_type->to_llvm_type(context)), right_val);
-        return ret;
-    }
-
     llvm::Value* ret = builder->CreateLoad(right_inner_type->to_llvm_type(context), right_val);
     return ret;
 }
@@ -417,7 +415,7 @@ std::any CodeGenerator::visit_dereference_expr(Expr::Dereference* expr) {
 std::any CodeGenerator::visit_access_expr(Expr::Access* expr) {
     // First visit the left side of the access expression
     auto struct_alloca = std::any_cast<llvm::Value*>(expr->left->accept(this));
-    // This is a struct, not a pointer to a struct
+    // This is a pointer to the struct
 
     auto struct_type = std::dynamic_pointer_cast<Type::Struct>(expr->left->type);
     // This should never be nullptr
@@ -426,7 +424,7 @@ std::any CodeGenerator::visit_access_expr(Expr::Access* expr) {
     int index = struct_type->struct_scope->instance_members.get_index(expr->ident.lexeme);
     if (index != -1) {
         // Create a GEP instruction to get the member
-        auto gep = builder->CreateStructGEP(struct_type->to_llvm_type(context), struct_alloca, index);
+        auto gep = builder->CreateStructGEP(struct_type->to_llvm_aggregate_type(context), struct_alloca, index);
         llvm::Value* ret = builder->CreateLoad(expr->type->to_llvm_type(context), gep);
         return ret;
     }
@@ -455,7 +453,7 @@ std::any CodeGenerator::visit_index_expr(Expr::Index* expr) {
         // This should never be nullptr
         auto index = std::any_cast<int>(literal_right->token.literal);
 
-        llvm::Value* val = builder->CreateStructGEP(tuple_type->to_llvm_type(context), tuple_alloca, index);
+        llvm::Value* val = builder->CreateStructGEP(tuple_type->to_llvm_aggregate_type(context), tuple_alloca, index);
         llvm::Value* ret = builder->CreateLoad(tuple_type->elements[index]->to_llvm_type(context), val);
 
         return ret;
@@ -467,7 +465,7 @@ std::any CodeGenerator::visit_index_expr(Expr::Index* expr) {
         auto index_value = std::any_cast<llvm::Value*>(expr->right->accept(this));
 
         llvm::Value* val = builder->CreateGEP(
-            array_type->to_llvm_type(context),
+            array_type->to_llvm_aggregate_type(context),
             array_alloca,
             {llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context), 0), index_value}
         );
@@ -527,10 +525,6 @@ std::any CodeGenerator::visit_identifier_expr(Expr::Identifier* expr) {
     if (var_node->decl->type->kind() == Type::Kind::FUNCTION) {
         return var_node->llvm_allocation;
     }
-    // If var_node is an aggregate type, the llvm_allocation is the alloca instruction
-    if (var_node->decl->type->is_aggregate()) {
-        return var_node->llvm_allocation;
-    }
 
     // Load the value from the variable
 
@@ -576,7 +570,7 @@ std::any CodeGenerator::visit_literal_expr(Expr::Literal* expr) {
 std::any CodeGenerator::visit_array_expr(Expr::Array* expr) {
     auto array_type = std::dynamic_pointer_cast<Type::Array>(expr->type);
 
-    auto llvm_array_type = array_type->to_llvm_type(context);
+    auto llvm_array_type = array_type->to_llvm_aggregate_type(context);
     auto array_alloca = builder->CreateAlloca(llvm_array_type);
 
     unsigned i = 0;
@@ -600,7 +594,7 @@ std::any CodeGenerator::visit_array_expr(Expr::Array* expr) {
 std::any CodeGenerator::visit_tuple_expr(Expr::Tuple* expr) {
     auto tuple_type = std::dynamic_pointer_cast<Type::Tuple>(expr->type);
 
-    auto llvm_tuple_type = tuple_type->to_llvm_type(context);
+    auto llvm_tuple_type = tuple_type->to_llvm_aggregate_type(context);
     auto tuple_alloca = builder->CreateAlloca(llvm_tuple_type);
     // An llvm tuple is actually a struct
     // Structs in llvm do not have member names
@@ -623,7 +617,7 @@ std::any CodeGenerator::visit_object_expr(Expr::Object* expr) {
     // This should never be nullptr
 
     // Create the struct
-    auto llvm_struct_type = struct_type->to_llvm_type(context);
+    auto llvm_struct_type = struct_type->to_llvm_aggregate_type(context);
     auto struct_alloca = builder->CreateAlloca(llvm_struct_type);
 
     unsigned i = 0;

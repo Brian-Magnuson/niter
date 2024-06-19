@@ -36,6 +36,9 @@ public:
         BLANK
     };
 
+    class Aggregate;
+
+    class Named;
     class Struct;
     class Function;
     class Array;
@@ -61,6 +64,8 @@ public:
 
     /**
      * @brief Get the LLVM type representation of the type.
+     * Note that if the type is an aggregate type, the LLVM type will be a pointer to the aggregate type.
+     * To get the actual aggregate type, use the to_llvm_aggregate_type of the Aggregate class.
      *
      * @param context The LLVM context; can be obtained from the Environment singleton.
      * @return llvm::Type* The LLVM type representation of the type.

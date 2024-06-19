@@ -22,26 +22,44 @@ TokenType Expr::LAccess::get_lvalue_declarer() {
         return KW_CONST;
     }
     // If the left side is not const, then the declarer is the declarer of the right side.
-    auto l_struct_type = std::dynamic_pointer_cast<Type::Struct>(left->type);
+    auto l_struct_type = std::dynamic_pointer_cast<Type::Named>(left->type);
     auto member_name = ident.lexeme;
     auto decl = Environment::inst().get_instance_variable(l_struct_type, member_name);
     return decl->declarer;
 }
 
 llvm::Value* Expr::LAccess::get_llvm_allocation(CodeGenerator* code_generator) {
-    // Get the llvm allocation of the left side
-    auto l_llvm_allocation = left_lvalue->get_llvm_allocation(code_generator);
-    // This is the address of the struct
+    // // Get the llvm allocation of the left side
+    // auto l_llvm_allocation = left_lvalue->get_llvm_allocation(code_generator);
+    // // This is the address of the struct
 
-    // Get the index of the member in the struct
-    auto l_struct_type = std::dynamic_pointer_cast<Type::Struct>(left->type);
-    auto l_llvm_type = l_struct_type->struct_scope->ir_type;
-    auto index = l_struct_type->struct_scope->instance_members.get_index(ident.lexeme);
+    // // Get the index of the member in the struct
+    // auto l_struct_type = std::dynamic_pointer_cast<Type::Struct>(left->type);
+    // auto context = Environment::inst().get_llvm_context();
+
+    // auto l_llvm_type = l_struct_type->to_llvm_aggregate_type(context);
+    // auto index = l_struct_type->struct_scope->instance_members.get_index(ident.lexeme);
+
+    // // Create a GEP instruction to get the member
+    // auto gep = code_generator->builder->CreateStructGEP(l_llvm_type, l_llvm_allocation, index);
+    // // We use GEP to calculate the address of the member
+    // return gep;
+
+    auto struct_alloca = std::any_cast<llvm::Value*>(left->accept(code_generator));
+    auto struct_type = std::dynamic_pointer_cast<Type::Struct>(left->type);
+
+    auto member_name = ident.lexeme;
+    auto member_index = struct_type->struct_scope->instance_members.get_index(member_name);
+
+    auto context = Environment::inst().get_llvm_context();
 
     // Create a GEP instruction to get the member
-    auto gep = code_generator->builder->CreateStructGEP(l_llvm_type, l_llvm_allocation, index);
-    // We use GEP to calculate the address of the member
-    return gep;
+    llvm::Value* val = code_generator->builder->CreateStructGEP(
+        struct_type->to_llvm_aggregate_type(context),
+        struct_alloca,
+        member_index
+    );
+    return val;
 }
 
 TokenType Expr::LIndex::get_lvalue_declarer() {
@@ -62,7 +80,7 @@ llvm::Value* Expr::LIndex::get_llvm_allocation(CodeGenerator* code_generator) {
         auto context = Environment::inst().get_llvm_context();
         // Create a GEP instruction to get the member
         llvm::Value* val = code_generator->builder->CreateStructGEP(
-            tuple_type->to_llvm_type(context),
+            tuple_type->to_llvm_aggregate_type(context),
             tuple_alloca,
             index
         );
@@ -79,7 +97,7 @@ llvm::Value* Expr::LIndex::get_llvm_allocation(CodeGenerator* code_generator) {
         auto context = Environment::inst().get_llvm_context();
         // Create a GEP instruction to get the member
         llvm::Value* val = code_generator->builder->CreateGEP(
-            array_type->to_llvm_type(context),
+            array_type->to_llvm_aggregate_type(context),
             array_alloca,
             {llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context), 0), index_value}
         );

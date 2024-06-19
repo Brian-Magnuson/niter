@@ -13,16 +13,41 @@
 #include <vector>
 
 /**
- * @brief A class representing a struct type.
- * Struct types are the most basic type, pointing to a single struct node in the namespace tree.
+ * @brief A base class for aggregate types.
+ * This distinction is important because llvm aggregate types must be created using `alloca` instructions.
+ * This means that their llvm type is a pointer to the actual type.
  *
  */
-class Type::Struct : public Type {
+class Type::Aggregate : virtual public Type {
+protected:
+    Aggregate() = default;
+
+public:
+    /**
+     * @brief Returns the true llvm type of the aggregate type.
+     * For aggregate types, `to_llvm_type` will return a pointer to the actual type.
+     * This is because aggregate types must be created using `alloca` instructions.
+     * However, sometimes, the actual type is needed for operations like `getelementptr`.
+     * This function will return the actual type.
+     *
+     * @param context The llvm context.
+     * @return llvm::Type* The actual llvm type of the aggregate type.
+     */
+    virtual llvm::Type* to_llvm_aggregate_type(std::shared_ptr<llvm::LLVMContext> context) const = 0;
+};
+
+/**
+ * @brief A class representing a named type.
+ * Includes both primitive and non-primitive structs.
+ * Named types are the most basic type, pointing to a single struct node in the namespace tree.
+ *
+ */
+class Type::Named : virtual public Type {
 public:
     // The node representing the struct in the namespace tree. Note: if two struct types are the same, they will point to the same node.
     std::shared_ptr<Node::StructScope> struct_scope = nullptr;
 
-    virtual ~Struct() = default;
+    virtual ~Named() = default;
     Type::Kind kind() const override { return Type::Kind::STRUCT; }
     std::string to_string() const override { return struct_scope->unique_name; }
 
@@ -30,7 +55,29 @@ public:
         return struct_scope->ir_type;
     }
 
-    Struct(std::shared_ptr<Node::StructScope> struct_scope) : struct_scope(struct_scope) {}
+    Named(std::shared_ptr<Node::StructScope> struct_scope) : struct_scope(struct_scope) {}
+};
+
+/**
+ * @brief A class representing a non-primitive struct type.
+ * Non-primitive structs are structs that are not built-in to the language.
+ * They are distinct from primitive Named types because they also inherit from Aggregate and may be treated differently by the code generator.
+ *
+ */
+class Type::Struct : public Type::Named, public Type::Aggregate {
+public:
+    virtual ~Struct() = default;
+    Type::Kind kind() const override { return Type::Kind::STRUCT; }
+
+    Struct(std::shared_ptr<Node::StructScope> struct_scope) : Named(struct_scope) {}
+
+    llvm::Type* to_llvm_type(std::shared_ptr<llvm::LLVMContext> context) const override {
+        return llvm::PointerType::getUnqual(struct_scope->ir_type);
+    }
+
+    llvm::Type* to_llvm_aggregate_type(std::shared_ptr<llvm::LLVMContext> context) const override {
+        return struct_scope->ir_type;
+    }
 };
 
 /**
@@ -89,7 +136,7 @@ public:
  * Array types have a single element type and a size.
  *
  */
-class Type::Array : public Type {
+class Type::Array : public Type::Aggregate {
 public:
     // The element type of the array.
     std::shared_ptr<Type> inner_type = nullptr;
@@ -101,6 +148,10 @@ public:
     std::string to_string() const override { return inner_type->to_string() + "[]"; }
 
     llvm::Type* to_llvm_type(std::shared_ptr<llvm::LLVMContext> context) const override {
+        return llvm::PointerType::getUnqual(to_llvm_aggregate_type(context));
+    }
+
+    llvm::Type* to_llvm_aggregate_type(std::shared_ptr<llvm::LLVMContext> context) const override {
         return llvm::ArrayType::get(inner_type->to_llvm_type(context), size);
     }
 
@@ -136,7 +187,7 @@ public:
  * Tuple types have multiple element types.
  *
  */
-class Type::Tuple : public Type {
+class Type::Tuple : public Type::Aggregate {
 public:
     // A list of element types in the tuple.
     std::vector<std::shared_ptr<Type>> elements;
@@ -153,6 +204,10 @@ public:
     }
 
     llvm::Type* to_llvm_type(std::shared_ptr<llvm::LLVMContext> context) const override {
+        return llvm::PointerType::getUnqual(to_llvm_aggregate_type(context));
+    }
+
+    llvm::Type* to_llvm_aggregate_type(std::shared_ptr<llvm::LLVMContext> context) const override {
         std::vector<llvm::Type*> element_types;
         for (auto& elem : elements) {
             element_types.push_back(elem->to_llvm_type(context));

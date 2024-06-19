@@ -168,7 +168,7 @@ std::shared_ptr<Node::Variable> Environment::get_variable(const std::vector<std:
     return std::dynamic_pointer_cast<Node::Variable>(found_node);
 }
 
-Decl::VarDeclarable* Environment::get_instance_variable(std::shared_ptr<Type::Struct> instance_type, const std::string& member_name) {
+Decl::VarDeclarable* Environment::get_instance_variable(std::shared_ptr<Type::Named> instance_type, const std::string& member_name) {
     auto struct_node = instance_type->struct_scope;
     auto found_node_iter = struct_node->instance_members.find(member_name);
     if (found_node_iter != struct_node->instance_members.end()) {
@@ -207,7 +207,14 @@ std::shared_ptr<Type> Environment::get_type(const std::shared_ptr<Annotation>& a
         // Note: only downward lookup is performed here. We may change this later.
         auto found_node = from_scope->downward_lookup(path);
         auto found_struct = std::dynamic_pointer_cast<Node::StructScope>(found_node);
-        return found_struct != nullptr ? std::make_shared<Type::Struct>(found_struct) : nullptr;
+        // return found_struct != nullptr ? std::make_shared<Type::Named>(found_struct) : nullptr;
+        if (found_struct == nullptr) {
+            return nullptr;
+        } else if (found_struct->is_primitive) {
+            return std::make_shared<Type::Named>(found_struct);
+        } else {
+            return std::make_shared<Type::Struct>(found_struct);
+        }
     } else if (IS_TYPE(annotation, Annotation::Function)) {
         // Annotations of the form `fun(t, t) => t`
         auto fun_annotation = std::dynamic_pointer_cast<Annotation::Function>(annotation);

@@ -189,7 +189,7 @@ public:
      * @param member_name The name of the member to retrieve.
      * @return Decl::VarDeclarable* The declaration of the instance variable. nullptr if the variable is not found.
      */
-    Decl::VarDeclarable* get_instance_variable(std::shared_ptr<Type::Struct> instance_type, const std::string& member_name);
+    Decl::VarDeclarable* get_instance_variable(std::shared_ptr<Type::Named> instance_type, const std::string& member_name);
 
     /**
      * @brief Creates a type object from an annotation.
