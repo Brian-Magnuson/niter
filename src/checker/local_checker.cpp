@@ -769,13 +769,9 @@ std::any LocalChecker::visit_object_expr(Expr::Object* expr) {
     return expr->type;
 }
 
-#include "../parser/ast_printer.h"
-
 void LocalChecker::type_check(std::vector<std::shared_ptr<Stmt>> stmts) {
-    AstPrinter printer;
     for (auto stmt : stmts) {
         try {
-            std::cout << printer.print(stmt) << std::endl;
             stmt->accept(this);
         } catch (const LocalTypeException&) {
             Environment::inst().exit_all_local_scopes();

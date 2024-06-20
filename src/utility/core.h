@@ -127,15 +127,6 @@ public:
     bool is_numeric() {
         return is_int() || is_float();
     }
-
-    /**
-     * @brief Checks if a type is an aggregate type.
-     * Aggregate types may be stored differently during code generation.
-     *
-     * @return true If the type is an aggregate type, i.e. an array, tuple, or non-primitive struct.
-     * @return false If the type is not an aggregate type, i.e. a primitive type or function type.
-     */
-    bool is_aggregate();
 };
 
 /**

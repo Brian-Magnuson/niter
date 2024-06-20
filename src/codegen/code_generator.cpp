@@ -179,19 +179,6 @@ std::any CodeGenerator::visit_var_decl(Decl::Var* decl) {
         auto llvm_safe_name = var_node->unique_name;
         std::replace(llvm_safe_name.begin(), llvm_safe_name.end(), ':', '_');
 
-        // Create the alloca instruction for the variable.
-        // llvm::AllocaInst* alloca = builder->CreateAlloca(var_node->decl->type->to_llvm_type(context), nullptr, llvm_safe_name);
-        // llvm::AllocaInst* alloca;
-        // if (var_node->decl->type->is_aggregate()) {
-        //     // For aggregate types, the initializer *is* the alloca
-        //     alloca = llvm::cast<llvm::AllocaInst>(initializer);
-        // } else {
-        //     // For non-aggregate types, we create an alloca instruction for the type itself.
-        //     alloca = builder->CreateAlloca(var_node->decl->type->to_llvm_type(context), nullptr, llvm_safe_name);
-        //     // Store the value in the alloca instruction.
-        //     builder->CreateStore(initializer, alloca);
-        // }
-
         llvm::AllocaInst* alloca = builder->CreateAlloca(var_node->decl->type->to_llvm_type(context), nullptr, llvm_safe_name);
         // Store the value in the alloca instruction.
         builder->CreateStore(initializer, alloca);
@@ -527,7 +514,6 @@ std::any CodeGenerator::visit_identifier_expr(Expr::Identifier* expr) {
     }
 
     // Load the value from the variable
-
     llvm::AllocaInst* alloca = llvm::dyn_cast<llvm::AllocaInst>(var_node->llvm_allocation);
     llvm::GlobalVariable* global = llvm::dyn_cast<llvm::GlobalVariable>(var_node->llvm_allocation);
     if (alloca == nullptr && global == nullptr) {
@@ -570,6 +556,7 @@ std::any CodeGenerator::visit_literal_expr(Expr::Literal* expr) {
 std::any CodeGenerator::visit_array_expr(Expr::Array* expr) {
     auto array_type = std::dynamic_pointer_cast<Type::Array>(expr->type);
 
+    // Allocate space for the array
     auto llvm_array_type = array_type->to_llvm_aggregate_type(context);
     auto array_alloca = builder->CreateAlloca(llvm_array_type);
 
@@ -594,6 +581,7 @@ std::any CodeGenerator::visit_array_expr(Expr::Array* expr) {
 std::any CodeGenerator::visit_tuple_expr(Expr::Tuple* expr) {
     auto tuple_type = std::dynamic_pointer_cast<Type::Tuple>(expr->type);
 
+    // Allocate space for the tuple
     auto llvm_tuple_type = tuple_type->to_llvm_aggregate_type(context);
     auto tuple_alloca = builder->CreateAlloca(llvm_tuple_type);
     // An llvm tuple is actually a struct
