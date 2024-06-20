@@ -133,12 +133,23 @@ std::any LocalChecker::visit_var_decl(Decl::Var* decl) {
     auto variable = std::dynamic_pointer_cast<Node::Variable>(node);
 
     // Verify that the type of the initializer matches the type annotation
-    if (!Type::are_compatible(init_type, variable->decl->type)) {
+    if (!Type::are_compatible(variable->decl->type, init_type)) {
         // If the error occurred because init_type is an array of blank types, give a more specific error message
         auto init_array = std::dynamic_pointer_cast<Type::Array>(init_type);
         if (init_array != nullptr && init_array->inner_type->kind() == Type::Kind::BLANK) {
             ErrorLogger::inst().log_error(decl->initializer->location, E_INDETERMINATE_ARRAY_TYPE, "The type of this array could not be determined.");
             ErrorLogger::inst().log_note(decl->name.location, "Missing type annotation.");
+            throw LocalTypeException();
+        }
+        // If the error occurred because variable->type had a known size, but init_type did not, give a more specific error message
+        auto var_array = std::dynamic_pointer_cast<Type::Array>(variable->decl->type);
+        if (var_array != nullptr && var_array->size != -1) {
+            ErrorLogger::inst().log_error(decl->name.location, E_ARRAY_SIZE_UNKNOWN, "Cannot implicitly convert from " + init_type->to_string() + " to " + variable->decl->type->to_string() + ".");
+            ErrorLogger::inst().log_note(decl->initializer->location, "Size is unknown.");
+            throw LocalTypeException();
+        }
+        if (var_array != nullptr && init_type->kind() == Type::Kind::BLANK) {
+            ErrorLogger::inst().log_error(decl->initializer->location, E_SIZED_ARRAY_WITHOUT_INITIALIZER, "An array with a known size must have an initializer.");
             throw LocalTypeException();
         }
 
@@ -591,7 +602,8 @@ std::any LocalChecker::visit_cast_expr(Expr::Cast* expr) {
         throw LocalTypeException();
     }
     // Currently, no other casts are allowed
-    // Pointer casts may be allowed in the future, but they will likely require more syntax rules since they are inherently unsafe
+    // Pointer casts and array size casts may be allowed in the future,
+    // but they will likely require more syntax rules since they are inherently unsafe
 
     return expr->type;
 }

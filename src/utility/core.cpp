@@ -46,8 +46,9 @@ bool Type::are_compatible(std::shared_ptr<Type>& a, std::shared_ptr<Type>& b) {
 
     if (b->kind() == Type::Kind::BLANK) {
         // If a is an array of blank types, then they are not compatible.
+        // Also, if a has a known size, then they are not compatible.
         auto a_array = std::dynamic_pointer_cast<Type::Array>(a);
-        if (a_array != nullptr && a_array->inner_type->kind() == Type::Kind::BLANK) {
+        if (a_array != nullptr && (a_array->inner_type->kind() == Type::Kind::BLANK || a_array->size != -1)) {
             return false;
         }
         b = a;

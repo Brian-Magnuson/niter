@@ -543,6 +543,8 @@ std::shared_ptr<Expr> Parser::access_index_expr() {
 
 std::shared_ptr<Expr> Parser::cast_expr() {
     std::shared_ptr<Expr> expr = primary_expr();
+    // TODO: Add a mechanism to force an unsafe cast
+    // Unsafe casts include pointer casting and casting from an array of unknown size to an array of known size
     if (match({KW_AS})) {
         Token op = previous();
         std::shared_ptr<Annotation> type_annotation = annotation();

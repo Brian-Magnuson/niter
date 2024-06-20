@@ -171,6 +171,10 @@ enum ErrorCode {
     E_INCONSISTENT_ARRAY_TYPES,
     // An array's element type could not be determined
     E_INDETERMINATE_ARRAY_TYPE,
+    // An attempt was made to implicitly cast an array of unknown size to an array of known size
+    E_ARRAY_SIZE_UNKNOWN,
+    // An array had a known size, but was not initialized with a list of that size
+    E_SIZED_ARRAY_WITHOUT_INITIALIZER,
     // A function was found to have multiple parameters with the same name
     E_DUPLICATE_PARAM_NAME,
     // A function was found with a return statement with an incompatible type
