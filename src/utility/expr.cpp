@@ -4,13 +4,13 @@
 #include "../codegen/code_generator.h"
 
 TokenType Expr::Dereference::get_lvalue_declarer() {
-    auto ptr_type = std::dynamic_pointer_cast<Type::Pointer>(right->type);
+    auto ptr_type = std::dynamic_pointer_cast<Type::Pointer>(inner->type);
     return ptr_type->declarer;
 }
 
 llvm::Value* Expr::Dereference::get_llvm_allocation(CodeGenerator* code_generator) {
     // If this is a dereferenced pointer...
-    auto value = std::any_cast<llvm::Value*>(right->accept(code_generator));
+    auto value = std::any_cast<llvm::Value*>(inner->accept(code_generator));
     // Then the pointer is the llvm allocation.
     return value;
 }

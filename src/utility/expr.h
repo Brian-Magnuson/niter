@@ -128,7 +128,7 @@ public:
  */
 class Expr::Unary : public Expr {
 public:
-    Unary(Token op, std::shared_ptr<Expr> right) : op(op), right(right) {
+    Unary(Token op, std::shared_ptr<Expr> inner) : op(op), inner(inner) {
         location = op.location;
     }
 
@@ -139,7 +139,7 @@ public:
     // The token representing the operator.
     Token op;
     // The expression on the right side.
-    std::shared_ptr<Expr> right;
+    std::shared_ptr<Expr> inner;
 };
 
 /**
@@ -150,7 +150,7 @@ public:
  */
 class Expr::Dereference : public Expr::LValue {
 public:
-    Dereference(Token op, std::shared_ptr<Expr> right) : op(op), right(right) {
+    Dereference(Token op, std::shared_ptr<Expr> inner) : op(op), inner(inner) {
         location = op.location;
     }
 
@@ -161,7 +161,7 @@ public:
     // The token representing the operator.
     Token op;
     // The expression on the right side.
-    std::shared_ptr<Expr> right;
+    std::shared_ptr<Expr> inner;
 
     TokenType get_lvalue_declarer() override;
     llvm::Value* get_llvm_allocation(CodeGenerator* code_generator) override;
@@ -447,8 +447,8 @@ public:
  */
 class Expr::Object : public Expr {
 public:
-    Object(Token colon, std::shared_ptr<Annotation::Segmented> struct_annotation, Dictionary<std::string, std::shared_ptr<Expr>>& key_values)
-        : colon(colon), struct_annotation(struct_annotation), key_values(key_values) {
+    Object(Token colon, std::shared_ptr<Annotation::Segmented> struct_annotation, Dictionary<std::string, std::shared_ptr<Expr>>& fields)
+        : colon(colon), struct_annotation(struct_annotation), fields(fields) {
         location = colon.location;
     }
 
@@ -461,7 +461,7 @@ public:
     // The annotation representing the struct name.
     std::shared_ptr<Annotation::Segmented> struct_annotation;
     // The key-value pairs of the object.
-    Dictionary<std::string, std::shared_ptr<Expr>> key_values;
+    Dictionary<std::string, std::shared_ptr<Expr>> fields;
 };
 
 #endif // EXPR_H

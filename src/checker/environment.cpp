@@ -254,7 +254,7 @@ std::shared_ptr<Type> Environment::get_type(const std::shared_ptr<Annotation>& a
     } else if (IS_TYPE(annotation, Annotation::Array)) {
         // Annotations of the form `t[]`
         auto array_annotation = std::dynamic_pointer_cast<Annotation::Array>(annotation);
-        auto ret = get_type(array_annotation->name, from_scope);
+        auto ret = get_type(array_annotation->inner, from_scope);
         if (ret == nullptr) {
             return nullptr;
         }
@@ -263,7 +263,7 @@ std::shared_ptr<Type> Environment::get_type(const std::shared_ptr<Annotation>& a
     } else if (IS_TYPE(annotation, Annotation::Pointer)) {
         // Annotations of the form `t*`
         auto ptr_annotation = std::dynamic_pointer_cast<Annotation::Pointer>(annotation);
-        auto ret = get_type(ptr_annotation->name, from_scope);
+        auto ret = get_type(ptr_annotation->inner, from_scope);
         if (ret == nullptr) {
             return nullptr;
         }

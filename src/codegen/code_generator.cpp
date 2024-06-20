@@ -373,13 +373,13 @@ std::any CodeGenerator::visit_binary_expr(Expr::Binary* expr) {
 }
 
 std::any CodeGenerator::visit_unary_expr(Expr::Unary* expr) {
-    auto right_val = std::any_cast<llvm::Value*>(expr->right->accept(this));
+    auto right_val = std::any_cast<llvm::Value*>(expr->inner->accept(this));
     if (expr->op.tok_type == TOK_BANG) {
         return builder->CreateICmpEQ(right_val, llvm::ConstantInt::get(right_val->getType(), 0));
     } else if (expr->op.tok_type == TOK_MINUS) {
         return builder->CreateNeg(right_val);
     } else if (expr->op.tok_type == TOK_AMP) {
-        auto right_lvalue = std::dynamic_pointer_cast<Expr::LValue>(expr->right);
+        auto right_lvalue = std::dynamic_pointer_cast<Expr::LValue>(expr->inner);
         // This should never be nullptr
         return right_lvalue->get_llvm_allocation(this);
     } else {
@@ -389,8 +389,8 @@ std::any CodeGenerator::visit_unary_expr(Expr::Unary* expr) {
 }
 
 std::any CodeGenerator::visit_dereference_expr(Expr::Dereference* expr) {
-    auto right_val = std::any_cast<llvm::Value*>(expr->right->accept(this));
-    std::shared_ptr<Type> right_type = expr->right->type;
+    auto right_val = std::any_cast<llvm::Value*>(expr->inner->accept(this));
+    std::shared_ptr<Type> right_type = expr->inner->type;
     auto right_ptr_type = std::dynamic_pointer_cast<Type::Pointer>(right_type);
     // This should never be nullptr
     auto right_inner_type = right_ptr_type->inner_type;
@@ -441,7 +441,7 @@ std::any CodeGenerator::visit_index_expr(Expr::Index* expr) {
         auto index = std::any_cast<int>(literal_right->token.literal);
 
         llvm::Value* val = builder->CreateStructGEP(tuple_type->to_llvm_aggregate_type(context), tuple_alloca, index);
-        llvm::Value* ret = builder->CreateLoad(tuple_type->elements[index]->to_llvm_type(context), val);
+        llvm::Value* ret = builder->CreateLoad(tuple_type->element_types[index]->to_llvm_type(context), val);
 
         return ret;
     }
@@ -609,7 +609,7 @@ std::any CodeGenerator::visit_object_expr(Expr::Object* expr) {
     auto struct_alloca = builder->CreateAlloca(llvm_struct_type);
 
     unsigned i = 0;
-    for (auto& [name, val_expr] : expr->key_values) {
+    for (auto& [name, val_expr] : expr->fields) {
         // Add the value to the struct
         auto member_value = std::any_cast<llvm::Value*>(val_expr->accept(this));
         auto member_alloc = builder->CreateStructGEP(llvm_struct_type, struct_alloca, i);

@@ -407,7 +407,7 @@ std::any LocalChecker::visit_binary_expr(Expr::Binary* expr) {
 std::any LocalChecker::visit_unary_expr(Expr::Unary* expr) {
     // There are 3 unary operators: `!`, `-`, and `&`
 
-    auto operand_type = std::any_cast<std::shared_ptr<Type>>(expr->right->accept(this));
+    auto operand_type = std::any_cast<std::shared_ptr<Type>>(expr->inner->accept(this));
 
     if (expr->op.tok_type == TOK_BANG) {
         // The operand must be of type `bool`
@@ -425,7 +425,7 @@ std::any LocalChecker::visit_unary_expr(Expr::Unary* expr) {
             throw LocalTypeException();
         }
     } else if (expr->op.tok_type == TOK_AMP) {
-        auto l_value = std::dynamic_pointer_cast<Expr::LValue>(expr->right);
+        auto l_value = std::dynamic_pointer_cast<Expr::LValue>(expr->inner);
         if (l_value == nullptr) {
             ErrorLogger::inst().log_error(expr->location, E_ADDRESS_OF_NON_LVALUE, "Cannot take the address of a non-lvalue.");
             throw LocalTypeException();
@@ -444,12 +444,12 @@ std::any LocalChecker::visit_unary_expr(Expr::Unary* expr) {
 }
 
 std::any LocalChecker::visit_dereference_expr(Expr::Dereference* expr) {
-    auto operand_type = std::any_cast<std::shared_ptr<Type>>(expr->right->accept(this));
+    auto operand_type = std::any_cast<std::shared_ptr<Type>>(expr->inner->accept(this));
 
     // The operand must be a pointer type
     auto operand_ptr_type = std::dynamic_pointer_cast<Type::Pointer>(operand_type);
     if (operand_ptr_type == nullptr) {
-        ErrorLogger::inst().log_error(expr->right->location, E_DEREFERENCE_NON_POINTER, "Cannot dereference non-pointer type " + operand_type->to_string() + ".");
+        ErrorLogger::inst().log_error(expr->inner->location, E_DEREFERENCE_NON_POINTER, "Cannot dereference non-pointer type " + operand_type->to_string() + ".");
         // If the operator is `->`, we can give a more specific error message
         if (expr->op.tok_type == TOK_ARROW) {
             ErrorLogger::inst().log_note(expr->op.location, "Did you mean to use '.' instead of '->'?");
@@ -525,11 +525,11 @@ std::any LocalChecker::visit_index_expr(Expr::Index* expr) {
             throw LocalTypeException();
         }
         auto index = std::any_cast<int>(index_expr->token.literal);
-        if (index < 0 || index >= left_tuple_type->elements.size()) {
-            ErrorLogger::inst().log_error(expr->location, E_TUPLE_INDEX_OUT_OF_RANGE, "Index out of range for tuple of size " + std::to_string(left_tuple_type->elements.size()) + ".");
+        if (index < 0 || index >= left_tuple_type->element_types.size()) {
+            ErrorLogger::inst().log_error(expr->location, E_TUPLE_INDEX_OUT_OF_RANGE, "Index out of range for tuple of size " + std::to_string(left_tuple_type->element_types.size()) + ".");
             throw LocalTypeException();
         }
-        expr->type = left_tuple_type->elements[index];
+        expr->type = left_tuple_type->element_types[index];
         return expr->type;
     }
 
@@ -722,14 +722,14 @@ std::any LocalChecker::visit_object_expr(Expr::Object* expr) {
         if (var_decl->initializer == nullptr) {
             // If the field does not have a default value, it is required
             required_fields.insert(field.first);
-        } else if (!HAS_KEY(expr->key_values, field.first)) {
+        } else if (!HAS_KEY(expr->fields, field.first)) {
             // If the field has a default value, and the object expression does not have that field, add the default value to the object expression
-            expr->key_values[field.first] = var_decl->initializer;
+            expr->fields[field.first] = var_decl->initializer;
         }
     }
 
     // Check that the object expression has the same fields as the struct
-    for (auto& field : expr->key_values) {
+    for (auto& field : expr->fields) {
         if (!HAS_KEY(struct_type->struct_scope->instance_members, field.first)) {
             // If the field is actually a static field, we can give a more specific error message
             if (HAS_KEY(struct_type->struct_scope->children, field.first)) {

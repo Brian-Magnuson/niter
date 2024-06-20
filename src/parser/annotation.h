@@ -130,18 +130,6 @@ public:
         result += return_annotation->to_string();
         return result;
     }
-
-    // bool is_compatible_with(std::shared_ptr<Annotation>& other) override {
-    //     if (!IS_TYPE(other, Function)) {
-    //         return false;
-    //     }
-    //     for (size_t i = 0; i < params.size(); i++) {
-    //         if (!params[i].second->is_compatible_with(std::static_pointer_cast<Function>(other)->params[i].second)) {
-    //             return false;
-    //         }
-    //     }
-    //     return ret->is_compatible_with(std::static_pointer_cast<Function>(other)->ret);
-    // }
 };
 
 /**
@@ -151,13 +139,13 @@ public:
 class Annotation::Array : public Annotation {
 public:
     // The name of the array. E.g. "int[]" has the name "int".
-    std::shared_ptr<Annotation> name;
+    std::shared_ptr<Annotation> inner;
 
-    Array(std::shared_ptr<Annotation> name)
-        : name(name) {}
+    Array(std::shared_ptr<Annotation> inner)
+        : inner(inner) {}
 
     std::string to_string() const override {
-        return name->to_string() + "[]";
+        return inner->to_string() + "[]";
     }
 };
 
@@ -168,21 +156,14 @@ public:
 class Annotation::Pointer : public Annotation {
 public:
     // The name of the pointer. E.g. "int*" has the name "int".
-    std::shared_ptr<Annotation> name;
+    std::shared_ptr<Annotation> inner;
 
-    Pointer(std::shared_ptr<Annotation> name)
-        : name(name) {}
+    Pointer(std::shared_ptr<Annotation> inner)
+        : inner(inner) {}
 
     std::string to_string() const override {
-        return name->to_string() + "*";
+        return inner->to_string() + "*";
     }
-
-    // bool is_compatible_with(std::shared_ptr<Annotation>& other) override {
-    //     if (!IS_TYPE(other, Pointer)) {
-    //         return false;
-    //     }
-    //     return name->is_compatible_with(std::static_pointer_cast<Pointer>(other)->name);
-    // }
 };
 
 /**
@@ -208,18 +189,6 @@ public:
         result += ")";
         return result;
     }
-
-    // bool is_compatible_with(std::shared_ptr<Annotation>& other) override {
-    //     if (!IS_TYPE(other, Tuple)) {
-    //         return false;
-    //     }
-    //     for (size_t i = 0; i < elements.size(); i++) {
-    //         if (!elements[i]->is_compatible_with(std::static_pointer_cast<Tuple>(other)->elements[i])) {
-    //             return false;
-    //         }
-    //     }
-    //     return true;
-    // }
 };
 
 #endif // ANNOTATION_H

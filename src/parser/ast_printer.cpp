@@ -194,11 +194,11 @@ std::any AstPrinter::visit_binary_expr(Expr::Binary* expr) {
 }
 
 std::any AstPrinter::visit_unary_expr(Expr::Unary* expr) {
-    return parenthesize(expr->op.lexeme, {expr->right});
+    return parenthesize(expr->op.lexeme, {expr->inner});
 }
 
 std::any AstPrinter::visit_dereference_expr(Expr::Dereference* expr) {
-    return parenthesize("*", {expr->right});
+    return parenthesize("*", {expr->inner});
 }
 
 std::any AstPrinter::visit_access_expr(Expr::Access* expr) {
@@ -273,11 +273,11 @@ std::any AstPrinter::visit_object_expr(Expr::Object* expr) {
     result += expr->struct_annotation->to_string();
     result += " {";
     unsigned i = 0;
-    for (const auto& field : expr->key_values) {
+    for (const auto& field : expr->fields) {
         result += field.first;
         result += ": ";
         result += std::any_cast<std::string>(field.second->accept(this));
-        if (i != expr->key_values.size() - 1) {
+        if (i != expr->fields.size() - 1) {
             result += ", ";
         }
         i++;

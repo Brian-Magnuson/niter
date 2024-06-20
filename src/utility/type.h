@@ -190,13 +190,13 @@ public:
 class Type::Tuple : public Type::Aggregate {
 public:
     // A list of element types in the tuple.
-    std::vector<std::shared_ptr<Type>> elements;
+    std::vector<std::shared_ptr<Type>> element_types;
 
     virtual ~Tuple() = default;
     Type::Kind kind() const override { return Type::Kind::TUPLE; }
     std::string to_string() const override {
         std::string str = "(";
-        for (auto& elem : elements) {
+        for (auto& elem : element_types) {
             str += elem->to_string() + ", ";
         }
         str += ")";
@@ -208,14 +208,14 @@ public:
     }
 
     llvm::Type* to_llvm_aggregate_type(std::shared_ptr<llvm::LLVMContext> context) const override {
-        std::vector<llvm::Type*> element_types;
-        for (auto& elem : elements) {
-            element_types.push_back(elem->to_llvm_type(context));
+        std::vector<llvm::Type*> elem_llvm_types;
+        for (auto& elem : element_types) {
+            elem_llvm_types.push_back(elem->to_llvm_type(context));
         }
-        return llvm::StructType::get(*context, element_types);
+        return llvm::StructType::get(*context, elem_llvm_types);
     }
 
-    Tuple(std::vector<std::shared_ptr<Type>>& elements) : elements(elements) {}
+    Tuple(std::vector<std::shared_ptr<Type>>& elements) : element_types(elements) {}
 };
 
 /**
