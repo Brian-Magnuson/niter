@@ -252,14 +252,13 @@ std::shared_ptr<Type> Environment::get_type(const std::shared_ptr<Annotation>& a
         }
         return std::make_shared<Type::Tuple>(elements);
     } else if (IS_TYPE(annotation, Annotation::Array)) {
-        // Annotations of the form `t[]`
+        // Annotations of the form `[t; n]`
         auto array_annotation = std::dynamic_pointer_cast<Annotation::Array>(annotation);
         auto ret = get_type(array_annotation->inner, from_scope);
         if (ret == nullptr) {
             return nullptr;
         }
-        // FIXME: We should probably make array sizes a part of the type.
-        return std::make_shared<Type::Array>(ret, -1);
+        return std::make_shared<Type::Array>(ret, array_annotation->size);
     } else if (IS_TYPE(annotation, Annotation::Pointer)) {
         // Annotations of the form `t*`
         auto ptr_annotation = std::dynamic_pointer_cast<Annotation::Pointer>(annotation);

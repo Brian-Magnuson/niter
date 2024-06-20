@@ -678,6 +678,8 @@ std::shared_ptr<Annotation> Parser::annotation() {
         type_annotation = function_annotation();
     } else if (match({TOK_LEFT_PAREN})) {
         type_annotation = tuple_annotation();
+    } else if (match({TOK_LEFT_SQUARE})) {
+        type_annotation = array_annotation();
     } else {
         ErrorLogger::inst().log_error(peek().location, E_INVALID_TYPE_ANNOTATION, "Expected valid type annotation.");
         throw ParserException();
@@ -713,13 +715,9 @@ std::shared_ptr<Annotation> Parser::segmented_annotation() {
 
     resolve_annotation(seg_type_annotation);
 
-    while (check({TOK_STAR, TOK_LEFT_SQUARE})) {
+    while (check({TOK_STAR})) {
         if (match({TOK_STAR})) {
             type_annotation = std::make_shared<Annotation::Pointer>(type_annotation);
-        }
-        if (match({TOK_LEFT_SQUARE})) {
-            consume(TOK_RIGHT_SQUARE, E_UNMATCHED_SQUARE_IN_TYPE, "Expected ']' after array type.");
-            type_annotation = std::make_shared<Annotation::Array>(type_annotation);
         }
     }
 
@@ -796,6 +794,26 @@ std::shared_ptr<Annotation::Tuple> Parser::tuple_annotation() {
     }
 
     return std::make_shared<Annotation::Tuple>(tuple_annotations);
+}
+
+std::shared_ptr<Annotation::Array> Parser::array_annotation() {
+    std::shared_ptr<Annotation> inner = annotation();
+    int size = -1;
+
+    consume(TOK_SEMICOLON, E_NO_SEMICOLON_IN_ARRAY_TYPE, "Expected ';' after array type.");
+
+    if (match({TOK_STAR})) {
+        // size = -1; // Size is not specified
+    } else if (match({TOK_INT})) {
+        size = std::any_cast<int>(previous().literal);
+    } else {
+        ErrorLogger::inst().log_error(peek().location, E_MISSING_SIZE_IN_ARRAY_TYPE, "Expected integer or `*` in array type.");
+        throw ParserException();
+    }
+
+    consume(TOK_RIGHT_SQUARE, E_UNMATCHED_SQUARE_IN_TYPE, "Expected ']' after array type.");
+
+    return std::make_shared<Annotation::Array>(inner, size);
 }
 
 void Parser::resolve_annotation(std::shared_ptr<Annotation::Segmented>& /*annotation*/) {

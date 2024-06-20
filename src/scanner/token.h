@@ -82,7 +82,7 @@ enum TokenType {
     TOK_STR,
     // TOK_CSTR, // C-style string literal, currently not supported
     // TOK_TSTR, // Template string literal, currently not supported
-    TOK_INT,   // Literals stored as 64-bit integers internally
+    TOK_INT,   // Literals stored as `int` internally
     TOK_FLOAT, // Literals stored as double-precision floating-point numbers internally. 'inf' and 'NaN' are also float literals.
     TOK_BOOL,  // Either 'true' or 'false'
     TOK_NIL,   // 'nil' only

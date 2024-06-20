@@ -45,6 +45,7 @@ public:
 /**
  * @brief A segmented annotation.
  * Segmented annotations consist of multiple classes separated by "::".
+ * E.g. `t::t`
  *
  */
 class Annotation::Segmented : public Annotation {
@@ -93,6 +94,7 @@ public:
 
 /**
  * @brief A function annotation.
+ * E.g. `fun(t, t) => t`
  *
  */
 class Annotation::Function : public Annotation {
@@ -134,18 +136,21 @@ public:
 
 /**
  * @brief An array annotation.
+ * E.g. `[t; 10]` or `[t; *]`
  *
  */
 class Annotation::Array : public Annotation {
 public:
-    // The name of the array. E.g. "int[]" has the name "int".
+    // The inner type of the array. E.g. "[int; 1]" has the inner type "int".
     std::shared_ptr<Annotation> inner;
+    // The size of the array. E.g. "[int; 1]" has the size 1. Unknown size is represented by -1.
+    int size = -1;
 
-    Array(std::shared_ptr<Annotation> inner)
-        : inner(inner) {}
+    Array(std::shared_ptr<Annotation> inner, int size)
+        : inner(inner), size(size) {}
 
     std::string to_string() const override {
-        return inner->to_string() + "[]";
+        return "[" + inner->to_string() + (size == -1 ? "; *" : "; " + std::to_string(size)) + "]";
     }
 };
 

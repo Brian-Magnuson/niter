@@ -79,6 +79,10 @@ enum ErrorCode {
     E_MISSING_IDENT_IN_TYPE,
     // A type annotation was found without a matching right square bracket
     E_UNMATCHED_SQUARE_IN_TYPE,
+    // An array type was found without a semicolon
+    E_NO_SEMICOLON_IN_ARRAY_TYPE,
+    // An array type was found without a valid token for the size
+    E_MISSING_SIZE_IN_ARRAY_TYPE,
     // A type annotation was found without a matching right angle bracket
     E_UNMATCHED_ANGLE_IN_TYPE,
     // A function pointer type was found without a left parenthesis

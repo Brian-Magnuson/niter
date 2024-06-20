@@ -83,7 +83,7 @@ TEST_CASE("Parser rptr type", "[parser]") {
 }
 
 TEST_CASE("Parser array type", "[parser]") {
-    std::string source_code = "var x: i32[];";
+    std::string source_code = "var x: [i32; *];";
     std::shared_ptr file_name = std::make_shared<std::string>("test_files/array_type_test.nit");
 
     Scanner scanner;
@@ -94,7 +94,7 @@ TEST_CASE("Parser array type", "[parser]") {
 
     AstPrinter printer;
     REQUIRE(stmts.size() == 2);
-    CHECK(printer.print(stmts.at(0)) == "(decl:var x i32[])");
+    CHECK(printer.print(stmts.at(0)) == "(decl:var x [i32; *])");
     CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
 }
 
@@ -376,7 +376,7 @@ TEST_CASE("Logger missing ident in type", "[logger]") {
 }
 
 TEST_CASE("Logger unmatched square in type", "[logger]") {
-    std::string source_code = "var x: i32[;";
+    std::string source_code = "var x: [i32; *;";
     std::shared_ptr file_name = std::make_shared<std::string>("test_files/unmatched_square_in_type_test.nit");
 
     ErrorLogger& logger = ErrorLogger::inst();

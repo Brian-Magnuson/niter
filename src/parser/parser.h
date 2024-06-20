@@ -357,6 +357,17 @@ class Parser {
     std::shared_ptr<Annotation::Tuple> tuple_annotation();
 
     /**
+     * @brief Parses an array type annotation.
+     * Array type annotations are a pair of square brackets containing a type annotation, a semicolon, and a literal size.
+     * The size can also be `*` to indicate unknown size.
+     * E.g. "[int; 10]", "[int; *]".
+     *
+     * @return std::shared_ptr<Annotation::Array> The parsed array type annotation.
+     * @throw ParserException If an error occurs while parsing the annotation. Will be caught by the statement() function.
+     */
+    std::shared_ptr<Annotation::Array> array_annotation();
+
+    /**
      * @brief Resolves a segmented annotation to its fully qualified name.
      * Useful if a using declaration is present.
      *
