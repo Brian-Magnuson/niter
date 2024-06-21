@@ -506,6 +506,63 @@ TEST_CASE("Local checker indeterminate array type", "[checker]") {
     env.reset();
 }
 
+TEST_CASE("Local checker array size bad cast", "[checker]") {
+    std::string source_code = R"(
+fun main(): i32 {
+    var arr: [i32; *] = [1, 2, 3];
+    var arr2: [i32; 2] = arr;
+    return 0;
+}
+)";
+    auto file_name = std::make_shared<std::string>("test_files/array_size_bad_cast.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+    Parser parser;
+    auto stmts = parser.parse(scanner.get_tokens());
+    Environment& env = Environment::inst();
+    GlobalChecker global_checker;
+    global_checker.type_check(stmts);
+    LocalChecker local_checker;
+    local_checker.type_check(stmts);
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_ARRAY_SIZE_UNKNOWN);
+
+    logger.reset();
+    env.reset();
+}
+
+TEST_CASE("Local checker sized array without initializer", "[checker]") {
+    std::string source_code = R"(
+fun main(): i32 {
+    var arr: [i32; 2];
+    return 0;
+}
+)";
+    auto file_name = std::make_shared<std::string>("test_files/sized_array_no_initializer.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+    Parser parser;
+    auto stmts = parser.parse(scanner.get_tokens());
+    Environment& env = Environment::inst();
+    GlobalChecker global_checker;
+    global_checker.type_check(stmts);
+    LocalChecker local_checker;
+    local_checker.type_check(stmts);
+
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors().at(0) == E_SIZED_ARRAY_WITHOUT_INITIALIZER);
+
+    logger.reset();
+    env.reset();
+}
+
 TEST_CASE("Local checker new constructor", "[checker]") {
     std::string source_code = R"(
 struct Point {

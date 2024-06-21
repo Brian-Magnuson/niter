@@ -98,6 +98,21 @@ TEST_CASE("Parser array type", "[parser]") {
     CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
 }
 
+TEST_CASE("Parser array type with size", "[parser]") {
+    std::string source_code = "var x: [i32; 5];";
+    std::shared_ptr file_name = std::make_shared<std::string>("test_files/array_type_with_size_test.nit");
+
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+    Parser parser(scanner.get_tokens());
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse();
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 2);
+    CHECK(printer.print(stmts.at(0)) == "(decl:var x [i32; 5])");
+    CHECK(printer.print(stmts.at(1)) == "(stmt:eof)");
+}
+
 TEST_CASE("Parser tuple type", "[parser]") {
     std::string source_code = "var x: (i32, i32); var y: ();";
     std::shared_ptr file_name = std::make_shared<std::string>("test_files/tuple_type_test.nit");

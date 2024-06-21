@@ -141,15 +141,14 @@ std::any LocalChecker::visit_var_decl(Decl::Var* decl) {
             ErrorLogger::inst().log_note(decl->name.location, "Missing type annotation.");
             throw LocalTypeException();
         }
-        // If the error occurred because variable->type had a known size, but init_type did not, give a more specific error message
         auto var_array = std::dynamic_pointer_cast<Type::Array>(variable->decl->type);
+        if (var_array != nullptr && decl->initializer == nullptr) {
+            ErrorLogger::inst().log_error(decl->name.location, E_SIZED_ARRAY_WITHOUT_INITIALIZER, "An array with a known size must have an initializer.");
+            throw LocalTypeException();
+        }
         if (var_array != nullptr && var_array->size != -1) {
             ErrorLogger::inst().log_error(decl->name.location, E_ARRAY_SIZE_UNKNOWN, "Cannot implicitly convert from " + init_type->to_string() + " to " + variable->decl->type->to_string() + ".");
             ErrorLogger::inst().log_note(decl->initializer->location, "Size is unknown.");
-            throw LocalTypeException();
-        }
-        if (var_array != nullptr && init_type->kind() == Type::Kind::BLANK) {
-            ErrorLogger::inst().log_error(decl->initializer->location, E_SIZED_ARRAY_WITHOUT_INITIALIZER, "An array with a known size must have an initializer.");
             throw LocalTypeException();
         }
 
