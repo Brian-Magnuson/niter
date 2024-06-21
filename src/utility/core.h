@@ -1,6 +1,7 @@
 #ifndef CORE_H
 #define CORE_H
 
+#include "../logger/error_code.h"
 #include "../scanner/token.h"
 #include "llvm/IR/Type.h"
 #include <any>
@@ -78,10 +79,13 @@ public:
      *
      * @param a A shared ptr reference to the first type. Should not be nullptr.
      * @param b A shared ptr reference to the second type. Should not be nullptr.
-     * @return true If the types are compatible.
-     * @return false If the types are not compatible.
+     * @return 0 If the types are compatible.
+     * E_INDETERMINATE_ARRAY_TYPE If the types are incompatible because `a` and `b` are arrays of blank types.
+     * E_ARRAY_SIZE_UNKNOWN If the types are incompatible because `a` is a sized array and `b` has an unknown size.
+     * E_SIZED_ARRAY_WITHOUT_INITIALIZER If the types are incompatible because `a` is a sized array and `b` is a blank type.
+     * E_INCOMPATIBLE_TYPES If the types are incompatible for any other reason.
      */
-    static bool are_compatible(std::shared_ptr<Type>& a, std::shared_ptr<Type>& b);
+    static ErrorCode are_compatible(std::shared_ptr<Type>& a, std::shared_ptr<Type>& b);
 
     /**
      * @brief Checks if the type is a primitive integer type.

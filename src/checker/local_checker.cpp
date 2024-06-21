@@ -133,26 +133,27 @@ std::any LocalChecker::visit_var_decl(Decl::Var* decl) {
     auto variable = std::dynamic_pointer_cast<Node::Variable>(node);
 
     // Verify that the type of the initializer matches the type annotation
-    if (!Type::are_compatible(variable->decl->type, init_type)) {
+    ErrorCode ec = Type::are_compatible(variable->decl->type, init_type);
+    if (ec != 0) {
         // If the error occurred because init_type is an array of blank types, give a more specific error message
-        auto init_array = std::dynamic_pointer_cast<Type::Array>(init_type);
-        if (init_array != nullptr && init_array->inner_type->kind() == Type::Kind::BLANK) {
-            ErrorLogger::inst().log_error(decl->initializer->location, E_INDETERMINATE_ARRAY_TYPE, "The type of this array could not be determined.");
+        // auto init_array = std::dynamic_pointer_cast<Type::Array>(init_type);
+        if (ec == E_INDETERMINATE_ARRAY_TYPE) {
+            ErrorLogger::inst().log_error(decl->initializer->location, ec, "The type of this array could not be determined.");
             ErrorLogger::inst().log_note(decl->name.location, "Missing type annotation.");
             throw LocalTypeException();
         }
-        auto var_array = std::dynamic_pointer_cast<Type::Array>(variable->decl->type);
-        if (var_array != nullptr && decl->initializer == nullptr) {
-            ErrorLogger::inst().log_error(decl->name.location, E_SIZED_ARRAY_WITHOUT_INITIALIZER, "An array with a known size must have an initializer.");
+        // auto var_array = std::dynamic_pointer_cast<Type::Array>(variable->decl->type);
+        if (ec == E_SIZED_ARRAY_WITHOUT_INITIALIZER) {
+            ErrorLogger::inst().log_error(decl->name.location, ec, "An array with a known size must have an initializer.");
             throw LocalTypeException();
         }
-        if (var_array != nullptr && var_array->size != -1) {
-            ErrorLogger::inst().log_error(decl->name.location, E_ARRAY_SIZE_UNKNOWN, "Cannot implicitly convert from " + init_type->to_string() + " to " + variable->decl->type->to_string() + ".");
+        if (ec == E_ARRAY_SIZE_UNKNOWN) {
+            ErrorLogger::inst().log_error(decl->name.location, ec, "Cannot implicitly convert from " + init_type->to_string() + " to " + variable->decl->type->to_string() + ".");
             ErrorLogger::inst().log_note(decl->initializer->location, "Size is unknown.");
             throw LocalTypeException();
         }
 
-        ErrorLogger::inst().log_error(decl->name.location, E_INCOMPATIBLE_TYPES, "Cannot convert from " + init_type->to_string() + " to " + variable->decl->type->to_string() + ".");
+        ErrorLogger::inst().log_error(decl->name.location, ec, "Cannot convert from " + init_type->to_string() + " to " + variable->decl->type->to_string() + ".");
         throw LocalTypeException();
     }
     // Verify that none of the types are blank
@@ -246,7 +247,7 @@ std::any LocalChecker::visit_fun_decl(Decl::Fun* decl) {
 
                 // The return type of the function must match the return type of the return statement
                 // This will also catch the case where the function return type is `void` and the return statement has a value
-                if (!Type::are_compatible(ret_type, variable_fun_type->return_type)) {
+                if (Type::are_compatible(ret_type, variable_fun_type->return_type) != 0) {
                     ErrorLogger::inst().log_error(stmt->location, E_RETURN_INCOMPATIBLE, "Cannot convert from " + ret_type->to_string() + " to return type " + fun_annotation->return_annotation->to_string() + ".");
                     throw LocalTypeException();
                 }
@@ -321,7 +322,7 @@ std::any LocalChecker::visit_assign_expr(Expr::Assign* expr) {
     }
 
     // The types of the left and right sides must match
-    if (!Type::are_compatible(l_type, r_type)) {
+    if (Type::are_compatible(l_type, r_type) != 0) {
         ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot convert from " + r_type->to_string() + " to " + l_type->to_string() + ".");
         throw LocalTypeException();
     }
@@ -338,7 +339,7 @@ std::any LocalChecker::visit_logical_expr(Expr::Logical* expr) {
     auto l_type = std::any_cast<std::shared_ptr<Type>>(expr->left->accept(this));
     auto r_type = std::any_cast<std::shared_ptr<Type>>(expr->right->accept(this));
 
-    if (!Type::are_compatible(l_type, r_type)) {
+    if (Type::are_compatible(l_type, r_type) != 0) {
         ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply operator '" + expr->op.lexeme + "' to types " + l_type->to_string() + " and " + r_type->to_string() + ".");
         throw LocalTypeException();
     }
@@ -364,7 +365,7 @@ std::any LocalChecker::visit_binary_expr(Expr::Binary* expr) {
     if (check_token(op, {TOK_PLUS, TOK_MINUS, TOK_STAR, TOK_SLASH})) {
         // For PLUS, MINUS, STAR, SLASH the operands must be equal and must be of type `int` or `float` and the result is of the same type
 
-        if (!Type::are_compatible(l_type, r_type)) {
+        if (Type::are_compatible(l_type, r_type) != 0) {
             ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply operator '" + expr->op.lexeme + "' to types " + l_type->to_string() + " and " + r_type->to_string() + ".");
             throw LocalTypeException();
         }
@@ -375,7 +376,7 @@ std::any LocalChecker::visit_binary_expr(Expr::Binary* expr) {
         expr->type = l_type;
     } else if (check_token(op, {TOK_PERCENT})) {
         // For PERCENT, the operands must be equal and must be of type `int` and the result is of type `int`
-        if (!Type::are_compatible(l_type, r_type)) {
+        if (Type::are_compatible(l_type, r_type) != 0) {
             ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply operator '" + expr->op.lexeme + "' to types " + l_type->to_string() + " and " + r_type->to_string() + ".");
             throw LocalTypeException();
         }
@@ -386,7 +387,7 @@ std::any LocalChecker::visit_binary_expr(Expr::Binary* expr) {
         expr->type = l_type;
     } else if (check_token(op, {TOK_CARET})) {
         // For CARET, the operands must be equal and must be either `int` or `float`. Unlike the other operators, the result is always of type `f64`
-        if (!Type::are_compatible(l_type, r_type)) {
+        if (Type::are_compatible(l_type, r_type) != 0) {
             ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply operator '" + expr->op.lexeme + "' to types " + l_type->to_string() + " and " + r_type->to_string() + ".");
             throw LocalTypeException();
         }
@@ -397,7 +398,7 @@ std::any LocalChecker::visit_binary_expr(Expr::Binary* expr) {
         expr->type = Environment::inst().get_type("f64");
     } else if (check_token(op, {TOK_EQ_EQ, TOK_BANG_EQ, TOK_LT, TOK_LE, TOK_GT, TOK_GE})) {
         // For EQ_EQ, BANG_EQ, LT, LE, GT, GE the operands must be equal and must be of type `int` or `float` and the result is of type `bool`
-        if (!Type::are_compatible(l_type, r_type)) {
+        if (Type::are_compatible(l_type, r_type) != 0) {
             ErrorLogger::inst().log_error(expr->location, E_INCOMPATIBLE_TYPES, "Cannot apply operator '" + expr->op.lexeme + "' to types " + l_type->to_string() + " and " + r_type->to_string() + ".");
             throw LocalTypeException();
         }
@@ -573,7 +574,7 @@ std::any LocalChecker::visit_call_expr(Expr::Call* expr) {
         auto arg_type = std::any_cast<std::shared_ptr<Type>>(expr->arguments[i]->accept(this));
         // We add a range check here in case the function is variadic
         // If there are more args than params, the extra args will be visited, but not compared against any params
-        if (i < fun_type->params.size() && !Type::are_compatible(arg_type, fun_type->params[i].second)) {
+        if (i < fun_type->params.size() && Type::are_compatible(arg_type, fun_type->params[i].second) != 0) {
             ErrorLogger::inst().log_error(expr->arguments[i]->location, E_INCOMPATIBLE_TYPES, "Cannot convert from " + arg_type->to_string() + " to " + fun_type->params[i].second->to_string() + ".");
             throw LocalTypeException();
         }
@@ -680,7 +681,7 @@ std::any LocalChecker::visit_array_expr(Expr::Array* expr) {
         // In the case that this element is an `auto` type, the repeated compatibility checks in the following loop will build the type until it is complete.
         for (auto& elem : expr->elements) {
             auto elem_type = std::any_cast<std::shared_ptr<Type>>(elem->accept(this));
-            if (Type::are_compatible(inner_type, elem_type) == false) {
+            if (Type::are_compatible(inner_type, elem_type) != 0) {
                 ErrorLogger::inst().log_error(elem->location, E_INCONSISTENT_ARRAY_TYPES, "Array elements must have the same type. Expected " + inner_type->to_string() + ", found " + elem_type->to_string() + ".");
                 throw LocalTypeException();
             }
@@ -758,7 +759,7 @@ std::any LocalChecker::visit_object_expr(Expr::Object* expr) {
 
         // Check that the types of the fields match
         auto field_type = std::any_cast<std::shared_ptr<Type>>(field.second->accept(this));
-        if (!Type::are_compatible(field_type, field_decl->type)) {
+        if (Type::are_compatible(field_type, field_decl->type) != 0) {
             ErrorLogger::inst().log_error(field.second->location, E_INCOMPATIBLE_TYPES, "Cannot convert from " + field_type->to_string() + " to " + field_decl->type->to_string() + ".");
             ErrorLogger::inst().log_note(field_decl->location, "Field declared here with type " + field_decl->type->to_string() + ".");
             throw LocalTypeException();
