@@ -145,7 +145,10 @@ public:
 
     virtual ~Array() = default;
     Type::Kind kind() const override { return Type::Kind::ARRAY; }
-    std::string to_string() const override { return inner_type->to_string() + "[]"; }
+    std::string to_string() const override {
+        std::string size_string = size == -1 ? "*" : std::to_string(size);
+        return "[" + inner_type->to_string() + "; " + size_string + "]";
+    }
 
     llvm::Type* to_llvm_type(std::shared_ptr<llvm::LLVMContext> context) const override {
         return llvm::PointerType::getUnqual(to_llvm_aggregate_type(context));
