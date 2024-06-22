@@ -270,6 +270,14 @@ public:
     std::any visit_array_expr(Expr::Array* expr) override;
 
     /**
+     * @brief Visit an array generator expression and return a string representation of it.
+     *
+     * @param expr The array generator expression to visit.
+     * @return std::any An any object containing the string representation of the expression.
+     */
+    std::any visit_array_gen_expr(Expr::ArrayGen* expr) override;
+
+    /**
      * @brief Visits a tuple expression and returns a string representation of it.
      *
      * @param expr The tuple expression to visit.

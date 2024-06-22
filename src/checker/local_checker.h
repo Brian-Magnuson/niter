@@ -284,6 +284,15 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
     std::any visit_array_expr(Expr::Array* expr) override;
 
     /**
+     * @brief Visit an array generator expression and determine if the array generator expression is valid.
+     *
+     * @param expr The array generator expression to visit.
+     * @return std::any An std::shared_ptr<Type> representing the type of the array.
+     * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
+     */
+    std::any visit_array_gen_expr(Expr::ArrayGen* expr) override;
+
+    /**
      * @brief Visits a tuple expression and determines if the tuple expression is valid.
      *
      * @param expr The tuple expression to visit.

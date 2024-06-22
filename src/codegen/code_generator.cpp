@@ -578,6 +578,18 @@ std::any CodeGenerator::visit_array_expr(Expr::Array* expr) {
     return (llvm::Value*)array_alloca;
 }
 
+std::any CodeGenerator::visit_array_gen_expr(Expr::ArrayGen* expr) {
+    auto array_type = std::dynamic_pointer_cast<Type::Array>(expr->type);
+
+    // Allocate space for the array
+    auto llvm_array_type = array_type->to_llvm_aggregate_type(context);
+    auto array_alloca = builder->CreateAlloca(llvm_array_type);
+
+    // TODO: Finish this implementation
+
+    return nullptr;
+}
+
 std::any CodeGenerator::visit_tuple_expr(Expr::Tuple* expr) {
     auto tuple_type = std::dynamic_pointer_cast<Type::Tuple>(expr->type);
 

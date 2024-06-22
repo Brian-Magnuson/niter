@@ -197,14 +197,23 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
     /**
      * @brief Visits an access expression.
      * The left side must have a struct type.
-     * If the right side is an instance member, `CreateExtractValue` will be called.
-     * If the right side is a static member, `CreateLoad` will be called, similar to a variable.
+     * The instance members will be checked first, then the static members.
      *
      * @param expr The access expression to visit.
      * @return std::any An llvm::Value* representing the value of the accessed member.
      * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
      */
     std::any visit_access_expr(Expr::Access* expr) override;
+
+    /**
+     * @brief Visits an index expression.
+     * If the left side is a tuple, the index must be a literal integer.
+     * If the left side is an array, the index may be any integer expression.
+     *
+     * @param expr The index expression to visit.
+     * @return std::any An llvm::Value* representing the value stored at the index.
+     * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
+     */
     std::any visit_index_expr(Expr::Index* expr) override;
 
     /**
@@ -256,7 +265,24 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
      * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
      */
     std::any visit_literal_expr(Expr::Literal* expr) override;
+
+    /**
+     * @brief Visits an array expression.
+     *
+     * @param expr The array expression to visit.
+     * @return std::any An llvm::Value* representing the array.
+     * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
+     */
     std::any visit_array_expr(Expr::Array* expr) override;
+
+    /**
+     * @brief Visits an array generator expression.
+     *
+     * @param expr The array generator expression to visit.
+     * @return std::any
+     * @throws CodeGenException If an error occurs during code generation. Will be caught by the generate function.
+     */
+    std::any visit_array_gen_expr(Expr::ArrayGen* expr) override;
 
     /**
      * @brief Visits a tuple expression.

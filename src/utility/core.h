@@ -258,6 +258,7 @@ public:
     class Identifier;
     class Literal;
     class Array;
+    class ArrayGen;
     class Tuple;
     class Object;
 
@@ -291,6 +292,7 @@ public:
         virtual std::any visit_identifier_expr(Identifier* expr) = 0;
         virtual std::any visit_literal_expr(Literal* expr) = 0;
         virtual std::any visit_array_expr(Array* expr) = 0;
+        virtual std::any visit_array_gen_expr(ArrayGen* expr) = 0;
         virtual std::any visit_tuple_expr(Tuple* expr) = 0;
         virtual std::any visit_object_expr(Object* expr) = 0;
     };

@@ -415,6 +415,29 @@ public:
 };
 
 /**
+ * @brief A class representing an array generator expression.
+ * E.g. [Foo::new(); 10]
+ *
+ */
+class Expr::ArrayGen : public Expr {
+public:
+    ArrayGen(Token bracket, std::shared_ptr<Expr> generator, unsigned size) : bracket(bracket), generator(generator), size(size) {
+        location = bracket.location;
+    }
+
+    std::any accept(Visitor* visitor) override {
+        return visitor->visit_array_gen_expr(this);
+    }
+
+    // The token representing the opening bracket.
+    Token bracket;
+    // The generator expression.
+    std::shared_ptr<Expr> generator;
+    // The size of the array, not to be confused with the size of this object.
+    unsigned size;
+};
+
+/**
  * @brief A class representing a tuple expression.
  * E.g. (1, 2, 3)
  * Note: Parentheses are required for tuples. To prevent ambiguity:

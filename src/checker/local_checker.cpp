@@ -693,6 +693,13 @@ std::any LocalChecker::visit_array_expr(Expr::Array* expr) {
     }
 }
 
+std::any LocalChecker::visit_array_gen_expr(Expr::ArrayGen* expr) {
+    // The type of the array generator is the type of the elements
+    auto elem_type = std::any_cast<std::shared_ptr<Type>>(expr->generator->accept(this));
+    expr->type = std::make_shared<Type::Array>(elem_type, (int)expr->size);
+    return expr->type;
+}
+
 std::any LocalChecker::visit_tuple_expr(Expr::Tuple* expr) {
     std::vector<std::shared_ptr<Type>> types;
     for (auto& elem : expr->elements) {

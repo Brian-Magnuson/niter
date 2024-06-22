@@ -260,6 +260,15 @@ std::any AstPrinter::visit_array_expr(Expr::Array* expr) {
     return parenthesize("array", elements);
 }
 
+std::any AstPrinter::visit_array_gen_expr(Expr::ArrayGen* expr) {
+    std::string result = "(array_gen ";
+    result += std::any_cast<std::string>(expr->generator->accept(this));
+    result += " ";
+    result += std::to_string(expr->size);
+    result += ")";
+    return result;
+}
+
 std::any AstPrinter::visit_tuple_expr(Expr::Tuple* expr) {
     std::vector<std::shared_ptr<Expr>> elements;
     for (const auto& element : expr->elements) {
