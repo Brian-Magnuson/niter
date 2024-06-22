@@ -1,5 +1,5 @@
 // #include "../src/pipeline/pipeline.h"
-// #include "catch/catch_amalgamated.hpp"
+// #include <catch2/catch_test_macros.hpp>
 // #include <filesystem>
 // #include <string>
 // #include <utility>

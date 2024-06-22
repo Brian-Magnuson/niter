@@ -5,7 +5,7 @@
 #include "../src/parser/ast_printer.h"
 #include "../src/parser/parser.h"
 #include "../src/scanner/scanner.h"
-#include "catch/catch_amalgamated.hpp"
+#include <catch2/catch_test_macros.hpp>
 #include <iostream>
 #include <memory>
 #include <string>

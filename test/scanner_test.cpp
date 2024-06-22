@@ -1,8 +1,9 @@
 #include "../src/logger/logger.h"
 #include "../src/scanner/scanner.h"
 #include "../src/scanner/token.h"
-#include "catch/catch_amalgamated.hpp"
 #include <any>
+#include <catch2/catch_test_macros.hpp>
+#include <cmath>
 #include <string>
 
 // MARK: Main tests

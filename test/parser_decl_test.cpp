@@ -6,8 +6,8 @@
 #include "../src/utility/decl.h"
 #include "../src/utility/expr.h"
 #include "../src/utility/stmt.h"
-#include "catch/catch_amalgamated.hpp"
 #include <any>
+#include <catch2/catch_test_macros.hpp>
 #include <cmath>
 #include <iostream>
 #include <memory>
