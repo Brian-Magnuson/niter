@@ -1,0 +1,11 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Create sandbox folders",
+            "type": "shell",
+            "command": "mkdir -p sandbox/bin sandbox/debug",
+            "problemMatcher": []
+        }
+    ]
+}

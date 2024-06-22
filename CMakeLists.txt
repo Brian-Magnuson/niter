@@ -1,5 +1,6 @@
 # CMake configuration
 cmake_minimum_required(VERSION 3.11)
+
 set(CMAKE_C_COMPILER clang-18)
 set(CMAKE_CXX_COMPILER clang++-18)
 project(niter)
@@ -27,7 +28,7 @@ message(STATUS "LLVM libraries: ${llvm_libs}")
 find_package(Catch2 3.4.0 QUIET)
 
 if(NOT Catch2_FOUND)
-    message(STATUS "Catch2 not found; fetching from GitHub.")
+    message(STATUS "Fetching Catch2 from GitHub.")
     FetchContent_Declare(
         Catch2
         GIT_REPOSITORY https://github.com/catchorg/Catch2.git
