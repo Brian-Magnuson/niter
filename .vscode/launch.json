@@ -26,6 +26,7 @@
                 }
             ],
             "preLaunchTask": "Create sandbox folders",
+            "postDebugTask": "Run niter built executable"
         },
         {
             "name": "Launch tests",

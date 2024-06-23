@@ -11,6 +11,17 @@
             "linux": {
                 "command": "mkdir -p sandbox/bin sandbox/debug"
             }
+        },
+        {
+            "label": "Run niter built executable",
+            "type": "shell",
+            "problemMatcher": [],
+            "windows": {
+                "command": "sandbox/bin/main.exe"
+            },
+            "linux": {
+                "command": "./sandbox/bin/main"
+            }
         }
     ]
 }
