@@ -1,8 +1,5 @@
 # CMake configuration
-cmake_minimum_required(VERSION 3.11)
-
-set(CMAKE_C_COMPILER clang-18)
-set(CMAKE_CXX_COMPILER clang++-18)
+cmake_minimum_required(VERSION 3.19)
 project(niter)
 include(FetchContent)
 include(CTest)
@@ -35,6 +32,8 @@ if(NOT Catch2_FOUND)
         GIT_TAG v3.4.0
     )
     FetchContent_MakeAvailable(Catch2)
+else()
+    message(STATUS "Found Catch2 ${Catch2_VERSION}")
 endif()
 
 include(Catch)

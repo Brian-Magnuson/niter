@@ -16,7 +16,8 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "C:/msys64/ucrt64/include/**"
             ],
             "defines": [
                 "_DEBUG",
@@ -27,7 +28,15 @@
             "compilerPath": "C:/msys64/ucrt64/bin/clang.exe",
             "cStandard": "c17",
             "cppStandard": "c++17",
-            "intelliSenseMode": "windows-clang-x64"
+            "intelliSenseMode": "windows-clang-x64",
+            "compilerPathInCppPropertiesJson": "C:/msys64/ucrt64/bin/clang.exe",
+            "mergeConfigurations": false,
+            "browse": {
+                "path": [
+                    "${workspaceFolder}/**"
+                ],
+                "limitSymbolsToIncludedHeaders": true
+            }
         }
     ],
     "version": 4

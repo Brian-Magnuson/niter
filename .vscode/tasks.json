@@ -4,8 +4,13 @@
         {
             "label": "Create sandbox folders",
             "type": "shell",
-            "command": "mkdir -p sandbox/bin sandbox/debug",
-            "problemMatcher": []
+            "problemMatcher": [],
+            "windows": {
+                "command": "New-Item -ItemType Directory -Path sandbox/bin -Force; New-Item -ItemType Directory -Path sandbox/debug -Force"
+            },
+            "linux": {
+                "command": "mkdir -p sandbox/bin sandbox/debug"
+            }
         }
     ]
 }
