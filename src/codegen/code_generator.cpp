@@ -585,9 +585,40 @@ std::any CodeGenerator::visit_array_gen_expr(Expr::ArrayGen* expr) {
     auto llvm_array_type = array_type->to_llvm_aggregate_type(context);
     auto array_alloca = builder->CreateAlloca(llvm_array_type);
 
-    // TODO: Finish this implementation
+    llvm::Value* start_val = llvm::ConstantInt::get(*context, llvm::APInt(32, 0, true));
+    llvm::AllocaInst* counter = builder->CreateAlloca(llvm::Type::getInt32Ty(*context), nullptr, "loop_counter");
+    builder->CreateStore(start_val, counter);
 
-    return nullptr;
+    llvm::Function* current_fun = builder->GetInsertBlock()->getParent();
+    llvm::BasicBlock* start_arraygen = llvm::BasicBlock::Create(*context, "start_arraygen", current_fun);
+    llvm::BasicBlock* loop_arraygen = llvm::BasicBlock::Create(*context, "loop_arraygen", current_fun);
+    llvm::BasicBlock* end_arraygen = llvm::BasicBlock::Create(*context, "end_arraygen", current_fun);
+    builder->CreateBr(start_arraygen);
+
+    // Start block: checks the loop condition
+    builder->SetInsertPoint(start_arraygen);
+    llvm::Value* counter_val = builder->CreateLoad(llvm::Type::getInt32Ty(*context), counter);
+    llvm::Value* cond = builder->CreateICmpSLT(counter_val, llvm::ConstantInt::get(*context, llvm::APInt(32, array_type->size, true)));
+    builder->CreateCondBr(cond, loop_arraygen, end_arraygen);
+
+    // Loop block: runs the loop iteration
+    builder->SetInsertPoint(loop_arraygen);
+    llvm::Value* index = builder->CreateLoad(llvm::Type::getInt32Ty(*context), counter);
+    llvm::Value* value = std::any_cast<llvm::Value*>(expr->generator->accept(this));
+    llvm::Value* member_alloc = builder->CreateGEP(
+        llvm_array_type,
+        array_alloca,
+        {llvm::ConstantInt::get(llvm::Type::getInt32Ty(*context), 0), index}
+    );
+    builder->CreateStore(value, member_alloc);
+    llvm::Value* new_counter = builder->CreateAdd(counter_val, llvm::ConstantInt::get(*context, llvm::APInt(32, 1, true)));
+    builder->CreateStore(new_counter, counter);
+    builder->CreateBr(start_arraygen);
+
+    // End block: continues after the loop
+    builder->SetInsertPoint(end_arraygen);
+
+    return (llvm::Value*)array_alloca;
 }
 
 std::any CodeGenerator::visit_tuple_expr(Expr::Tuple* expr) {
