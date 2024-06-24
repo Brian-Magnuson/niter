@@ -309,6 +309,15 @@ class Parser {
      */
     std::shared_ptr<Expr> object_expr();
 
+    /**
+     * @brief Parses an array expression.
+     * Array expressions can either be in list form or in array-generator form.
+     *
+     * @return std::shared_ptr<Expr> A pointer to the parsed array expression.
+     * @throw ParserException If an error occurs while parsing the expression. Will be caught by the statement() function.
+     */
+    std::shared_ptr<Expr> array_expr();
+
     // MARK: Annotations
 
     /**

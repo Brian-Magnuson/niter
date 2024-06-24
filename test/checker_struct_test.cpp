@@ -460,7 +460,7 @@ TEST_CASE("Local checker inconsistent array types", "[checker]") {
     auto file_name = std::make_shared<std::string>("test_files/inconsistent_array_types.nit");
 
     ErrorLogger& logger = ErrorLogger::inst();
-    logger.set_printing_enabled(false);
+    logger.set_printing_enabled(true);
 
     Scanner scanner;
     scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
@@ -558,6 +558,33 @@ fun main(): i32 {
 
     REQUIRE(logger.get_errors().size() >= 1);
     CHECK(logger.get_errors().at(0) == E_SIZED_ARRAY_WITHOUT_INITIALIZER);
+
+    logger.reset();
+    env.reset();
+}
+
+TEST_CASE("Local checker array generator", "[checker]") {
+    std::string source_code = R"(
+fun main(): i32 {
+    var arr: [i32; 5] = [0; 5];
+    return 0;
+}
+)";
+    auto file_name = std::make_shared<std::string>("test_files/array_generator.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(true);
+    Scanner scanner;
+    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
+    Parser parser;
+    auto stmts = parser.parse(scanner.get_tokens());
+    Environment& env = Environment::inst();
+    GlobalChecker global_checker;
+    global_checker.type_check(stmts);
+    LocalChecker local_checker;
+    local_checker.type_check(stmts);
+
+    REQUIRE(logger.get_errors().size() == 0);
 
     logger.reset();
     env.reset();

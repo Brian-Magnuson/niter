@@ -583,22 +583,7 @@ std::shared_ptr<Expr> Parser::primary_expr() {
         return expr;
     }
     if (check({TOK_LEFT_SQUARE})) {
-        Token& bracket = peek();
-        grouping_tokens.push(TOK_RIGHT_SQUARE);
-        advance();
-        std::vector<std::shared_ptr<Expr>> elements;
-        if (!check({TOK_RIGHT_SQUARE})) {
-            elements.push_back(expression());
-            while (match({TOK_COMMA})) {
-                if (check({TOK_RIGHT_SQUARE})) {
-                    break;
-                }
-                elements.push_back(expression());
-            }
-        }
-
-        consume(TOK_RIGHT_SQUARE, E_UNMATCHED_LEFT_SQUARE, "Expected ']' after array.");
-        return std::make_shared<Expr::Array>(elements, bracket);
+        return array_expr();
     }
     if (check({TOK_LEFT_PAREN})) {
         Token& paren = peek();
@@ -668,6 +653,38 @@ std::shared_ptr<Expr> Parser::object_expr() {
     consume(TOK_RIGHT_BRACE, E_UNMATCHED_BRACE_IN_OBJ_EXPR, "Expected '}' after object expression.");
 
     return std::make_shared<Expr::Object>(colon, seg_type_annotation, fields);
+}
+
+std::shared_ptr<Expr> Parser::array_expr() {
+    Token& bracket = peek();
+    grouping_tokens.push(TOK_RIGHT_SQUARE);
+    advance();
+    std::vector<std::shared_ptr<Expr>> elements;
+    if (!check({TOK_RIGHT_SQUARE})) {
+        elements.push_back(expression());
+        if (match({TOK_SEMICOLON})) {
+            // This is an array generator
+            auto generator = elements[0];
+            consume(TOK_INT, E_NO_LITERAL_IN_ARRAY_GEN, "Expected integer literal after ';' in array generator.");
+            int size = std::any_cast<int>(previous().literal);
+            if (size < 0) {
+                ErrorLogger::inst().log_error(previous().location, E_NEGATIVE_ARRAY_SIZE, "Array size must be non-negative.");
+                throw ParserException();
+            }
+            consume(TOK_RIGHT_SQUARE, E_UNMATCHED_LEFT_SQUARE, "Expected ']' after array generator.");
+            return std::make_shared<Expr::ArrayGen>(bracket, generator, size);
+        }
+        // This is an array list
+        while (match({TOK_COMMA})) {
+            if (check({TOK_RIGHT_SQUARE})) {
+                break;
+            }
+            elements.push_back(expression());
+        }
+    }
+
+    consume(TOK_RIGHT_SQUARE, E_UNMATCHED_LEFT_SQUARE, "Expected ']' after array.");
+    return std::make_shared<Expr::Array>(elements, bracket);
 }
 
 // MARK: Annotations

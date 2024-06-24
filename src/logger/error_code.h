@@ -123,6 +123,10 @@ enum ErrorCode {
     E_NO_LBRACE_IN_OBJ_EXPR,
     // An object expression was found without a matching right brace
     E_UNMATCHED_BRACE_IN_OBJ_EXPR,
+    // An array generator was found without a literal integer for the size
+    E_NO_LITERAL_IN_ARRAY_GEN,
+    // An array generator was found with a negative size
+    E_NEGATIVE_ARRAY_SIZE,
 
     // Global type errors
     E_GLOBAL_TYPE = 4000,
