@@ -9,6 +9,10 @@ struct Point {
         this->x = this->x + dx
         this->y = this->y + dy
     }
+
+    fun new(): Point {
+        return :Point {x: 0, y: 0, z: 0}
+    }
 }
 
 fun main(): i32 {
@@ -50,6 +54,11 @@ fun main(): i32 {
     arr[1] = 5
     arr[2] = 6
     printf("arr is: [%d, %d, %d]\n", arr[0], arr[1], arr[2])
+
+    var arr2 = [1; 3]
+    printf("arr2 is: [%d, %d, %d]\n", arr2[0], arr2[1], arr2[2])
+    var p2 = Point::new();
+    printf("p is: (%d, %d, %d)\n", p2.x, p2.y, p2.z)
 
 
     return 0

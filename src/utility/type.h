@@ -119,6 +119,13 @@ public:
         for (auto& param : params) {
             param_types.push_back(param.second->to_llvm_type(context));
         }
+
+        // If the function's return type is aggregate, return the actual type.
+        auto aggregate_return_type = std::dynamic_pointer_cast<Aggregate>(return_type);
+        if (aggregate_return_type) {
+            return llvm::FunctionType::get(aggregate_return_type->to_llvm_aggregate_type(context), param_types, is_variadic);
+        }
+
         auto fun_type = llvm::FunctionType::get(return_type->to_llvm_type(context), param_types, is_variadic);
         return fun_type;
     }

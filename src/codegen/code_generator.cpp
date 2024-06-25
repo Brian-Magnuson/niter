@@ -237,8 +237,19 @@ std::any CodeGenerator::visit_fun_decl(Decl::Fun* decl) {
     builder->CreateBr(exit_block);
     builder->SetInsertPoint(exit_block);
     if (decl->return_var != nullptr) {
-        auto return_alloc = llvm::cast<llvm::AllocaInst>(Environment::inst().get_variable({decl->return_var->name})->llvm_allocation);
-        llvm::Value* return_value = builder->CreateLoad(return_alloc->getAllocatedType(), return_alloc);
+
+        // Get the variable node for the return variable
+        auto var_node = Environment::inst().get_variable({decl->return_var->name});
+        auto return_alloc = llvm::cast<llvm::AllocaInst>(var_node->llvm_allocation);
+        var_node->decl->type->to_llvm_type(context);
+        llvm::Value* return_value = builder->CreateLoad(var_node->decl->type->to_llvm_type(context), return_alloc);
+
+        // If this is an aggregate type, we should load the value again
+        auto aggregate_type = std::dynamic_pointer_cast<Type::Aggregate>(var_node->decl->type);
+        if (aggregate_type != nullptr) {
+            return_value = builder->CreateLoad(aggregate_type->to_llvm_aggregate_type(context), return_value);
+        }
+
         builder->CreateRet(return_value);
     } else {
         builder->CreateRetVoid();
@@ -475,6 +486,13 @@ std::any CodeGenerator::visit_call_expr(Expr::Call* expr) {
     }
     // Call the function
     ret = builder->CreateCall(fun, args);
+
+    if (fun->getReturnType()->isAggregateType()) {
+        // If the function returns an aggregate type, we need to store the return value in an alloca instruction
+        auto alloca = builder->CreateAlloca(fun->getReturnType());
+        builder->CreateStore(ret, alloca);
+        return (llvm::Value*)alloca;
+    }
 
     return ret;
 }
