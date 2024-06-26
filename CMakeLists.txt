@@ -62,6 +62,7 @@ set(TEST_SOURCES
     test/compiler_test.cpp
     test/parser_decl_test.cpp
     test/parser_expr_test.cpp
+    test/parser_flow_test.cpp
     test/scanner_test.cpp
 )
 

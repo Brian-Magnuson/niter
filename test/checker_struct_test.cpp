@@ -460,7 +460,7 @@ TEST_CASE("Local checker inconsistent array types", "[checker]") {
     auto file_name = std::make_shared<std::string>("test_files/inconsistent_array_types.nit");
 
     ErrorLogger& logger = ErrorLogger::inst();
-    logger.set_printing_enabled(true);
+    logger.set_printing_enabled(false);
 
     Scanner scanner;
     scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
