@@ -48,6 +48,32 @@ public:
 };
 
 /**
+ * @brief A class representing a conditional statement.
+ * Conditional statements contain an expression, a list of statements for the "then" branch, and optionally a list of statements for the "else" branch.
+ *
+ */
+class Stmt::Conditional : public Stmt {
+public:
+    Conditional(Token keyword, std::shared_ptr<Expr> condition, std::vector<std::shared_ptr<Stmt>> then_branch, std::vector<std::shared_ptr<Stmt>> else_branch)
+        : keyword(keyword), condition(condition), then_branch(then_branch), else_branch(else_branch) {
+        location = condition->location;
+    }
+
+    std::any accept(Visitor* visitor) override {
+        return visitor->visit_conditional_stmt(this);
+    }
+
+    // The keyword that signifies the conditional statement.
+    Token keyword;
+    // The condition of the conditional statement
+    std::shared_ptr<Expr> condition;
+    // The statements in the "then" branch
+    std::vector<std::shared_ptr<Stmt>> then_branch;
+    // The statements in the "else" branch
+    std::vector<std::shared_ptr<Stmt>> else_branch;
+};
+
+/**
  * @brief A class representing a return statement.
  * Return statements consist of the "return" keyword and optionally an expression.
  *

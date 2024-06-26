@@ -54,9 +54,26 @@ std::any AstPrinter::visit_block_stmt(Stmt::Block* /*stmt*/) {
     return std::any();
 }
 
-std::any AstPrinter::visit_conditional_stmt(Stmt::Conditional* /*stmt*/) {
-    // TODO: Implement this
-    return std::any();
+std::any AstPrinter::visit_conditional_stmt(Stmt::Conditional* stmt) {
+    std::string result = "(stmt:" + stmt->keyword.lexeme;
+    result += " ";
+    result += std::any_cast<std::string>(stmt->condition->accept(this));
+    result += " { ";
+    for (const auto& stmt : stmt->then_branch) {
+        result += std::any_cast<std::string>(stmt->accept(this));
+        result += " ";
+    }
+    result += "}";
+    if (!stmt->else_branch.empty()) {
+        result += " else { ";
+        for (const auto& stmt : stmt->else_branch) {
+            result += std::any_cast<std::string>(stmt->accept(this));
+            result += " ";
+        }
+        result += "}";
+    }
+    result += ")";
+    return result;
 }
 
 std::any AstPrinter::visit_loop_stmt(Stmt::Loop* /*stmt*/) {

@@ -94,9 +94,9 @@ std::shared_ptr<Stmt> Parser::statement() {
         if (check({KW_VAR, KW_CONST, KW_FUN, KW_EXTERN, KW_STRUCT})) {
             return declaration_statement();
         }
-        // if (match({KW_IF})) {
-        //     return if_statement();
-        // }
+        if (match({KW_IF})) {
+            return if_statement();
+        }
         // if (match({KW_WHILE})) {
         //     return while_statement();
         // }
@@ -144,6 +144,50 @@ std::shared_ptr<Stmt> Parser::declaration_statement() {
         throw ParserException();
     }
     return std::make_shared<Stmt::Declaration>(decl);
+}
+
+std::shared_ptr<Stmt> Parser::if_statement() {
+    Token& keyword = previous();
+    std::shared_ptr<Expr> condition = expression();
+    std::vector<std::shared_ptr<Stmt>> then_branch;
+    std::vector<std::shared_ptr<Stmt>> else_branch;
+
+    if (match({TOK_LEFT_BRACE})) {
+        // Parse multiple statements
+        while (match({TOK_NEWLINE}))
+            ; // Skip over newlines
+        while (!check({TOK_RIGHT_BRACE}) && !is_at_end()) {
+            then_branch.push_back(statement());
+            while (match({TOK_NEWLINE}))
+                ; // Skip over newlines
+        }
+        consume(TOK_RIGHT_BRACE, E_UNMATCHED_BRACE_IN_IF_STMT, "Expected '}' after if body.");
+
+    } else {
+        // Parse a single statement
+        then_branch.push_back(statement());
+    }
+
+    if (match({KW_ELSE})) {
+        if (match({TOK_LEFT_BRACE})) {
+            // Parse multiple statements
+            while (match({TOK_NEWLINE}))
+                ; // Skip over newlines
+            while (!check({TOK_RIGHT_BRACE}) && !is_at_end()) {
+                else_branch.push_back(statement());
+                while (match({TOK_NEWLINE}))
+                    ; // Skip over newlines
+            }
+            consume(TOK_RIGHT_BRACE, E_UNMATCHED_BRACE_IN_IF_STMT, "Expected '}' after else body.");
+        } else {
+            // Parse a single statement
+            else_branch.push_back(statement());
+            // This single statement can be an if statement,
+            // creating an if-else-if chain
+        }
+    }
+
+    return std::make_shared<Stmt::Conditional>(keyword, condition, then_branch, else_branch);
 }
 
 std::shared_ptr<Stmt> Parser::expression_statement() {

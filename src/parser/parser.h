@@ -106,11 +106,19 @@ class Parser {
     std::shared_ptr<Stmt> statement();
 
     /**
-     * @brief Parsers a declaration statement, i.e. a declaration by itself.
+     * @brief Parses a declaration statement, i.e. a declaration by itself.
      *
      * @return std::shared_ptr<Stmt> A pointer to the parsed declaration statement.
      */
     std::shared_ptr<Stmt> declaration_statement();
+
+    /**
+     * @brief Parses an if statement.
+     * An if statement begins with the `if` keyword followed by an expression, a statement or statements, and an optional `else` keyword followed by a statement or statements.
+     *
+     * @return std::shared_ptr<Stmt>
+     */
+    std::shared_ptr<Stmt> if_statement();
 
     /**
      * @brief Parses an expression statement, i.e. an expression by itself.

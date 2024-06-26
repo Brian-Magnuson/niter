@@ -14,7 +14,7 @@
 #include "../src/utility/stmt.h"
 
 TEST_CASE("Parser if stmt", "[parser]") {
-    auto source_code = std::make_shared<std::string>("if true { x = 1; }");
+    auto source_code = std::make_shared<std::string>("if true { x = 1; }\n");
     auto file_name = std::make_shared<std::string>("test_files/if_stmt.nit");
 
     Scanner scanner;
@@ -24,6 +24,6 @@ TEST_CASE("Parser if stmt", "[parser]") {
 
     AstPrinter printer;
     REQUIRE(stmts.size() == 2);
-    CHECK(printer.print(stmts[0]) == "(stmt:if true { (= x 1)})");
+    CHECK(printer.print(stmts[0]) == "(stmt:if true { (= x 1) })");
     CHECK(printer.print(stmts[1]) == "(stmt:eof)");
 }

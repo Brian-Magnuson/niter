@@ -127,6 +127,8 @@ enum ErrorCode {
     E_NO_LITERAL_IN_ARRAY_GEN,
     // An array generator was found with a negative size
     E_NEGATIVE_ARRAY_SIZE,
+    // An if statement was found without a matching right brace
+    E_UNMATCHED_BRACE_IN_IF_STMT,
 
     // Global type errors
     E_GLOBAL_TYPE = 4000,
