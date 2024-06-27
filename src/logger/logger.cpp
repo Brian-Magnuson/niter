@@ -2,7 +2,29 @@
 #include <fstream>
 #include <iomanip>
 
+// Include the appropriate headers based on the target OS
+#if defined(_WIN32) || defined(_WIN64)
+// Windows
+#include <io.h>
+#define ISATTY _isatty
+#define FILENO _fileno
+#elif defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__))
+// Unix-like systems
+#include <unistd.h>
+#define ISATTY isatty
+#define FILENO fileno
+#else
+// Fallback if neither header is available
+#define ISATTY(x) (0)          // Always return false, indicating not a terminal
+#define FILENO(x) ((void)0, 0) // Dummy to avoid unused variable warning
+#endif
+
 std::string colorize(Color color) {
+    // Check if the standard output is a terminal
+    if (!ISATTY(FILENO(stdout))) {
+        return "";
+    }
+
     switch (color) {
     case Color::RED:
         return "\033[31m";
