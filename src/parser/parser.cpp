@@ -164,6 +164,8 @@ std::shared_ptr<Stmt> Parser::if_statement() {
         consume(TOK_RIGHT_BRACE, E_UNMATCHED_BRACE_IN_IF_STMT, "Expected '}' after if body.");
 
     } else {
+        while (match({TOK_NEWLINE}))
+            ; // Skip over newlines
         // Parse a single statement
         then_branch.push_back(statement());
     }
@@ -180,6 +182,8 @@ std::shared_ptr<Stmt> Parser::if_statement() {
             }
             consume(TOK_RIGHT_BRACE, E_UNMATCHED_BRACE_IN_IF_STMT, "Expected '}' after else body.");
         } else {
+            while (match({TOK_NEWLINE}))
+                ; // Skip over newlines
             // Parse a single statement
             else_branch.push_back(statement());
             // This single statement can be an if statement,
