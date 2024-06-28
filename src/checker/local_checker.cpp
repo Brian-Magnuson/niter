@@ -20,8 +20,8 @@ bool LocalChecker::check_token(TokenType token, const std::vector<TokenType>& ty
 
 std::any LocalChecker::visit_declaration_stmt(Stmt::Declaration* stmt) {
     // Visit the declaration
-    return stmt->declaration->accept(this);
-    return std::any();
+    stmt->declaration->accept(this);
+    return std::shared_ptr<Type>(nullptr);
 }
 
 std::any LocalChecker::visit_expression_stmt(Stmt::Expression* stmt) {
@@ -29,27 +29,72 @@ std::any LocalChecker::visit_expression_stmt(Stmt::Expression* stmt) {
     // Visit the expression.
     stmt->expression->accept(this);
     // Expression statements do not produce any value.
-    return std::any();
+    return std::shared_ptr<Type>(nullptr);
 }
 std::any LocalChecker::visit_block_stmt(Stmt::Block* /* stmt */) {
     // Not yet implemented
     // TODO: Implement block statements
     // ErrorLogger::inst().log_error(stmt->location, E_UNIMPLEMENTED, "Block statements are not yet implemented.");
-    return std::any();
+    return std::shared_ptr<Type>(nullptr);
 }
 
-std::any LocalChecker::visit_conditional_stmt(Stmt::Conditional* /* stmt */) {
-    // Log error with location
-    // TODO: Implement conditional statements
-    // ErrorLogger::inst().log_error(stmt->location, E_UNIMPLEMENTED, "Conditional statements are not yet implemented.");
-    return std::any();
+std::any LocalChecker::visit_conditional_stmt(Stmt::Conditional* stmt) {
+    // First, check that the conditional expression is of type `bool`
+    auto cond_type = std::any_cast<std::shared_ptr<Type>>(stmt->condition->accept(this));
+    if (cond_type->to_string() != "::bool") {
+        ErrorLogger::inst().log_error(stmt->condition->location, E_CONDITIONAL_WITHOUT_BOOL, "Expected expression of type `bool`; Found " + cond_type->to_string() + ".");
+        throw LocalTypeException();
+    }
+    std::shared_ptr<Stmt> prev_ret_stmt = nullptr;
+    std::shared_ptr<Type> ret_type = nullptr;
+    // Increase the local scope for the then_branch
+    Environment::inst().increase_local_scope();
+    // Visit the then_branch
+    for (auto& if_stmt : stmt->then_branch) {
+        // If one of these statements returns something...
+        auto temp_type = std::any_cast<std::shared_ptr<Type>>(if_stmt->accept(this));
+        // Ensure the return type is consistent...
+        if (ret_type != nullptr && temp_type != nullptr && Type::are_compatible(ret_type, temp_type) != 0) {
+            ErrorLogger::inst().log_error(if_stmt->location, E_INCONSISTENT_RETURN_TYPES, "Return type is inconsistent with a previous return statement.");
+            ErrorLogger::inst().log_note(prev_ret_stmt->location, "Previous return statement was here.");
+            throw LocalTypeException();
+        }
+        // ...and store the return type
+        if (temp_type != nullptr) {
+            ret_type = temp_type;
+            prev_ret_stmt = if_stmt;
+        }
+    }
+    // Exit the local scope for the then_branch
+    Environment::inst().exit_scope();
+    // Do the same for the else_branch
+    Environment::inst().increase_local_scope();
+    // Visit the else_branch
+    for (auto& if_stmt : stmt->else_branch) {
+        auto temp = if_stmt->accept(this);
+        // If one of these statements returns something...
+        auto temp_type = std::any_cast<std::shared_ptr<Type>>(if_stmt->accept(this));
+        // Ensure the return type is consistent...
+        if (ret_type != nullptr && temp_type != nullptr && Type::are_compatible(ret_type, temp_type) != 0) {
+            ErrorLogger::inst().log_error(if_stmt->location, E_INCONSISTENT_RETURN_TYPES, "Return type is inconsistent with a previous return statement.");
+            ErrorLogger::inst().log_note(prev_ret_stmt->location, "Previous return statement was here.");
+            throw LocalTypeException();
+        }
+        // ...and store the return type
+        if (temp_type != nullptr) {
+            ret_type = temp_type;
+            prev_ret_stmt = if_stmt;
+        }
+    }
+
+    return ret_type != nullptr ? std::any(ret_type) : std::any();
 }
 
 std::any LocalChecker::visit_loop_stmt(Stmt::Loop* /* stmt */) {
     // Log error with location
     // TODO: Implement loop statements
     // ErrorLogger::inst().log_error(stmt->location, E_UNIMPLEMENTED, "Loop statements are not yet implemented.");
-    return std::any();
+    return std::shared_ptr<Type>(nullptr);
 }
 
 std::any LocalChecker::visit_return_stmt(Stmt::Return* stmt) {
@@ -57,7 +102,7 @@ std::any LocalChecker::visit_return_stmt(Stmt::Return* stmt) {
     // We already checked for this in the global checker
 
     if (stmt->value == nullptr) {
-        return std::any();
+        return std::shared_ptr<Type>(nullptr);
     }
 
     std::shared_ptr<Type> ret_type = std::any_cast<std::shared_ptr<Type>>(stmt->value->accept(this));
@@ -69,19 +114,19 @@ std::any LocalChecker::visit_break_stmt(Stmt::Break* /* stmt */) {
     // Log error with location
     // TODO: Implement break statements
     // ErrorLogger::inst().log_error(stmt->location, E_UNIMPLEMENTED, "Break statements are not yet implemented.");
-    return std::any();
+    return std::shared_ptr<Type>(nullptr);
 }
 
 std::any LocalChecker::visit_continue_stmt(Stmt::Continue* /* stmt */) {
     // Log error with location
     // TODO: Implement continue statements
     // ErrorLogger::inst().log_error(stmt->location, E_UNIMPLEMENTED, "Continue statements are not yet implemented.");
-    return std::any();
+    return std::shared_ptr<Type>(nullptr);
 }
 
 std::any LocalChecker::visit_eof_stmt(Stmt::EndOfFile* /* stmt */) {
     // Does nothing (for now)
-    return std::any();
+    return std::shared_ptr<Type>(nullptr);
 }
 
 // MARK: Declarations
@@ -171,7 +216,7 @@ std::any LocalChecker::visit_var_decl(Decl::Var* decl) {
         init_ptr_type->declarer = KW_CONST;
     }
 
-    return std::any();
+    return std::shared_ptr<Type>(nullptr);
 }
 
 std::any LocalChecker::visit_fun_decl(Decl::Fun* decl) {
@@ -236,19 +281,18 @@ std::any LocalChecker::visit_fun_decl(Decl::Fun* decl) {
     // Verify the return statement types and log the appropriate error messages
     bool has_return = false;
     for (auto& stmt : decl->body) {
-        std::any stmt_type = stmt->accept(this);
-        if (stmt_type.has_value()) {
+        // std::any stmt_type = stmt->accept(this);
+        std::shared_ptr<Type> stmt_type = std::any_cast<std::shared_ptr<Type>>(stmt->accept(this));
+        if (stmt_type != nullptr) {
             has_return = true;
             if (variable->decl->type->to_string() == "::void") {
                 ErrorLogger::inst().log_error(stmt->location, E_RETURN_IN_VOID_FUN, "Function with return type 'void' cannot return a value.");
                 throw LocalTypeException();
             } else {
-                auto ret_type = std::any_cast<std::shared_ptr<Type>>(stmt_type);
-
                 // The return type of the function must match the return type of the return statement
                 // This will also catch the case where the function return type is `void` and the return statement has a value
-                if (Type::are_compatible(ret_type, variable_fun_type->return_type) != 0) {
-                    ErrorLogger::inst().log_error(stmt->location, E_RETURN_INCOMPATIBLE, "Cannot convert from " + ret_type->to_string() + " to return type " + fun_annotation->return_annotation->to_string() + ".");
+                if (Type::are_compatible(stmt_type, variable_fun_type->return_type) != 0) {
+                    ErrorLogger::inst().log_error(stmt->location, E_RETURN_INCOMPATIBLE, "Cannot convert from " + stmt_type->to_string() + " to return type " + variable_fun_type->return_type->to_string() + ".");
                     throw LocalTypeException();
                 }
             }
@@ -263,7 +307,7 @@ std::any LocalChecker::visit_fun_decl(Decl::Fun* decl) {
     Environment::inst().exit_scope();
     Environment::inst().exit_scope();
 
-    return std::any();
+    return std::shared_ptr<Type>(nullptr);
 }
 
 std::any LocalChecker::visit_extern_fun_decl(Decl::ExternFun* decl) {
@@ -274,7 +318,7 @@ std::any LocalChecker::visit_extern_fun_decl(Decl::ExternFun* decl) {
     }
 
     // No need to do further checks; we've already done that in the global checker
-    return std::any();
+    return std::shared_ptr<Type>(nullptr);
 }
 
 std::any LocalChecker::visit_struct_decl(Decl::Struct* decl) {
@@ -297,7 +341,7 @@ std::any LocalChecker::visit_struct_decl(Decl::Struct* decl) {
     // Exit the struct scope
     Environment::inst().exit_scope();
 
-    return std::any();
+    return std::shared_ptr<Type>(nullptr);
 }
 
 // MARK: Expressions

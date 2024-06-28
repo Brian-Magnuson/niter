@@ -40,7 +40,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      * @brief Visits a declaration statement and determines if the declaration is valid.
      *
      * @param stmt The declaration statement to visit.
-     * @return std::any The empty std::any value always.
+     * @return std::any std::shared_ptr<Type>(nullptr) always.
      * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_declaration_stmt(Stmt::Declaration* stmt) override;
@@ -49,7 +49,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      * @brief Visits an expression statement and determines if the expression is valid.
      *
      * @param stmt The expression statement to visit.
-     * @return std::any The empty std::any value always.
+     * @return std::any std::shared_ptr<Type>(nullptr) always.
      * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_expression_stmt(Stmt::Expression* stmt) override;
@@ -58,7 +58,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      * @brief Visits a block statement and determines if the block is valid.
      *
      * @param stmt The block statement to visit.
-     * @return std::any An std::shared_ptr<Annotation> if the block has a return type, the empty std::any value otherwise.
+     * @return std::any An std::shared_ptr<Type> if the block has a return type, std::shared_ptr<Type>(nullptr) otherwise.
      * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_block_stmt(Stmt::Block* stmt) override;
@@ -67,7 +67,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      * @brief Visits a conditional statement and determines if the condition is valid.
      *
      * @param stmt The conditional statement to visit.
-     * @return std::any An std::shared_ptr<Annotation> if the block has a return type, the empty std::any value otherwise.
+     * @return std::any An std::shared_ptr<Type> if the block has a return type, std::shared_ptr<Type>(nullptr) otherwise.
      * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_conditional_stmt(Stmt::Conditional* stmt) override;
@@ -76,7 +76,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      * @brief Visits a loop statement and determines if the loop is valid.
      *
      * @param stmt The loop statement to visit.
-     * @return std::any An std::shared_ptr<Annotation> if the block has a return type, the empty std::any value otherwise.
+     * @return std::any An std::shared_ptr<Type> if the block has a return type, std::shared_ptr<Type>(nullptr) otherwise.
      * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_loop_stmt(Stmt::Loop* stmt) override;
@@ -85,7 +85,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      * @brief Visits a return statement and determines if the return type is valid.
      *
      * @param stmt The return statement to visit.
-     * @return std::any The std::shared_ptr<Annotation> of the return type.
+     * @return std::any The std::shared_ptr<Type> of the return type.
      * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_return_stmt(Stmt::Return* stmt) override;
@@ -94,7 +94,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      * @brief Visits a break statement and determines if the break is valid.
      *
      * @param stmt The break statement to visit.
-     * @return std::any The empty std::any value always.
+     * @return std::any std::shared_ptr<Type>(nullptr) always.
      * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_break_stmt(Stmt::Break* stmt) override;
@@ -103,7 +103,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      * @brief Visits a continue statement and determines if the continue is valid.
      *
      * @param stmt The continue statement to visit.
-     * @return std::any The empty std::any value always.
+     * @return std::any std::shared_ptr<Type>(nullptr) always.
      * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_continue_stmt(Stmt::Continue* stmt) override;
@@ -112,7 +112,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      * @brief Visits an end of file statement and determines if the end of file is valid.
      *
      * @param stmt The end of file statement to visit.
-     * @return std::any The empty std::any value always.
+     * @return std::any std::shared_ptr<Type>(nullptr) always.
      * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_eof_stmt(Stmt::EndOfFile* stmt) override;
@@ -121,7 +121,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      * @brief Visits a variable declaration and determines if the initialization is valid.
      *
      * @param decl The variable declaration to visit.
-     * @return std::any The empty std::any value always.
+     * @return std::any std::shared_ptr<Type>(nullptr) always.
      * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_var_decl(Decl::Var* decl) override;
@@ -130,7 +130,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      * @brief Visits a function declaration and determines if the return type and body are valid.
      *
      * @param decl The function declaration to visit.
-     * @return std::any The empty std::any value always.
+     * @return std::any std::shared_ptr<Type>(nullptr) always.
      * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_fun_decl(Decl::Fun* decl) override;
@@ -141,7 +141,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      *
      *
      * @param decl The external function declaration to visit.
-     * @return std::any The empty std::any value always.
+     * @return std::any std::shared_ptr<Type>(nullptr) always.
      * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_extern_fun_decl(Decl::ExternFun* decl) override;
@@ -151,7 +151,7 @@ class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Vi
      * Checks if the struct is not in local space, then visits each declaration.
      *
      * @param decl The struct declaration to visit.
-     * @return std::any The empty std::any value always.
+     * @return std::any std::shared_ptr<Type>(nullptr) always.
      * @throws LocalTypeException If an error occurs during type checking. Will be caught by the type_check function.
      */
     std::any visit_struct_decl(Decl::Struct* decl) override;

@@ -189,6 +189,8 @@ enum ErrorCode {
     E_RETURN_IN_VOID_FUN,
     // A return statement was not found in a non-void function
     E_NO_RETURN_IN_NON_VOID_FUN,
+    // A block was found with inconsistent return types
+    E_INCONSISTENT_RETURN_TYPES,
     // An attempt was made to dereference a non-pointer
     E_DEREFERENCE_NON_POINTER,
     // A dot-access expression was found on a non-struct type
@@ -215,6 +217,8 @@ enum ErrorCode {
     E_ASSIGN_TO_NON_LVALUE,
     // An assignment was found to a constant
     E_ASSIGN_TO_CONST,
+    // A conditional statement was found with a non-boolean condition
+    E_CONDITIONAL_WITHOUT_BOOL,
 
     // Code generation errors
     E_CODEGEN = 6000,
