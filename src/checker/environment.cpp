@@ -60,6 +60,7 @@ void Environment::install_primitive_types() {
 void Environment::increase_local_scope() {
     auto local_scope = std::make_shared<Node::LocalScope>(current_scope);
     current_scope = local_scope;
+    local_scopes.push_back(local_scope);
 }
 
 bool Environment::enter_scope(const std::string& name) {
@@ -73,18 +74,26 @@ bool Environment::enter_scope(const std::string& name) {
 }
 
 ErrorCode Environment::exit_scope() {
-    if (current_scope->parent == nullptr) {
+    if (IS_TYPE(current_scope, Node::LocalScope)) {
+        local_scopes.pop_back();
+    }
+
+    // Convert the parent scope to a shared pointer.
+    auto parent_scope_sptr = current_scope->parent.lock();
+
+    if (parent_scope_sptr == nullptr) {
         return E_EXITED_ROOT_SCOPE;
     } else {
-        current_scope = current_scope->parent;
+        current_scope = parent_scope_sptr;
         return (ErrorCode)0;
     }
 }
 
 void Environment::exit_all_local_scopes() {
-    while (!IS_TYPE(current_scope, Node::RootScope)) {
+    while (!IS_TYPE(current_scope, Node::LocalScope)) {
         exit_scope();
     }
+    local_scopes.clear();
 }
 
 bool Environment::in_global_scope() {

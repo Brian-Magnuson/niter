@@ -67,7 +67,6 @@ public:
 class Node::RootScope : public Node::Scope {
 public:
     RootScope() {
-        parent = nullptr;
         unique_name = "";
     }
 };

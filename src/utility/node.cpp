@@ -7,8 +7,9 @@ int Node::local_scope_count = 0;
 std::shared_ptr<Node> Node::Scope::upward_lookup(const std::string& name) {
     if (children.find(name) != children.end()) {
         return children[name];
-    } else if (parent != nullptr) {
-        return parent->upward_lookup(name);
+    } else if (auto parent_sptr = parent.lock()) {
+        // If parent is not null...
+        return parent_sptr->upward_lookup(name);
     } else {
         return nullptr;
     }
@@ -40,7 +41,8 @@ std::shared_ptr<Node> Node::Scope::downward_lookup(const std::vector<std::string
     }
     // If we didn't find 'A' or 'B', or 'A::B' does not contain 'c', then try again from the parent scope.
     if (!found || current->children.find(path.back()) == current->children.end()) {
-        return parent != nullptr ? parent->downward_lookup(path) : nullptr;
+        auto parent_sptr = parent.lock();
+        return parent_sptr != nullptr ? parent_sptr->downward_lookup(path) : nullptr;
     }
     // If we found 'A::B::c', return it.
     return current->children[path.back()];

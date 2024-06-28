@@ -335,7 +335,8 @@ public:
     // A unique name for this node. Used for type comparison and LLVM IR generation.
     std::string unique_name;
     // The parent scope of this node. This is never a variable since variables do not have children.
-    std::shared_ptr<Scope> parent = nullptr;
+    // A weak pointer is used to prevent circular references.
+    std::weak_ptr<Scope> parent;
 };
 
 #endif // CORE_H

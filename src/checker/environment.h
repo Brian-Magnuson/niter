@@ -32,6 +32,15 @@ class Environment {
     // A list of struct scopes declared in the global scope. Useful for creating forward declarations.
     std::vector<std::shared_ptr<Node::StructScope>> struct_scopes;
 
+    /**
+     * @brief A stack of local scopes.
+     * LocalScopes are temporary members of the namespace tree.
+     * Nodes are not allowed to track LocalScopes as children.
+     * Therefore, we need a container of shared pointers to make sure they don't
+     * accidentally get deleted.
+     */
+    std::vector<std::shared_ptr<Node::LocalScope>> local_scopes;
+
     // A list of deferred declarations to be resolved later.
     std::vector<std::pair<Decl::VarDeclarable*, std::shared_ptr<Node::Scope>>>
         deferred_declarations;
