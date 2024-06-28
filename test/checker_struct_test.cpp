@@ -5,8 +5,6 @@
 #include "../src/parser/parser.h"
 #include "../src/scanner/scanner.h"
 #include <catch2/catch_test_macros.hpp>
-#include <memory>
-#include <string>
 
 // MARK: Local Checker Tests
 

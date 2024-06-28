@@ -59,6 +59,7 @@ set(SOURCES
 set(TEST_SOURCES
     test/checker_fun_test.cpp
     test/checker_struct_test.cpp
+    test/checker_flow_test.cpp
     test/compiler_test.cpp
     test/parser_decl_test.cpp
     test/parser_expr_test.cpp

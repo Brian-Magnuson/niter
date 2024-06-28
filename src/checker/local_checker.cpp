@@ -42,7 +42,7 @@ std::any LocalChecker::visit_conditional_stmt(Stmt::Conditional* stmt) {
     // First, check that the conditional expression is of type `bool`
     auto cond_type = std::any_cast<std::shared_ptr<Type>>(stmt->condition->accept(this));
     if (cond_type->to_string() != "::bool") {
-        ErrorLogger::inst().log_error(stmt->condition->location, E_CONDITIONAL_WITHOUT_BOOL, "Expected expression of type `bool`; Found " + cond_type->to_string() + ".");
+        ErrorLogger::inst().log_error(stmt->condition->location, E_CONDITIONAL_WITHOUT_BOOL, "Expected expression of type `bool`; Found `" + cond_type->to_string() + "`.");
         throw LocalTypeException();
     }
     std::shared_ptr<Stmt> prev_ret_stmt = nullptr;
@@ -87,7 +87,7 @@ std::any LocalChecker::visit_conditional_stmt(Stmt::Conditional* stmt) {
         }
     }
 
-    return ret_type != nullptr ? std::any(ret_type) : std::any();
+    return ret_type;
 }
 
 std::any LocalChecker::visit_loop_stmt(Stmt::Loop* /* stmt */) {

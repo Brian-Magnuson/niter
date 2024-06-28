@@ -1,8 +1,8 @@
-#include <catch2/catch_test_macros.hpp>
-
 #include <memory>
 #include <string>
 #include <vector>
+
+#include <catch2/catch_test_macros.hpp>
 
 #include "../src/logger/logger.h"
 #include "../src/parser/ast_printer.h"
