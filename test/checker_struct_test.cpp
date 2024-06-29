@@ -6,6 +6,29 @@
 #include "../src/scanner/scanner.h"
 #include <catch2/catch_test_macros.hpp>
 
+static void setup(const std::string& source_code, const std::string& file_name, bool set_printing_enabled) {
+    auto source_code_ptr = std::make_shared<std::string>(source_code);
+    auto file_name_ptr = std::make_shared<std::string>(file_name);
+
+    ErrorLogger::inst().set_printing_enabled(set_printing_enabled);
+
+    Scanner scanner;
+    scanner.scan_file(file_name_ptr, source_code_ptr);
+    Parser parser;
+    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse(scanner.get_tokens());
+    GlobalChecker global_checker;
+    global_checker.type_check(stmts);
+    LocalChecker local_checker;
+    local_checker.type_check(stmts);
+}
+
+static void cleanup() {
+    Environment& env = Environment::inst();
+    env.reset();
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.reset();
+}
+
 // MARK: Local Checker Tests
 
 TEST_CASE("Local checker tuples", "[checker]") {
@@ -15,24 +38,12 @@ fun main(): i32 {
     return 0; 
 }
 )";
-    auto file_name = std::make_shared<std::string>("test_files/tuples.nit");
+    setup(source_code, "test_files/tuples.nit", true);
 
     ErrorLogger& logger = ErrorLogger::inst();
-    logger.set_printing_enabled(true);
-    Scanner scanner;
-    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
-    Parser parser;
-    auto stmts = parser.parse(scanner.get_tokens());
-    Environment& env = Environment::inst();
-    GlobalChecker global_checker;
-    global_checker.type_check(stmts);
-    LocalChecker local_checker;
-    local_checker.type_check(stmts);
-
     REQUIRE(logger.get_errors().size() == 0);
 
-    logger.reset();
-    env.reset();
+    cleanup();
 }
 
 TEST_CASE("Local checker incompatible tuples", "[checker]") {
@@ -42,25 +53,13 @@ fun main(): i32 {
     return 0; 
 }
 )";
-    auto file_name = std::make_shared<std::string>("test_files/incompatible_tuples.nit");
+    setup(source_code, "test_files/incompatible_tuples.nit", false);
 
     ErrorLogger& logger = ErrorLogger::inst();
-    logger.set_printing_enabled(false);
-    Scanner scanner;
-    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
-    Parser parser;
-    auto stmts = parser.parse(scanner.get_tokens());
-    Environment& env = Environment::inst();
-    GlobalChecker global_checker;
-    global_checker.type_check(stmts);
-    LocalChecker local_checker;
-    local_checker.type_check(stmts);
-
     REQUIRE(logger.get_errors().size() >= 1);
     CHECK(logger.get_errors().at(0) == E_INCOMPATIBLE_TYPES);
 
-    logger.reset();
-    env.reset();
+    cleanup();
 }
 
 TEST_CASE("Local checker tuple indexing", "[checker]") {
@@ -72,24 +71,12 @@ fun main(): i32 {
     return 0; 
 }
 )";
-    auto file_name = std::make_shared<std::string>("test_files/tuple_indexing.nit");
+    setup(source_code, "test_files/tuple_indexing.nit", true);
 
     ErrorLogger& logger = ErrorLogger::inst();
-    logger.set_printing_enabled(true);
-    Scanner scanner;
-    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
-    Parser parser;
-    auto stmts = parser.parse(scanner.get_tokens());
-    Environment& env = Environment::inst();
-    GlobalChecker global_checker;
-    global_checker.type_check(stmts);
-    LocalChecker local_checker;
-    local_checker.type_check(stmts);
-
     REQUIRE(logger.get_errors().size() == 0);
 
-    logger.reset();
-    env.reset();
+    cleanup();
 }
 
 TEST_CASE("Local checker tuple indexing out of bounds", "[checker]") {
@@ -100,25 +87,13 @@ fun main(): i32 {
     return 0; 
 }
 )";
-    auto file_name = std::make_shared<std::string>("test_files/tuple_indexing_out_of_bounds.nit");
+    setup(source_code, "test_files/tuple_indexing_out_of_bounds.nit", false);
 
     ErrorLogger& logger = ErrorLogger::inst();
-    logger.set_printing_enabled(false);
-    Scanner scanner;
-    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
-    Parser parser;
-    auto stmts = parser.parse(scanner.get_tokens());
-    Environment& env = Environment::inst();
-    GlobalChecker global_checker;
-    global_checker.type_check(stmts);
-    LocalChecker local_checker;
-    local_checker.type_check(stmts);
-
     REQUIRE(logger.get_errors().size() >= 1);
     CHECK(logger.get_errors().at(0) == E_TUPLE_INDEX_OUT_OF_RANGE);
 
-    logger.reset();
-    env.reset();
+    cleanup();
 }
 
 TEST_CASE("Local checker tuple without literal index", "[checker]") {
@@ -130,25 +105,13 @@ fun main(): i32 {
     return 0; 
 }
 )";
-    auto file_name = std::make_shared<std::string>("test_files/tuple_no_literal_index.nit");
+    setup(source_code, "test_files/tuple_no_literal_index.nit", false);
 
     ErrorLogger& logger = ErrorLogger::inst();
-    logger.set_printing_enabled(false);
-    Scanner scanner;
-    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
-    Parser parser;
-    auto stmts = parser.parse(scanner.get_tokens());
-    Environment& env = Environment::inst();
-    GlobalChecker global_checker;
-    global_checker.type_check(stmts);
-    LocalChecker local_checker;
-    local_checker.type_check(stmts);
-
     REQUIRE(logger.get_errors().size() >= 1);
     CHECK(logger.get_errors().at(0) == E_NO_LITERAL_INDEX_ON_TUPLE);
 
-    logger.reset();
-    env.reset();
+    cleanup();
 }
 
 TEST_CASE("Local checker new struct", "[checker]") {
@@ -164,24 +127,12 @@ fun main(): i32 {
     return 0
 }
 )";
-    auto file_name = std::make_shared<std::string>("test_files/new_struct.nit");
+    setup(source_code, "test_files/new_struct.nit", true);
 
     ErrorLogger& logger = ErrorLogger::inst();
-    logger.set_printing_enabled(true);
-    Scanner scanner;
-    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
-    Parser parser;
-    auto stmts = parser.parse(scanner.get_tokens());
-    Environment& env = Environment::inst();
-    GlobalChecker global_checker;
-    global_checker.type_check(stmts);
-    LocalChecker local_checker;
-    local_checker.type_check(stmts);
-
     REQUIRE(logger.get_errors().size() == 0);
 
-    logger.reset();
-    env.reset();
+    cleanup();
 }
 
 TEST_CASE("Local checker new struct with wrong field", "[checker]") {
@@ -196,25 +147,13 @@ fun main(): i32 {
     return 0
 }
 )";
-    auto file_name = std::make_shared<std::string>("test_files/new_struct_wrong_field.nit");
+    setup(source_code, "test_files/new_struct_wrong_field.nit", false);
 
     ErrorLogger& logger = ErrorLogger::inst();
-    logger.set_printing_enabled(false);
-    Scanner scanner;
-    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
-    Parser parser;
-    auto stmts = parser.parse(scanner.get_tokens());
-    Environment& env = Environment::inst();
-    GlobalChecker global_checker;
-    global_checker.type_check(stmts);
-    LocalChecker local_checker;
-    local_checker.type_check(stmts);
-
     REQUIRE(logger.get_errors().size() >= 1);
     CHECK(logger.get_errors().at(0) == E_INVALID_STRUCT_MEMBER);
 
-    logger.reset();
-    env.reset();
+    cleanup();
 }
 
 TEST_CASE("Local checker new struct missing field", "[checker]") {
@@ -230,25 +169,13 @@ fun main(): i32 {
     return 0
 }
 )";
-    auto file_name = std::make_shared<std::string>("test_files/new_struct_missing_field.nit");
+    setup(source_code, "test_files/new_struct_missing_field.nit", false);
 
     ErrorLogger& logger = ErrorLogger::inst();
-    logger.set_printing_enabled(false);
-    Scanner scanner;
-    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
-    Parser parser;
-    auto stmts = parser.parse(scanner.get_tokens());
-    Environment& env = Environment::inst();
-    GlobalChecker global_checker;
-    global_checker.type_check(stmts);
-    LocalChecker local_checker;
-    local_checker.type_check(stmts);
-
     REQUIRE(logger.get_errors().size() >= 1);
     CHECK(logger.get_errors().at(0) == E_MISSING_FIELD_IN_OBJ);
 
-    logger.reset();
-    env.reset();
+    cleanup();
 }
 
 TEST_CASE("Local checker struct fields optional", "[checker]") {
@@ -264,24 +191,12 @@ fun main(): i32 {
     return 0
 }
 )";
-    auto file_name = std::make_shared<std::string>("test_files/struct_fields_optional.nit");
+    setup(source_code, "test_files/struct_fields_optional.nit", true);
 
     ErrorLogger& logger = ErrorLogger::inst();
-    logger.set_printing_enabled(true);
-    Scanner scanner;
-    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
-    Parser parser;
-    auto stmts = parser.parse(scanner.get_tokens());
-    Environment& env = Environment::inst();
-    GlobalChecker global_checker;
-    global_checker.type_check(stmts);
-    LocalChecker local_checker;
-    local_checker.type_check(stmts);
-
     REQUIRE(logger.get_errors().size() == 0);
 
-    logger.reset();
-    env.reset();
+    cleanup();
 }
 
 TEST_CASE("Local checker struct field type mismatch", "[checker]") {
@@ -296,25 +211,13 @@ fun main(): i32 {
     return 0
 }
 )";
-    auto file_name = std::make_shared<std::string>("test_files/struct_field_type_mismatch.nit");
+    setup(source_code, "test_files/struct_field_type_mismatch.nit", false);
 
     ErrorLogger& logger = ErrorLogger::inst();
-    logger.set_printing_enabled(false);
-    Scanner scanner;
-    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
-    Parser parser;
-    auto stmts = parser.parse(scanner.get_tokens());
-    Environment& env = Environment::inst();
-    GlobalChecker global_checker;
-    global_checker.type_check(stmts);
-    LocalChecker local_checker;
-    local_checker.type_check(stmts);
-
     REQUIRE(logger.get_errors().size() >= 1);
     CHECK(logger.get_errors().at(0) == E_INCOMPATIBLE_TYPES);
 
-    logger.reset();
-    env.reset();
+    cleanup();
 }
 
 TEST_CASE("Local checker struct usage", "[checker]") {
@@ -331,24 +234,12 @@ fun main(): i32 {
     return 0
 }
 )";
-    auto file_name = std::make_shared<std::string>("test_files/struct_usage.nit");
+    setup(source_code, "test_files/struct_usage.nit", true);
 
     ErrorLogger& logger = ErrorLogger::inst();
-    logger.set_printing_enabled(true);
-    Scanner scanner;
-    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
-    Parser parser;
-    auto stmts = parser.parse(scanner.get_tokens());
-    Environment& env = Environment::inst();
-    GlobalChecker global_checker;
-    global_checker.type_check(stmts);
-    LocalChecker local_checker;
-    local_checker.type_check(stmts);
-
     REQUIRE(logger.get_errors().size() == 0);
 
-    logger.reset();
-    env.reset();
+    cleanup();
 }
 
 TEST_CASE("Local checker struct mutation", "[checker]") {
@@ -365,24 +256,12 @@ fun main(): i32 {
     return 0
 }
 )";
-    auto file_name = std::make_shared<std::string>("test_files/struct_mutation.nit");
+    setup(source_code, "test_files/struct_mutation.nit", true);
 
     ErrorLogger& logger = ErrorLogger::inst();
-    logger.set_printing_enabled(true);
-    Scanner scanner;
-    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
-    Parser parser;
-    auto stmts = parser.parse(scanner.get_tokens());
-    Environment& env = Environment::inst();
-    GlobalChecker global_checker;
-    global_checker.type_check(stmts);
-    LocalChecker local_checker;
-    local_checker.type_check(stmts);
-
     REQUIRE(logger.get_errors().size() == 0);
 
-    logger.reset();
-    env.reset();
+    cleanup();
 }
 
 TEST_CASE("Local checker struct mutation with wrong field", "[checker]") {
@@ -398,25 +277,13 @@ fun main(): i32 {
     return 0
 }
 )";
-    auto file_name = std::make_shared<std::string>("test_files/struct_mutation_wrong_field.nit");
+    setup(source_code, "test_files/struct_mutation_wrong_field.nit", false);
 
     ErrorLogger& logger = ErrorLogger::inst();
-    logger.set_printing_enabled(false);
-    Scanner scanner;
-    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
-    Parser parser;
-    auto stmts = parser.parse(scanner.get_tokens());
-    Environment& env = Environment::inst();
-    GlobalChecker global_checker;
-    global_checker.type_check(stmts);
-    LocalChecker local_checker;
-    local_checker.type_check(stmts);
-
     REQUIRE(logger.get_errors().size() >= 1);
     CHECK(logger.get_errors().at(0) == E_INVALID_STRUCT_MEMBER);
 
-    logger.reset();
-    env.reset();
+    cleanup();
 }
 
 TEST_CASE("Local checker struct mutation with wrong type", "[checker]") {
@@ -432,76 +299,37 @@ fun main(): i32 {
     return 0
 }
 )";
-    auto file_name = std::make_shared<std::string>("test_files/struct_mutation_wrong_type.nit");
+    setup(source_code, "test_files/struct_mutation_wrong_type.nit", false);
 
     ErrorLogger& logger = ErrorLogger::inst();
-    logger.set_printing_enabled(false);
-    Scanner scanner;
-    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
-    Parser parser;
-    auto stmts = parser.parse(scanner.get_tokens());
-    Environment& env = Environment::inst();
-    GlobalChecker global_checker;
-    global_checker.type_check(stmts);
-    LocalChecker local_checker;
-    local_checker.type_check(stmts);
-
     REQUIRE(logger.get_errors().size() >= 1);
     CHECK(logger.get_errors().at(0) == E_INCOMPATIBLE_TYPES);
 
-    logger.reset();
-    env.reset();
+    cleanup();
 }
 
 TEST_CASE("Local checker inconsistent array types", "[checker]") {
     std::string source_code = "fun main(): i32 { var arr = [1, 2, true]; return 0; }";
-    auto file_name = std::make_shared<std::string>("test_files/inconsistent_array_types.nit");
+
+    setup(source_code, "test_files/inconsistent_array_types.nit", false);
 
     ErrorLogger& logger = ErrorLogger::inst();
-    logger.set_printing_enabled(false);
-
-    Scanner scanner;
-    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
-
-    Parser parser;
-    auto stmts = parser.parse(scanner.get_tokens());
-
-    Environment& env = Environment::inst();
-
-    GlobalChecker global_checker;
-    global_checker.type_check(stmts);
-
-    LocalChecker local_checker;
-    local_checker.type_check(stmts);
-
     REQUIRE(logger.get_errors().size() >= 1);
     CHECK(logger.get_errors().at(0) == E_INCONSISTENT_ARRAY_TYPES);
 
-    logger.reset();
-    env.reset();
+    cleanup();
 }
 
 TEST_CASE("Local checker indeterminate array type", "[checker]") {
     std::string source_code = "fun main(): i32 { var arr = []; return 0; }";
-    auto file_name = std::make_shared<std::string>("test_files/indeterminate_arr_type.nit");
+
+    setup(source_code, "test_files/indeterminate_arr_type.nit", false);
 
     ErrorLogger& logger = ErrorLogger::inst();
-    logger.set_printing_enabled(false);
-    Scanner scanner;
-    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
-    Parser parser;
-    auto stmts = parser.parse(scanner.get_tokens());
-    Environment& env = Environment::inst();
-    GlobalChecker global_checker;
-    global_checker.type_check(stmts);
-    LocalChecker local_checker;
-    local_checker.type_check(stmts);
-
     REQUIRE(logger.get_errors().size() >= 1);
     CHECK(logger.get_errors().at(0) == E_INDETERMINATE_ARRAY_TYPE);
 
-    logger.reset();
-    env.reset();
+    cleanup();
 }
 
 TEST_CASE("Local checker array size bad cast", "[checker]") {
@@ -512,25 +340,13 @@ fun main(): i32 {
     return 0;
 }
 )";
-    auto file_name = std::make_shared<std::string>("test_files/array_size_bad_cast.nit");
+    setup(source_code, "test_files/array_size_bad_cast.nit", false);
 
     ErrorLogger& logger = ErrorLogger::inst();
-    logger.set_printing_enabled(false);
-    Scanner scanner;
-    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
-    Parser parser;
-    auto stmts = parser.parse(scanner.get_tokens());
-    Environment& env = Environment::inst();
-    GlobalChecker global_checker;
-    global_checker.type_check(stmts);
-    LocalChecker local_checker;
-    local_checker.type_check(stmts);
-
     REQUIRE(logger.get_errors().size() >= 1);
     CHECK(logger.get_errors().at(0) == E_ARRAY_SIZE_UNKNOWN);
 
-    logger.reset();
-    env.reset();
+    cleanup();
 }
 
 TEST_CASE("Local checker sized array without initializer", "[checker]") {
@@ -540,25 +356,13 @@ fun main(): i32 {
     return 0;
 }
 )";
-    auto file_name = std::make_shared<std::string>("test_files/sized_array_no_initializer.nit");
+    setup(source_code, "test_files/sized_array_no_initializer.nit", false);
 
     ErrorLogger& logger = ErrorLogger::inst();
-    logger.set_printing_enabled(false);
-    Scanner scanner;
-    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
-    Parser parser;
-    auto stmts = parser.parse(scanner.get_tokens());
-    Environment& env = Environment::inst();
-    GlobalChecker global_checker;
-    global_checker.type_check(stmts);
-    LocalChecker local_checker;
-    local_checker.type_check(stmts);
-
     REQUIRE(logger.get_errors().size() >= 1);
     CHECK(logger.get_errors().at(0) == E_SIZED_ARRAY_WITHOUT_INITIALIZER);
 
-    logger.reset();
-    env.reset();
+    cleanup();
 }
 
 TEST_CASE("Local checker array generator", "[checker]") {
@@ -568,24 +372,12 @@ fun main(): i32 {
     return 0;
 }
 )";
-    auto file_name = std::make_shared<std::string>("test_files/array_generator.nit");
+    setup(source_code, "test_files/array_generator.nit", true);
 
     ErrorLogger& logger = ErrorLogger::inst();
-    logger.set_printing_enabled(true);
-    Scanner scanner;
-    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
-    Parser parser;
-    auto stmts = parser.parse(scanner.get_tokens());
-    Environment& env = Environment::inst();
-    GlobalChecker global_checker;
-    global_checker.type_check(stmts);
-    LocalChecker local_checker;
-    local_checker.type_check(stmts);
-
     REQUIRE(logger.get_errors().size() == 0);
 
-    logger.reset();
-    env.reset();
+    cleanup();
 }
 
 TEST_CASE("Local checker new constructor", "[checker]") {
@@ -604,26 +396,12 @@ fun main(): i32 {
     return 0
 }
 )";
-    auto file_name = std::make_shared<std::string>("test_files/new_constructor.nit");
+    setup(source_code, "test_files/new_constructor.nit", true);
 
     ErrorLogger& logger = ErrorLogger::inst();
-    logger.set_printing_enabled(true);
-    Scanner scanner;
-    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
-    Parser parser;
-    auto stmts = parser.parse(scanner.get_tokens());
-
-    Environment& env = Environment::inst();
-    GlobalChecker global_checker;
-    global_checker.type_check(stmts);
-
-    LocalChecker local_checker;
-    local_checker.type_check(stmts);
-
     REQUIRE(logger.get_errors().size() == 0);
 
-    logger.reset();
-    env.reset();
+    cleanup();
 }
 
 TEST_CASE("Local checker instance method", "[checker]") {
@@ -643,26 +421,12 @@ fun main(): i32 {
     return 0
 }
 )";
-    auto file_name = std::make_shared<std::string>("test_files/instance_method.nit");
+    setup(source_code, "test_files/instance_method.nit", true);
 
     ErrorLogger& logger = ErrorLogger::inst();
-    logger.set_printing_enabled(true);
-    Scanner scanner;
-    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
-    Parser parser;
-    auto stmts = parser.parse(scanner.get_tokens());
-
-    Environment& env = Environment::inst();
-    GlobalChecker global_checker;
-    global_checker.type_check(stmts);
-
-    LocalChecker local_checker;
-    local_checker.type_check(stmts);
-
     REQUIRE(logger.get_errors().size() == 0);
 
-    logger.reset();
-    env.reset();
+    cleanup();
 }
 
 TEST_CASE("Local checker mutating fun immutable param", "[checker]") {
@@ -681,27 +445,13 @@ fun main(): i32 {
     return 0
 }
 )";
-    auto file_name = std::make_shared<std::string>("test_files/mutating_function_immutable_param.nit");
+    setup(source_code, "test_files/mutating_function_immutable_param.nit", false);
 
     ErrorLogger& logger = ErrorLogger::inst();
-    logger.set_printing_enabled(false);
-    Scanner scanner;
-    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
-    Parser parser;
-    auto stmts = parser.parse(scanner.get_tokens());
-
-    Environment& env = Environment::inst();
-    GlobalChecker global_checker;
-    global_checker.type_check(stmts);
-
-    LocalChecker local_checker;
-    local_checker.type_check(stmts);
-
     REQUIRE(logger.get_errors().size() >= 1);
-    // CHECK(logger.get_errors().at(0) == E_MUTATING_IMMUTABLE_PARAM);
+    CHECK(logger.get_errors().at(0) == E_ASSIGN_TO_CONST);
 
-    logger.reset();
-    env.reset();
+    cleanup();
 }
 
 TEST_CASE("Local checker mutating fun mutable param", "[checker]") {
@@ -719,24 +469,10 @@ fun main(): i32 {
     return 0
 }
 )";
-    auto file_name = std::make_shared<std::string>("test_files/mutating_function_mutable_param.nit");
+    setup(source_code, "test_files/mutating_function_mutable_param.nit", true);
 
     ErrorLogger& logger = ErrorLogger::inst();
-    logger.set_printing_enabled(true);
-    Scanner scanner;
-    scanner.scan_file(file_name, std::make_shared<std::string>(source_code));
-    Parser parser;
-    auto stmts = parser.parse(scanner.get_tokens());
-
-    Environment& env = Environment::inst();
-    GlobalChecker global_checker;
-    global_checker.type_check(stmts);
-
-    LocalChecker local_checker;
-    local_checker.type_check(stmts);
-
     REQUIRE(logger.get_errors().size() == 0);
 
-    logger.reset();
-    env.reset();
+    cleanup();
 }

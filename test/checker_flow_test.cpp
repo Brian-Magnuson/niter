@@ -10,7 +10,7 @@
 #include "../src/parser/parser.h"
 #include "../src/scanner/scanner.h"
 
-void setup(const std::string& source_code, const std::string& file_name, bool set_printing_enabled) {
+static void setup(const std::string& source_code, const std::string& file_name, bool set_printing_enabled) {
     auto source_code_ptr = std::make_shared<std::string>(source_code);
     auto file_name_ptr = std::make_shared<std::string>(file_name);
 
@@ -26,7 +26,7 @@ void setup(const std::string& source_code, const std::string& file_name, bool se
     local_checker.type_check(stmts);
 }
 
-void cleanup() {
+static void cleanup() {
     Environment& env = Environment::inst();
     env.reset();
     ErrorLogger& logger = ErrorLogger::inst();
