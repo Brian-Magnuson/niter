@@ -1,10 +1,15 @@
+#include <memory>
+#include <string>
+#include <vector>
+
+#include <catch2/catch_test_macros.hpp>
+
 #include "../src/checker/environment.h"
 #include "../src/checker/global_checker.h"
 #include "../src/checker/local_checker.h"
 #include "../src/logger/logger.h"
 #include "../src/parser/parser.h"
 #include "../src/scanner/scanner.h"
-#include <catch2/catch_test_macros.hpp>
 
 static void setup(const std::string& source_code, const std::string& file_name, bool set_printing_enabled) {
     auto source_code_ptr = std::make_shared<std::string>(source_code);
