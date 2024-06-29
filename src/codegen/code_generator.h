@@ -30,7 +30,7 @@ class CodeGenerator : public Stmt::Visitor, public Decl::Visitor, public Expr::V
     // A shared pointer to the LLVM context, created in Environment.
     std::shared_ptr<llvm::LLVMContext> context;
     // The LLVM module that will be generated.
-    std::shared_ptr<llvm::Module> ir_module;
+    std::unique_ptr<llvm::Module> ir_module;
 
     // The current function being generated.
     // llvm::Function* current_function;
@@ -322,9 +322,9 @@ public:
      * @param dump_ir A string representing the file path to dump the IR to. Path is relative to CWD.
      * If invalid, the IR will not be dumped and an error will be logged; this WILL stop compilation.
      * If empty, the IR will not be dumped. Default is empty.
-     * @return std::shared_ptr<llvm::Module> A pointer to the generated module. nullptr if an error occurred.
+     * @return std::unique_ptr<llvm::Module> A pointer to the generated module. nullptr if an error occurred.
      */
-    std::shared_ptr<llvm::Module> generate(std::vector<std::shared_ptr<Stmt>> stmts, const std::string& ir_target_destination = "");
+    std::unique_ptr<llvm::Module> generate(std::vector<std::shared_ptr<Stmt>> stmts, const std::string& ir_target_destination = "");
 
     /**
      * @brief Dumps the IR to a file, allowing the user to inspect the generated IR.

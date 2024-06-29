@@ -685,10 +685,10 @@ std::any CodeGenerator::visit_object_expr(Expr::Object* expr) {
 CodeGenerator::CodeGenerator() {
     context = Environment::inst().get_llvm_context();
     builder = std::make_shared<llvm::IRBuilder<>>(*context);
-    ir_module = std::make_shared<llvm::Module>("main", *context);
+    ir_module = std::make_unique<llvm::Module>("main", *context);
 }
 
-std::shared_ptr<llvm::Module> CodeGenerator::generate(std::vector<std::shared_ptr<Stmt>> stmts, const std::string& ir_target_destination) {
+std::unique_ptr<llvm::Module> CodeGenerator::generate(std::vector<std::shared_ptr<Stmt>> stmts, const std::string& ir_target_destination) {
     declare_all_structs();
     declare_all_functions();
     try {
@@ -716,7 +716,7 @@ std::shared_ptr<llvm::Module> CodeGenerator::generate(std::vector<std::shared_pt
         return nullptr;
     }
 
-    return ir_module;
+    return std::move(ir_module);
 }
 
 void CodeGenerator::dump_ir(const std::string& filename) {

@@ -2,7 +2,7 @@
 #include "llvm/IR/PassManager.h"
 #include "llvm/Passes/PassBuilder.h"
 
-void Optimizer::optimize(std::shared_ptr<llvm::Module> ir_module) {
+void Optimizer::optimize(std::unique_ptr<llvm::Module>& ir_module) {
     llvm::LoopAnalysisManager lam;
     llvm::FunctionAnalysisManager fam;
     llvm::CGSCCAnalysisManager cgam;

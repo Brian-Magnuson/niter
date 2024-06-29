@@ -8,7 +8,7 @@
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetMachine.h"
 
-void Emitter::emit(const std::shared_ptr<llvm::Module>& ir_module, const std::string& target_destination) {
+void Emitter::emit(const std::unique_ptr<llvm::Module>& ir_module, const std::string& target_destination) {
     llvm::InitializeNativeTarget();
     llvm::InitializeNativeTargetAsmPrinter();
 

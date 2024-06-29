@@ -18,7 +18,7 @@ public:
      *
      * @param ir_module The IR module to optimize.
      */
-    void optimize(std::shared_ptr<llvm::Module> ir_module);
+    void optimize(std::unique_ptr<llvm::Module>& ir_module);
 };
 
 #endif // OPTIMIZER_H
