@@ -75,21 +75,120 @@ static void cleanup() {
     logger.reset();
 }
 
-TEST_CASE("Codegen", "[codegen]") {
+TEST_CASE("Compiler", "[compiler]") {
 
     std::string source_code = R"(
         fun main(): i32 {
-            var x: i32;
-            x = 1;
-            return x;
+            var x: i32
+            x = 1
+            return x
         }
     )";
 
-    auto ir_module = setup(source_code, "test_files/codegen.nit", true);
+    auto ir_module = setup(source_code, "test_files/compiler.nit", true);
 
-    auto result = run_code(std::move(ir_module), "main");
-    REQUIRE(result.second);
-    REQUIRE(result.first.IntVal.getSExtValue() == 1);
+    auto [result, ok] = run_code(std::move(ir_module), "main");
+    REQUIRE(ok);
+    REQUIRE(result.IntVal.getSExtValue() == 1);
 
     cleanup();
 }
+
+TEST_CASE("Compiler add", "[compiler]") {
+
+    std::string source_code = R"(
+        fun main(): i32 {
+            return 1 + 2
+        }
+    )";
+
+    auto ir_module = setup(source_code, "test_files/compiler_add.nit", true);
+
+    auto [result, ok] = run_code(std::move(ir_module), "main");
+    REQUIRE(ok);
+    REQUIRE(result.IntVal.getSExtValue() == 3);
+
+    cleanup();
+}
+
+TEST_CASE("Compiler add 2", "[compiler]") {
+
+    std::string source_code = R"(
+        fun add(): i32 {
+            return 1 + 2 + 3
+        }
+    )";
+
+    auto ir_module = setup(source_code, "test_files/compiler_add_2.nit", true);
+
+    auto [result, ok] = run_code(std::move(ir_module), "__add");
+    REQUIRE(ok);
+    REQUIRE(result.IntVal.getSExtValue() == 6);
+
+    cleanup();
+}
+
+TEST_CASE("Compiler tuple", "[compiler]") {
+
+    std::string source_code = R"(
+        fun main(): i32 {
+            var x: (i32, i32)
+            x = (1, 2)
+            return x[0] + x[1]
+        }
+    )";
+
+    auto ir_module = setup(source_code, "test_files/compiler_tuple.nit", true);
+
+    auto [result, ok] = run_code(std::move(ir_module), "main");
+    REQUIRE(ok);
+    REQUIRE(result.IntVal.getSExtValue() == 3);
+
+    cleanup();
+}
+
+TEST_CASE("Compiler tuple 2", "[compiler]") {
+
+    std::string source_code = R"(
+        fun main(): i32 {
+            var x: (i32, i32, i32, i32)
+            x = (1, 2, 3, 4)
+            return x[0] + x[1] + x[2] + x[3]
+        }
+    )";
+
+    auto ir_module = setup(source_code, "test_files/compiler_tuple_2.nit", true);
+
+    auto [result, ok] = run_code(std::move(ir_module), "main");
+    REQUIRE(ok);
+    REQUIRE(result.IntVal.getSExtValue() == 10);
+
+    cleanup();
+}
+
+// FIXME: This test is failing because LLVM can't load the Point type correctly in the interpreter.
+// Figure out how to fix this.
+// TEST_CASE("Compiler struct", "[compiler]") {
+
+//     std::string source_code = R"(
+//         struct Point {
+//             var x: i32
+//             var y: i32
+//             var z: i32
+
+//             fun new(): Point {
+//                 return :Point { x: 1, y: 2, z: 3 }
+//             }
+//         }
+//     )";
+
+//     auto ir_module = setup(source_code, "test_files/compiler_struct.nit", true);
+
+//     auto [result, ok] = run_code(std::move(ir_module), "__Point__new");
+//     REQUIRE(ok);
+//     // REQUIRE(result.AggregateVal[0].IntVal.getSExtValue() == 1);
+//     // REQUIRE(result.AggregateVal[1].IntVal.getSExtValue() == 2);
+//     // REQUIRE(result.AggregateVal[2].IntVal.getSExtValue() == 3);
+
+//     cleanup();
+// }
