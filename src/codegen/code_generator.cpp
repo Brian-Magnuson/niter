@@ -72,8 +72,35 @@ std::any CodeGenerator::visit_block_stmt(Stmt::Block*) {
     return nullptr;
 }
 
-std::any CodeGenerator::visit_conditional_stmt(Stmt::Conditional*) {
-    // TODO: Implement conditional statements
+std::any CodeGenerator::visit_conditional_stmt(Stmt::Conditional* stmt) {
+    auto condition = std::any_cast<llvm::Value*>(stmt->condition->accept(this));
+
+    // Create the blocks
+    auto then_block = llvm::BasicBlock::Create(*context, "then_cond", block_stack.front()->getParent());
+    auto else_block = llvm::BasicBlock::Create(*context, "else_cond", block_stack.front()->getParent());
+    auto end_block = llvm::BasicBlock::Create(*context, "end_cond", block_stack.front()->getParent());
+
+    // Branch to the then block if the condition is true
+    builder->CreateCondBr(condition, then_block, else_block);
+
+    // Generate code for the then block
+    builder->SetInsertPoint(then_block);
+    for (auto& then_stmt : stmt->then_branch) {
+        then_stmt->accept(this);
+    }
+    builder->CreateBr(end_block);
+
+    // Generate code for the else block
+    builder->SetInsertPoint(else_block);
+    for (auto& else_stmt : stmt->else_branch) {
+        else_stmt->accept(this);
+    }
+    // If the else block is empty, the else block will just contain the branch instruction.
+    builder->CreateBr(end_block);
+
+    // Set the insert point to the end block
+    builder->SetInsertPoint(end_block);
+
     return nullptr;
 }
 
