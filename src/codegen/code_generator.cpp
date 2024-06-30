@@ -84,19 +84,23 @@ std::any CodeGenerator::visit_conditional_stmt(Stmt::Conditional* stmt) {
     builder->CreateCondBr(condition, then_block, else_block);
 
     // Generate code for the then block
+    Environment::inst().increase_local_scope();
     builder->SetInsertPoint(then_block);
     for (auto& then_stmt : stmt->then_branch) {
         then_stmt->accept(this);
     }
     builder->CreateBr(end_block);
+    Environment::inst().exit_scope();
 
     // Generate code for the else block
+    Environment::inst().increase_local_scope();
     builder->SetInsertPoint(else_block);
     for (auto& else_stmt : stmt->else_branch) {
         else_stmt->accept(this);
     }
     // If the else block is empty, the else block will just contain the branch instruction.
     builder->CreateBr(end_block);
+    Environment::inst().exit_scope();
 
     // Set the insert point to the end block
     builder->SetInsertPoint(end_block);

@@ -309,6 +309,9 @@ bool Environment::verify_deferred_types() {
 void Environment::reset() {
     llvm_context = std::make_shared<llvm::LLVMContext>();
     global_tree = std::make_shared<Node::RootScope>();
+    struct_scopes.clear();
+    local_scopes.clear();
+    global_functions.clear();
     current_scope = global_tree;
     install_primitive_types();
 }
