@@ -50,19 +50,19 @@ std::any LocalChecker::visit_conditional_stmt(Stmt::Conditional* stmt) {
     // Increase the local scope for the then_branch
     Environment::inst().increase_local_scope();
     // Visit the then_branch
-    for (auto& if_stmt : stmt->then_branch) {
+    for (auto& inner_stmt : stmt->then_branch) {
         // If one of these statements returns something...
-        auto temp_type = std::any_cast<std::shared_ptr<Type>>(if_stmt->accept(this));
+        auto temp_type = std::any_cast<std::shared_ptr<Type>>(inner_stmt->accept(this));
         // Ensure the return type is consistent...
         if (ret_type != nullptr && temp_type != nullptr && Type::are_compatible(ret_type, temp_type) != 0) {
-            ErrorLogger::inst().log_error(if_stmt->location, E_INCONSISTENT_RETURN_TYPES, "Return type is inconsistent with a previous return statement.");
+            ErrorLogger::inst().log_error(inner_stmt->location, E_INCONSISTENT_RETURN_TYPES, "Return type is inconsistent with a previous return statement.");
             ErrorLogger::inst().log_note(prev_ret_stmt->location, "Previous return statement was here.");
             throw LocalTypeException();
         }
         // ...and store the return type
         if (temp_type != nullptr) {
             ret_type = temp_type;
-            prev_ret_stmt = if_stmt;
+            prev_ret_stmt = inner_stmt;
         }
     }
     // Exit the local scope for the then_branch
@@ -70,31 +70,57 @@ std::any LocalChecker::visit_conditional_stmt(Stmt::Conditional* stmt) {
     // Do the same for the else_branch
     Environment::inst().increase_local_scope();
     // Visit the else_branch
-    for (auto& if_stmt : stmt->else_branch) {
-        auto temp = if_stmt->accept(this);
+    for (auto& inner_stmt : stmt->else_branch) {
+        auto temp = inner_stmt->accept(this);
         // If one of these statements returns something...
-        auto temp_type = std::any_cast<std::shared_ptr<Type>>(if_stmt->accept(this));
+        auto temp_type = std::any_cast<std::shared_ptr<Type>>(inner_stmt->accept(this));
         // Ensure the return type is consistent...
         if (ret_type != nullptr && temp_type != nullptr && Type::are_compatible(ret_type, temp_type) != 0) {
-            ErrorLogger::inst().log_error(if_stmt->location, E_INCONSISTENT_RETURN_TYPES, "Return type is inconsistent with a previous return statement.");
+            ErrorLogger::inst().log_error(inner_stmt->location, E_INCONSISTENT_RETURN_TYPES, "Return type is inconsistent with a previous return statement.");
             ErrorLogger::inst().log_note(prev_ret_stmt->location, "Previous return statement was here.");
             throw LocalTypeException();
         }
         // ...and store the return type
         if (temp_type != nullptr) {
             ret_type = temp_type;
-            prev_ret_stmt = if_stmt;
+            prev_ret_stmt = inner_stmt;
         }
     }
 
     return ret_type;
 }
 
-std::any LocalChecker::visit_loop_stmt(Stmt::Loop* /* stmt */) {
-    // Log error with location
-    // TODO: Implement loop statements
-    // ErrorLogger::inst().log_error(stmt->location, E_UNIMPLEMENTED, "Loop statements are not yet implemented.");
-    return std::shared_ptr<Type>(nullptr);
+std::any LocalChecker::visit_loop_stmt(Stmt::Loop* stmt) {
+    // First, check that the conditional expression is of type `bool`
+    auto cond_type = std::any_cast<std::shared_ptr<Type>>(stmt->condition->accept(this));
+    if (cond_type->to_string() != "::bool") {
+        ErrorLogger::inst().log_error(stmt->condition->location, E_CONDITIONAL_WITHOUT_BOOL, "Expected expression of type `bool`; Found `" + cond_type->to_string() + "`.");
+        throw LocalTypeException();
+    }
+    std::shared_ptr<Stmt> prev_ret_stmt = nullptr;
+    std::shared_ptr<Type> ret_type = nullptr;
+    // Increase the local scope for the body
+    Environment::inst().increase_local_scope();
+    // Visit the body
+    for (auto& inner_stmt : stmt->body) {
+        // If one of these statements returns something...
+        auto temp_type = std::any_cast<std::shared_ptr<Type>>(inner_stmt->accept(this));
+        // Ensure the return type is consistent...
+        if (ret_type != nullptr && temp_type != nullptr && Type::are_compatible(ret_type, temp_type) != 0) {
+            ErrorLogger::inst().log_error(inner_stmt->location, E_INCONSISTENT_RETURN_TYPES, "Return type is inconsistent with a previous return statement.");
+            ErrorLogger::inst().log_note(prev_ret_stmt->location, "Previous return statement was here.");
+            throw LocalTypeException();
+        }
+        // ...and store the return type
+        if (temp_type != nullptr) {
+            ret_type = temp_type;
+            prev_ret_stmt = inner_stmt;
+        }
+    }
+    // Exit the local scope for the body
+    Environment::inst().exit_scope();
+
+    return ret_type;
 }
 
 std::any LocalChecker::visit_return_stmt(Stmt::Return* stmt) {
