@@ -318,6 +318,19 @@ while false {
     cleanup();
 }
 
+TEST_CASE("Parser break stmt", "[parser]") {
+    std::string source_code = "while true { break }\n";
+
+    auto stmts = run_parser(source_code, "test_files/break_stmt.nit");
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 2);
+    CHECK(printer.print(stmts[0]) == "(stmt:while true { (stmt:break) })");
+    CHECK(printer.print(stmts[1]) == "(stmt:eof)");
+
+    cleanup();
+}
+
 TEST_CASE("Logger while stmt unmatched brace", "[logger]") {
     std::string source_code = "while true { x = 1; \n";
 

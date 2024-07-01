@@ -79,7 +79,6 @@ std::any CodeGenerator::visit_conditional_stmt(Stmt::Conditional* stmt) {
     auto then_block = llvm::BasicBlock::Create(*context, "cond_then", block_stack.front()->getParent());
     auto else_block = llvm::BasicBlock::Create(*context, "cond_else", block_stack.front()->getParent());
     auto end_block = llvm::BasicBlock::Create(*context, "cond_end", block_stack.front()->getParent());
-    block_stack.push_back(end_block);
 
     // Branch to the then block if the condition is true
     builder->CreateCondBr(condition, then_block, else_block);
@@ -105,7 +104,6 @@ std::any CodeGenerator::visit_conditional_stmt(Stmt::Conditional* stmt) {
 
     // Set the insert point to the end block
     builder->SetInsertPoint(end_block);
-    block_stack.pop_back();
 
     return nullptr;
 }
@@ -167,6 +165,14 @@ std::any CodeGenerator::visit_return_stmt(Stmt::Return* stmt) {
 std::any CodeGenerator::visit_break_stmt(Stmt::Break*) {
     // Jump to the last block in the block stack, which, at this point, should be the end block of the loop.
     builder->CreateBr(block_stack.back());
+    // We allow statements to appear after a break statement. Theoretically, these statements should be unreachable.
+    // We allow this anyway because unreachable code is not an error (might generate a warning, though).
+
+    // To prevent LLVM from complaining about terminators in the middle of a block, we create a new block right here.
+    auto new_block = llvm::BasicBlock::Create(*context, "unreachable", block_stack.front()->getParent());
+    builder->SetInsertPoint(new_block);
+    // If this code is truly unreachable, it will be removed by the optimizer (keep things consistent, then optimize).
+
     return nullptr;
 }
 

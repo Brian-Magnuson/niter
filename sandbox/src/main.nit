@@ -71,6 +71,10 @@ fun main(): i32 {
     while i < 10 {
         printf("i is: %d\n", i)
         
+        if i == 5 {
+            break
+        }
+
         i = i + 1
     }
 

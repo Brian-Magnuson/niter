@@ -336,3 +336,41 @@ TEST_CASE("Checker while stmt 6", "[checker]") {
 
     cleanup();
 }
+
+TEST_CASE("Checker while stmt break", "[checker]") {
+
+    std::string source_code = R"(
+        fun main(): i32 {
+            var x: i32;
+            while true {
+                break
+            }
+            return x
+        }
+    )";
+
+    setup(source_code, "test_files/while_stmt_break.nit", true);
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    REQUIRE(logger.get_errors().size() == 0);
+
+    cleanup();
+}
+
+TEST_CASE("Checker break outside loop", "[checker]") {
+
+    std::string source_code = R"(
+            fun main(): i32 {
+                break
+                return 0
+            }
+        )";
+
+    setup(source_code, "test_files/break_outside_loop.nit", false);
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    REQUIRE(logger.get_errors().size() == 1);
+    CHECK(logger.get_errors().at(0) == E_BREAK_OUTSIDE_LOOP);
+
+    cleanup();
+}
