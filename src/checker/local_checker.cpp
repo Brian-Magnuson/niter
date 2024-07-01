@@ -101,6 +101,7 @@ std::any LocalChecker::visit_loop_stmt(Stmt::Loop* stmt) {
     std::shared_ptr<Type> ret_type = nullptr;
     // Increase the local scope for the body
     Environment::inst().increase_local_scope();
+    loop_depth++;
     // Visit the body
     for (auto& inner_stmt : stmt->body) {
         // If one of these statements returns something...
@@ -119,6 +120,7 @@ std::any LocalChecker::visit_loop_stmt(Stmt::Loop* stmt) {
     }
     // Exit the local scope for the body
     Environment::inst().exit_scope();
+    loop_depth--;
 
     return ret_type;
 }
@@ -136,10 +138,11 @@ std::any LocalChecker::visit_return_stmt(Stmt::Return* stmt) {
     return ret_type;
 }
 
-std::any LocalChecker::visit_break_stmt(Stmt::Break* /* stmt */) {
-    // Log error with location
-    // TODO: Implement break statements
-    // ErrorLogger::inst().log_error(stmt->location, E_UNIMPLEMENTED, "Break statements are not yet implemented.");
+std::any LocalChecker::visit_break_stmt(Stmt::Break* stmt) {
+    if (loop_depth == 0) {
+        ErrorLogger::inst().log_error(stmt->location, E_BREAK_OUTSIDE_LOOP, "Break statement is not inside a loop.");
+        throw LocalTypeException();
+    }
     return std::shared_ptr<Type>(nullptr);
 }
 
@@ -864,6 +867,7 @@ void LocalChecker::type_check(std::vector<std::shared_ptr<Stmt>> stmts) {
             stmt->accept(this);
         } catch (const LocalTypeException&) {
             Environment::inst().exit_all_local_scopes();
+            loop_depth = 0;
         } catch (const std::bad_any_cast& e) {
             ErrorLogger::inst().log_error(stmt->location, E_ANY_CAST, "Any cast failed in local type checking.");
             std::cerr << e.what() << std::endl;

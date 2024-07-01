@@ -59,11 +59,19 @@ fun main(): i32 {
 //    printf("arr2 is: [%d, %d, %d]\n", arr2[0], arr2[1], arr2[2])
 //    var p2 = Point::new();
 //    printf("p is: (%d, %d, %d)\n", p2.x, p2.y, p2.z)
+//
+//    if false {
+//        printf("true\n")
+//    } else {
+//        printf("false\n")
+//    }
 
-    if false {
-        printf("true\n")
-    } else {
-        printf("false\n")
+    var i = 0
+
+    while i < 10 {
+        printf("i is: %d\n", i)
+        
+        i = i + 1
     }
 
     return 0

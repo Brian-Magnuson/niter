@@ -26,6 +26,9 @@ class LocalTypeException : public std::exception {};
  */
 class LocalChecker : public Stmt::Visitor, public Decl::Visitor, public Expr::Visitor {
 
+    // The current depth of loops; useful for checking break and continue statements
+    int loop_depth = 0;
+
     /**
      * @brief Checks if a token type is of a certain type.
      *

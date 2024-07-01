@@ -98,9 +98,8 @@ std::any AstPrinter::visit_return_stmt(Stmt::Return* stmt) {
     return result;
 }
 
-std::any AstPrinter::visit_break_stmt(Stmt::Break* /*stmt*/) {
-    // TODO: Implement this
-    return std::any();
+std::any AstPrinter::visit_break_stmt(Stmt::Break* stmt) {
+    return std::string("(stmt:break)");
 }
 
 std::any AstPrinter::visit_continue_stmt(Stmt::Continue* /*stmt*/) {

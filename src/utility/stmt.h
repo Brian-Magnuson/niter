@@ -121,6 +121,25 @@ public:
 };
 
 /**
+ * @brief A class representing a break statement.
+ * Break statements consist of the "break" keyword.
+ *
+ */
+class Stmt::Break : public Stmt {
+public:
+    Break(Token keyword) : keyword(keyword) {
+        location = keyword.location;
+    }
+
+    std::any accept(Visitor* visitor) override {
+        return visitor->visit_break_stmt(this);
+    }
+
+    // The keyword that signifies the break statement.
+    Token keyword;
+};
+
+/**
  * @brief A class representing an end-of-file statement.
  * EOF statements are used to signal the end of the file.
  * They have no member variables.

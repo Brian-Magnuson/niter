@@ -133,6 +133,8 @@ enum ErrorCode {
     E_UNMATCHED_BRACE_IN_IF_STMT,
     // A while statement was found without a matching right brace
     E_UNMATCHED_BRACE_IN_WHILE_STMT,
+    // A break statement was found outside of a loop
+    E_BREAK_OUTSIDE_LOOP,
 
     // Global type errors
     E_GLOBAL_TYPE = 4000,

@@ -104,6 +104,9 @@ std::shared_ptr<Stmt> Parser::statement() {
         if (match({KW_WHILE})) {
             return while_statement();
         }
+        if (match({KW_BREAK})) {
+            return std::make_shared<Stmt::Break>(previous());
+        }
         // if (match({KW_LOOP})) {
         //     return loop_statement();
         // }
