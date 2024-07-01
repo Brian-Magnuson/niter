@@ -97,6 +97,10 @@ std::shared_ptr<Stmt> Parser::statement() {
         if (match({KW_IF})) {
             return if_statement();
         }
+        if (match({KW_ELSE})) {
+            ErrorLogger::inst().log_error(previous().location, E_UNEXPECTED_KEYWORD, "Unexpected `else` without `if`.");
+            throw ParserException();
+        }
         if (match({KW_WHILE})) {
             return while_statement();
         }
@@ -208,7 +212,7 @@ std::shared_ptr<Stmt> Parser::while_statement() {
             while (match({TOK_NEWLINE}))
                 ; // Skip over newlines
         }
-        consume(TOK_RIGHT_BRACE, E_UNMATCHED_BRACE_IN_IF_STMT, "Expected '}' after if body.");
+        consume(TOK_RIGHT_BRACE, E_UNMATCHED_BRACE_IN_WHILE_STMT, "Expected '}' after while body.");
 
     } else {
         while (match({TOK_NEWLINE}))

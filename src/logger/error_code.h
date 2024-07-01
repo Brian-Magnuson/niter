@@ -57,6 +57,8 @@ enum ErrorCode {
     E_NOT_AN_EXPRESSION,
     // A statement was found where a declaration was expected
     E_NOT_A_DECLARATION,
+    // A keyword was found in a place where it was not expected
+    E_UNEXPECTED_KEYWORD,
     // A list of arguments was found without matching parentheses
     E_UNMATCHED_PAREN_IN_ARGS,
     // A grouping expression was found without matching parentheses
@@ -129,6 +131,8 @@ enum ErrorCode {
     E_NEGATIVE_ARRAY_SIZE,
     // An if statement was found without a matching right brace
     E_UNMATCHED_BRACE_IN_IF_STMT,
+    // A while statement was found without a matching right brace
+    E_UNMATCHED_BRACE_IN_WHILE_STMT,
 
     // Global type errors
     E_GLOBAL_TYPE = 4000,

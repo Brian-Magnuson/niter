@@ -204,11 +204,7 @@ TEST_CASE("Checker if stmt 9", "[checker]") {
     fun main(): i32 {
         var x: i32;
         if true
-            x = 1
-        else if false
-            x = 2
-        else
-            x = 3
+            return 1
 
         return 0
     }
@@ -218,6 +214,125 @@ TEST_CASE("Checker if stmt 9", "[checker]") {
 
     ErrorLogger& logger = ErrorLogger::inst();
     REQUIRE(logger.get_errors().size() == 0);
+
+    cleanup();
+}
+
+TEST_CASE("Checker while stmt", "[checker]") {
+
+    std::string source_code = R"(
+    fun main(): i32 {
+        var x: i32;
+        while true {
+            x = 1
+        }
+        return x
+    }
+)";
+
+    setup(source_code, "test_files/while_stmt.nit", true);
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    REQUIRE(logger.get_errors().size() == 0);
+
+    cleanup();
+}
+
+TEST_CASE("Checker while stmt 2", "[checker]") {
+
+    std::string source_code = R"(
+    fun main(): i32 {
+        var x: i32;
+        while true
+            x = 1
+        return x
+    }
+)";
+
+    setup(source_code, "test_files/while_stmt_2.nit", true);
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    REQUIRE(logger.get_errors().size() == 0);
+
+    cleanup();
+}
+
+TEST_CASE("Checker while stmt 3", "[checker]") {
+
+    std::string source_code = R"(
+    fun main(): i32 {
+        var x: i32;
+        while true
+            return 0
+    }
+)";
+
+    setup(source_code, "test_files/while_stmt_3.nit", true);
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    REQUIRE(logger.get_errors().size() == 0);
+
+    cleanup();
+}
+
+TEST_CASE("Checker while stmt 4", "[checker]") {
+
+    std::string source_code = R"(
+    fun main(): i32 {
+        var x: i32;
+        while x
+            x = 0
+        return 0
+    }
+)";
+
+    setup(source_code, "test_files/while_stmt_4.nit", false);
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    REQUIRE(logger.get_errors().size() == 1);
+    CHECK(logger.get_errors().at(0) == E_CONDITIONAL_WITHOUT_BOOL);
+
+    cleanup();
+}
+
+TEST_CASE("Checker while stmt 5", "[checker]") {
+
+    std::string source_code = R"(
+    fun main(): i32 {
+        var x: i32;
+        while true
+            return true
+        return 0
+    }
+)";
+
+    setup(source_code, "test_files/while_stmt_5.nit", false);
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    REQUIRE(logger.get_errors().size() == 1);
+    CHECK(logger.get_errors().at(0) == E_RETURN_INCOMPATIBLE);
+
+    cleanup();
+}
+
+TEST_CASE("Checker while stmt 6", "[checker]") {
+
+    std::string source_code = R"(
+    fun main(): i32 {
+        var x: i32;
+        while true {
+            if true
+                return 0
+            return true
+        }
+    }
+)";
+
+    setup(source_code, "test_files/while_stmt_6.nit", false);
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    REQUIRE(logger.get_errors().size() == 1);
+    CHECK(logger.get_errors().at(0) == E_INCONSISTENT_RETURN_TYPES);
 
     cleanup();
 }
