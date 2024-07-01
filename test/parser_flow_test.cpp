@@ -247,6 +247,30 @@ if false {
     cleanup();
 }
 
+TEST_CASE("Logger if stmt unmatched brace", "[logger]") {
+    std::string source_code = "if true { x = 1; \n";
+
+    auto stmts = run_parser(source_code, "test_files/if_stmt_unmatched_brace.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors()[0] == E_UNMATCHED_BRACE_IN_IF_STMT);
+
+    cleanup();
+}
+
+TEST_CASE("Logger if else stmt unmatched brace", "[logger]") {
+    std::string source_code = "if true { x = 1; } else { x = 2; \n";
+
+    auto stmts = run_parser(source_code, "test_files/if_else_stmt_unmatched_brace.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors()[0] == E_UNMATCHED_BRACE_IN_IF_STMT);
+
+    cleanup();
+}
+
 TEST_CASE("Parser while stmt", "[parser]") {
     std::string source_code = "while true { x = 1; }\n";
 
@@ -290,6 +314,18 @@ while false {
     CHECK(printer.print(stmts[0]) == "(stmt:while true { (= x 1) })");
     CHECK(printer.print(stmts[1]) == "(stmt:while false { (= x 2) })");
     CHECK(printer.print(stmts[2]) == "(stmt:eof)");
+
+    cleanup();
+}
+
+TEST_CASE("Logger while stmt unmatched brace", "[logger]") {
+    std::string source_code = "while true { x = 1; \n";
+
+    auto stmts = run_parser(source_code, "test_files/while_stmt_unmatched_brace.nit");
+
+    ErrorLogger& logger = ErrorLogger::inst();
+    REQUIRE(logger.get_errors().size() >= 1);
+    CHECK(logger.get_errors()[0] == E_UNMATCHED_BRACE_IN_WHILE_STMT);
 
     cleanup();
 }
