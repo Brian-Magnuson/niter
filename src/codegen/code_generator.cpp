@@ -76,9 +76,9 @@ std::any CodeGenerator::visit_conditional_stmt(Stmt::Conditional* stmt) {
     auto condition = std::any_cast<llvm::Value*>(stmt->condition->accept(this));
 
     // Create the blocks
-    auto then_block = llvm::BasicBlock::Create(*context, "then_cond", block_stack.front()->getParent());
-    auto else_block = llvm::BasicBlock::Create(*context, "else_cond", block_stack.front()->getParent());
-    auto end_block = llvm::BasicBlock::Create(*context, "end_cond", block_stack.front()->getParent());
+    auto then_block = llvm::BasicBlock::Create(*context, "cond_then", block_stack.front()->getParent());
+    auto else_block = llvm::BasicBlock::Create(*context, "cond_else", block_stack.front()->getParent());
+    auto end_block = llvm::BasicBlock::Create(*context, "cond_end", block_stack.front()->getParent());
 
     // Branch to the then block if the condition is true
     builder->CreateCondBr(condition, then_block, else_block);
@@ -108,8 +108,33 @@ std::any CodeGenerator::visit_conditional_stmt(Stmt::Conditional* stmt) {
     return nullptr;
 }
 
-std::any CodeGenerator::visit_loop_stmt(Stmt::Loop*) {
-    // TODO: Implement loop statements
+std::any CodeGenerator::visit_loop_stmt(Stmt::Loop* stmt) {
+    // Create the blocks
+    auto start_block = llvm::BasicBlock::Create(*context, "loop_start", block_stack.front()->getParent());
+    auto continue_block = llvm::BasicBlock::Create(*context, "loop_continue", block_stack.front()->getParent());
+    auto end_block = llvm::BasicBlock::Create(*context, "loop_end", block_stack.front()->getParent());
+
+    // Branch to the start block
+    builder->CreateBr(start_block);
+
+    // Generate code for the start block
+    builder->SetInsertPoint(start_block);
+
+    auto condition = std::any_cast<llvm::Value*>(stmt->condition->accept(this));
+    builder->CreateCondBr(condition, continue_block, end_block);
+
+    // Generate code for the continue block
+    Environment::inst().increase_local_scope();
+    builder->SetInsertPoint(continue_block);
+    for (auto& continue_stmt : stmt->body) {
+        continue_stmt->accept(this);
+    }
+    builder->CreateBr(start_block);
+    Environment::inst().exit_scope();
+
+    // Set the insert point to the end block
+    builder->SetInsertPoint(end_block);
+
     return nullptr;
 }
 
@@ -639,9 +664,9 @@ std::any CodeGenerator::visit_array_gen_expr(Expr::ArrayGen* expr) {
     builder->CreateStore(start_val, counter);
 
     llvm::Function* current_fun = builder->GetInsertBlock()->getParent();
-    llvm::BasicBlock* start_arraygen = llvm::BasicBlock::Create(*context, "start_arraygen", current_fun);
-    llvm::BasicBlock* loop_arraygen = llvm::BasicBlock::Create(*context, "loop_arraygen", current_fun);
-    llvm::BasicBlock* end_arraygen = llvm::BasicBlock::Create(*context, "end_arraygen", current_fun);
+    llvm::BasicBlock* start_arraygen = llvm::BasicBlock::Create(*context, "arraygen_start", current_fun);
+    llvm::BasicBlock* loop_arraygen = llvm::BasicBlock::Create(*context, "arraygen_loop", current_fun);
+    llvm::BasicBlock* end_arraygen = llvm::BasicBlock::Create(*context, "arraygen_end", current_fun);
     builder->CreateBr(start_arraygen);
 
     // Start block: checks the loop condition
