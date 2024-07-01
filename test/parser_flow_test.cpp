@@ -10,91 +10,96 @@
 #include "../src/scanner/scanner.h"
 #include "../src/utility/stmt.h"
 
-TEST_CASE("Parser if stmt", "[parser]") {
-    auto source_code = std::make_shared<std::string>("if true { x = 1; }\n");
-    auto file_name = std::make_shared<std::string>("test_files/if_stmt.nit");
+static std::vector<std::shared_ptr<Stmt>> run_parser(const std::string& source_code, const std::string& file_name) {
+    auto source_code_ptr = std::make_shared<std::string>(source_code);
+    auto file_name_ptr = std::make_shared<std::string>(file_name);
 
     Scanner scanner;
-    scanner.scan_file(file_name, source_code);
+    scanner.scan_file(file_name_ptr, source_code_ptr);
     Parser parser;
-    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse(scanner.get_tokens());
+    return parser.parse(scanner.get_tokens());
+}
+
+static void cleanup() {
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.reset();
+}
+
+TEST_CASE("Parser if stmt", "[parser]") {
+    std::string source_code = "if true { x = 1; }\n";
+
+    auto stmts = run_parser(source_code, "test_files/if_stmt.nit");
 
     AstPrinter printer;
     REQUIRE(stmts.size() == 2);
     CHECK(printer.print(stmts[0]) == "(stmt:if true { (= x 1) })");
     CHECK(printer.print(stmts[1]) == "(stmt:eof)");
+
+    cleanup();
 }
 
 TEST_CASE("Parser if stmt 2", "[parser]") {
-    auto source_code = std::make_shared<std::string>("if true x = 1\n");
-    auto file_name = std::make_shared<std::string>("test_files/if_stmt_2.nit");
+    std::string source_code = "if true x = 1\n";
 
-    Scanner scanner;
-    scanner.scan_file(file_name, source_code);
-    Parser parser;
-    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse(scanner.get_tokens());
+    auto stmts = run_parser(source_code, "test_files/if_stmt_2.nit");
 
     AstPrinter printer;
     REQUIRE(stmts.size() == 2);
     CHECK(printer.print(stmts[0]) == "(stmt:if true { (= x 1) })");
     CHECK(printer.print(stmts[1]) == "(stmt:eof)");
+
+    cleanup();
 }
 
 TEST_CASE("Parser if stmt 3", "[parser]") {
-    auto source_code = std::make_shared<std::string>(R"(
+    std::string source_code = R"(
 if true
     x = 1
 
 if false {
     x = 2
 }
-)");
-    auto file_name = std::make_shared<std::string>("test_files/if_stmt_3.nit");
+)";
 
-    Scanner scanner;
-    scanner.scan_file(file_name, source_code);
-    Parser parser;
-    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse(scanner.get_tokens());
+    auto stmts = run_parser(source_code, "test_files/if_stmt_3.nit");
 
     AstPrinter printer;
     REQUIRE(stmts.size() == 3);
     CHECK(printer.print(stmts[0]) == "(stmt:if true { (= x 1) })");
     CHECK(printer.print(stmts[1]) == "(stmt:if false { (= x 2) })");
     CHECK(printer.print(stmts[2]) == "(stmt:eof)");
+
+    cleanup();
 }
 
 TEST_CASE("Parser if else stmt", "[parser]") {
-    auto source_code = std::make_shared<std::string>("if true { x = 1; } else { x = 2; }\n");
-    auto file_name = std::make_shared<std::string>("test_files/if_else_stmt.nit");
+    std::string source_code = "if true { x = 1; } else { x = 2; }\n";
 
-    Scanner scanner;
-    scanner.scan_file(file_name, source_code);
-    Parser parser;
-    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse(scanner.get_tokens());
+    auto stmts = run_parser(source_code, "test_files/if_else_stmt.nit");
 
     AstPrinter printer;
     REQUIRE(stmts.size() == 2);
     CHECK(printer.print(stmts[0]) == "(stmt:if true { (= x 1) } else { (= x 2) })");
     CHECK(printer.print(stmts[1]) == "(stmt:eof)");
+
+    cleanup();
 }
 
 TEST_CASE("Parser if else stmt 2", "[parser]") {
-    auto source_code = std::make_shared<std::string>("if true x = 1; else x = 2\n");
-    auto file_name = std::make_shared<std::string>("test_files/if_else_stmt_2.nit");
+    std::string source_code = "if true x = 1; else x = 2\n";
 
-    Scanner scanner;
-    scanner.scan_file(file_name, source_code);
-    Parser parser;
-    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse(scanner.get_tokens());
+    auto stmts = run_parser(source_code, "test_files/if_else_stmt_2.nit");
 
     AstPrinter printer;
     REQUIRE(stmts.size() == 2);
     CHECK(printer.print(stmts[0]) == "(stmt:if true { (= x 1) } else { (= x 2) })");
     CHECK(printer.print(stmts[1]) == "(stmt:eof)");
+
+    cleanup();
 }
 
 TEST_CASE("Parser if else stmt 3", "[parser]") {
-    auto source_code = std::make_shared<std::string>(R"(
+    std::string source_code = R"(
 if true
     x = 1
 else
@@ -105,53 +110,46 @@ if false {
 } else {
     x = 2
 }
-)");
-    auto file_name = std::make_shared<std::string>("test_files/if_else_stmt_3.nit");
-
-    Scanner scanner;
-    scanner.scan_file(file_name, source_code);
-    Parser parser;
-    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse(scanner.get_tokens());
+)";
+    auto stmts = run_parser(source_code, "test_files/if_else_stmt_3.nit");
 
     AstPrinter printer;
     REQUIRE(stmts.size() == 3);
     CHECK(printer.print(stmts[0]) == "(stmt:if true { (= x 1) } else { (= x 2) })");
     CHECK(printer.print(stmts[1]) == "(stmt:if false { (= x 1) } else { (= x 2) })");
     CHECK(printer.print(stmts[2]) == "(stmt:eof)");
+
+    cleanup();
 }
 
 TEST_CASE("Parser if else if stmt", "[parser]") {
-    auto source_code = std::make_shared<std::string>("if true { x = 1; } else if false { x = 2; }\n");
-    auto file_name = std::make_shared<std::string>("test_files/if_else_if_stmt.nit");
+    std::string source_code = "if true { x = 1; } else if false { x = 2; }\n";
 
-    Scanner scanner;
-    scanner.scan_file(file_name, source_code);
-    Parser parser;
-    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse(scanner.get_tokens());
+    auto stmts = run_parser(source_code, "test_files/if_else_if_stmt.nit");
 
     AstPrinter printer;
     REQUIRE(stmts.size() == 2);
     CHECK(printer.print(stmts[0]) == "(stmt:if true { (= x 1) } else { (stmt:if false { (= x 2) }) })");
     CHECK(printer.print(stmts[1]) == "(stmt:eof)");
+
+    cleanup();
 }
 
 TEST_CASE("Parser if else if stmt 2", "[parser]") {
-    auto source_code = std::make_shared<std::string>("if true x = 1; else if false x = 2\n");
-    auto file_name = std::make_shared<std::string>("test_files/if_else_if_stmt_2.nit");
+    std::string source_code = "if true x = 1; else if false x = 2\n";
 
-    Scanner scanner;
-    scanner.scan_file(file_name, source_code);
-    Parser parser;
-    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse(scanner.get_tokens());
+    auto stmts = run_parser(source_code, "test_files/if_else_if_stmt_2.nit");
 
     AstPrinter printer;
     REQUIRE(stmts.size() == 2);
     CHECK(printer.print(stmts[0]) == "(stmt:if true { (= x 1) } else { (stmt:if false { (= x 2) }) })");
     CHECK(printer.print(stmts[1]) == "(stmt:eof)");
+
+    cleanup();
 }
 
 TEST_CASE("Parser if else if stmt 3", "[parser]") {
-    auto source_code = std::make_shared<std::string>(R"(
+    std::string source_code = R"(
 if true
     x = 1
 else if false
@@ -162,23 +160,20 @@ if false {
 } else if true {
     x = 2
 }
-)");
-    auto file_name = std::make_shared<std::string>("test_files/if_else_if_stmt_3.nit");
-
-    Scanner scanner;
-    scanner.scan_file(file_name, source_code);
-    Parser parser;
-    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse(scanner.get_tokens());
+)";
+    auto stmts = run_parser(source_code, "test_files/if_else_if_stmt_3.nit");
 
     AstPrinter printer;
     REQUIRE(stmts.size() == 3);
     CHECK(printer.print(stmts[0]) == "(stmt:if true { (= x 1) } else { (stmt:if false { (= x 2) }) })");
     CHECK(printer.print(stmts[1]) == "(stmt:if false { (= x 1) } else { (stmt:if true { (= x 2) }) })");
     CHECK(printer.print(stmts[2]) == "(stmt:eof)");
+
+    cleanup();
 }
 
 TEST_CASE("Parser if else if stmt 4", "[parser]") {
-    auto source_code = std::make_shared<std::string>(R"(
+    std::string source_code = R"(
 if true
     x = 1
 else if false
@@ -186,53 +181,46 @@ else if false
 if true
     x = 3
 
-)");
-    auto file_name = std::make_shared<std::string>("test_files/if_else_if_stmt_4.nit");
-
-    Scanner scanner;
-    scanner.scan_file(file_name, source_code);
-    Parser parser;
-    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse(scanner.get_tokens());
+)";
+    auto stmts = run_parser(source_code, "test_files/if_else_if_stmt_4.nit");
 
     AstPrinter printer;
     REQUIRE(stmts.size() == 3);
     CHECK(printer.print(stmts[0]) == "(stmt:if true { (= x 1) } else { (stmt:if false { (= x 2) }) })");
     CHECK(printer.print(stmts[1]) == "(stmt:if true { (= x 3) })");
     CHECK(printer.print(stmts[2]) == "(stmt:eof)");
+
+    cleanup();
 }
 
 TEST_CASE("Parser if else if else stmt", "[parser]") {
-    auto source_code = std::make_shared<std::string>("if true { x = 1; } else if false { x = 2; } else { x = 3; }\n");
-    auto file_name = std::make_shared<std::string>("test_files/if_else_if_else_stmt.nit");
+    std::string source_code = "if true { x = 1; } else if false { x = 2; } else { x = 3; }\n";
 
-    Scanner scanner;
-    scanner.scan_file(file_name, source_code);
-    Parser parser;
-    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse(scanner.get_tokens());
+    auto stmts = run_parser(source_code, "test_files/if_else_if_else_stmt.nit");
 
     AstPrinter printer;
     REQUIRE(stmts.size() == 2);
     CHECK(printer.print(stmts[0]) == "(stmt:if true { (= x 1) } else { (stmt:if false { (= x 2) } else { (= x 3) }) })");
     CHECK(printer.print(stmts[1]) == "(stmt:eof)");
+
+    cleanup();
 }
 
 TEST_CASE("Parser if else if else stmt 2", "[parser]") {
-    auto source_code = std::make_shared<std::string>("if true x = 1; else if false x = 2; else x = 3\n");
-    auto file_name = std::make_shared<std::string>("test_files/if_else_if_else_stmt_2.nit");
+    std::string source_code = "if true x = 1; else if false x = 2; else x = 3\n";
 
-    Scanner scanner;
-    scanner.scan_file(file_name, source_code);
-    Parser parser;
-    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse(scanner.get_tokens());
+    auto stmts = run_parser(source_code, "test_files/if_else_if_else_stmt_2.nit");
 
     AstPrinter printer;
     REQUIRE(stmts.size() == 2);
     CHECK(printer.print(stmts[0]) == "(stmt:if true { (= x 1) } else { (stmt:if false { (= x 2) } else { (= x 3) }) })");
     CHECK(printer.print(stmts[1]) == "(stmt:eof)");
+
+    cleanup();
 }
 
 TEST_CASE("Parser if else if else stmt 3", "[parser]") {
-    auto source_code = std::make_shared<std::string>(R"(
+    std::string source_code = R"(
 if true
     x = 1
 else if false
@@ -247,17 +235,14 @@ if false {
 } else {
     x = 3
 }
-)");
-    auto file_name = std::make_shared<std::string>("test_files/if_else_if_else_stmt_3.nit");
-
-    Scanner scanner;
-    scanner.scan_file(file_name, source_code);
-    Parser parser;
-    std::vector<std::shared_ptr<Stmt>> stmts = parser.parse(scanner.get_tokens());
+)";
+    auto stmts = run_parser(source_code, "test_files/if_else_if_else_stmt_3.nit");
 
     AstPrinter printer;
     REQUIRE(stmts.size() == 3);
     CHECK(printer.print(stmts[0]) == "(stmt:if true { (= x 1) } else { (stmt:if false { (= x 2) } else { (= x 3) }) })");
     CHECK(printer.print(stmts[1]) == "(stmt:if false { (= x 1) } else { (stmt:if true { (= x 2) } else { (= x 3) }) })");
     CHECK(printer.print(stmts[2]) == "(stmt:eof)");
+
+    cleanup();
 }
