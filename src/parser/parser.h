@@ -116,9 +116,17 @@ class Parser {
      * @brief Parses an if statement.
      * An if statement begins with the `if` keyword followed by an expression, a statement or statements, and an optional `else` keyword followed by a statement or statements.
      *
-     * @return std::shared_ptr<Stmt>
+     * @return std::shared_ptr<Stmt> A pointer to the parsed if statement.
      */
     std::shared_ptr<Stmt> if_statement();
+
+    /**
+     * @brief Parses a while statement.
+     * A while statement begins with the `while` keyword followed by an expression and a statement or statements.
+     *
+     * @return std::shared_ptr<Stmt> A pointer to the parsed while statement.
+     */
+    std::shared_ptr<Stmt> while_statement();
 
     /**
      * @brief Parses an expression statement, i.e. an expression by itself.

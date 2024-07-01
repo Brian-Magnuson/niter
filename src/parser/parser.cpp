@@ -97,9 +97,9 @@ std::shared_ptr<Stmt> Parser::statement() {
         if (match({KW_IF})) {
             return if_statement();
         }
-        // if (match({KW_WHILE})) {
-        //     return while_statement();
-        // }
+        if (match({KW_WHILE})) {
+            return while_statement();
+        }
         // if (match({KW_LOOP})) {
         //     return loop_statement();
         // }
@@ -192,6 +192,32 @@ std::shared_ptr<Stmt> Parser::if_statement() {
     }
 
     return std::make_shared<Stmt::Conditional>(keyword, condition, then_branch, else_branch);
+}
+
+std::shared_ptr<Stmt> Parser::while_statement() {
+    Token& keyword = previous();
+    std::shared_ptr<Expr> condition = expression();
+    std::vector<std::shared_ptr<Stmt>> body;
+
+    if (match({TOK_LEFT_BRACE})) {
+        // Parse multiple statements
+        while (match({TOK_NEWLINE}))
+            ; // Skip over newlines
+        while (!check({TOK_RIGHT_BRACE}) && !is_at_end()) {
+            body.push_back(statement());
+            while (match({TOK_NEWLINE}))
+                ; // Skip over newlines
+        }
+        consume(TOK_RIGHT_BRACE, E_UNMATCHED_BRACE_IN_IF_STMT, "Expected '}' after if body.");
+
+    } else {
+        while (match({TOK_NEWLINE}))
+            ; // Skip over newlines
+        // Parse a single statement
+        body.push_back(statement());
+    }
+
+    return std::make_shared<Stmt::Loop>(keyword, condition, body);
 }
 
 std::shared_ptr<Stmt> Parser::expression_statement() {
