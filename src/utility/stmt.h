@@ -74,6 +74,30 @@ public:
 };
 
 /**
+ * @brief A class representing a loop statement.
+ * Loop statements contain an expression for the condition and a list of statements for the loop body.
+ *
+ */
+class Stmt::Loop : public Stmt {
+public:
+    Loop(Token keyword, std::shared_ptr<Expr> condition, std::vector<std::shared_ptr<Stmt>> body)
+        : keyword(keyword), condition(condition), body(body) {
+        location = condition->location;
+    }
+
+    std::any accept(Visitor* visitor) override {
+        return visitor->visit_loop_stmt(this);
+    }
+
+    // The keyword that signifies the loop statement.
+    Token keyword;
+    // The condition of the loop statement
+    std::shared_ptr<Expr> condition;
+    // The statements in the loop body
+    std::vector<std::shared_ptr<Stmt>> body;
+};
+
+/**
  * @brief A class representing a return statement.
  * Return statements consist of the "return" keyword and optionally an expression.
  *
