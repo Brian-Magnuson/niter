@@ -246,3 +246,50 @@ if false {
 
     cleanup();
 }
+
+TEST_CASE("Parser while stmt", "[parser]") {
+    std::string source_code = "while true { x = 1; }\n";
+
+    auto stmts = run_parser(source_code, "test_files/while_stmt.nit");
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 2);
+    CHECK(printer.print(stmts[0]) == "(stmt:while true { (= x 1) })");
+    CHECK(printer.print(stmts[1]) == "(stmt:eof)");
+
+    cleanup();
+}
+
+TEST_CASE("Parser while stmt 2", "[parser]") {
+    std::string source_code = "while true x = 1\n";
+
+    auto stmts = run_parser(source_code, "test_files/while_stmt_2.nit");
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 2);
+    CHECK(printer.print(stmts[0]) == "(stmt:while true { (= x 1) })");
+    CHECK(printer.print(stmts[1]) == "(stmt:eof)");
+
+    cleanup();
+}
+
+TEST_CASE("Parser while stmt 3", "[parser]") {
+    std::string source_code = R"(
+while true
+    x = 1
+
+while false {
+    x = 2
+}
+)";
+
+    auto stmts = run_parser(source_code, "test_files/while_stmt_3.nit");
+
+    AstPrinter printer;
+    REQUIRE(stmts.size() == 3);
+    CHECK(printer.print(stmts[0]) == "(stmt:while true { (= x 1) })");
+    CHECK(printer.print(stmts[1]) == "(stmt:while false { (= x 2) })");
+    CHECK(printer.print(stmts[2]) == "(stmt:eof)");
+
+    cleanup();
+}

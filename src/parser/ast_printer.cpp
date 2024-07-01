@@ -76,9 +76,17 @@ std::any AstPrinter::visit_conditional_stmt(Stmt::Conditional* stmt) {
     return result;
 }
 
-std::any AstPrinter::visit_loop_stmt(Stmt::Loop* /*stmt*/) {
-    // TODO: Implement this
-    return std::any();
+std::any AstPrinter::visit_loop_stmt(Stmt::Loop* stmt) {
+    std::string result = "(stmt:" + stmt->keyword.lexeme;
+    result += " ";
+    result += std::any_cast<std::string>(stmt->condition->accept(this));
+    result += " { ";
+    for (const auto& stmt : stmt->body) {
+        result += std::any_cast<std::string>(stmt->accept(this));
+        result += " ";
+    }
+    result += "})";
+    return result;
 }
 
 std::any AstPrinter::visit_return_stmt(Stmt::Return* stmt) {
