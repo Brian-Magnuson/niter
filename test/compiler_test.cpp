@@ -166,6 +166,73 @@ TEST_CASE("Compiler tuple 2", "[compiler]") {
     cleanup();
 }
 
+TEST_CASE("Compiler if stmt", "[compiler]") {
+
+    std::string source_code = R"(
+            fun main(): i32 {
+                var x: i32
+                x = 1
+                if x == 1 {
+                    return 1
+                }
+                return 0
+            }
+        )";
+
+    auto ir_module = setup(source_code, "test_files/compiler_if_stmt.nit", true);
+
+    auto [result, ok] = run_code(std::move(ir_module), "main");
+    REQUIRE(ok);
+    REQUIRE(result.IntVal.getSExtValue() == 1);
+
+    cleanup();
+}
+
+TEST_CASE("Compiler if stmt 2", "[compiler]") {
+
+    std::string source_code = R"(
+            fun main(): i32 {
+                var x: i32
+                x = 2
+                if x == 1 {
+                    return 1
+                }
+                return 0
+            }
+        )";
+
+    auto ir_module = setup(source_code, "test_files/compiler_if_stmt_2.nit", true);
+
+    auto [result, ok] = run_code(std::move(ir_module), "main");
+    REQUIRE(ok);
+    REQUIRE(result.IntVal.getSExtValue() == 0);
+
+    cleanup();
+}
+
+TEST_CASE("Compiler if stmt 3", "[compiler]") {
+
+    std::string source_code = R"(
+            fun main(): i32 {
+                var x: i32
+                x = 1
+                if x == 1 {
+                    return 1
+                } else {
+                    return 0
+                }
+            }
+        )";
+
+    auto ir_module = setup(source_code, "test_files/compiler_if_stmt_3.nit", true);
+
+    auto [result, ok] = run_code(std::move(ir_module), "main");
+    REQUIRE(ok);
+    REQUIRE(result.IntVal.getSExtValue() == 1);
+
+    cleanup();
+}
+
 // FIXME: This test is failing because LLVM can't load the Point type correctly in the interpreter.
 // Figure out how to fix this.
 // TEST_CASE("Compiler struct", "[compiler]") {
