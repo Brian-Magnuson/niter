@@ -14,6 +14,9 @@ static std::vector<std::shared_ptr<Stmt>> run_parser(const std::string& source_c
     auto source_code_ptr = std::make_shared<std::string>(source_code);
     auto file_name_ptr = std::make_shared<std::string>(file_name);
 
+    ErrorLogger& logger = ErrorLogger::inst();
+    logger.set_printing_enabled(false);
+
     Scanner scanner;
     scanner.scan_file(file_name_ptr, source_code_ptr);
     Parser parser;

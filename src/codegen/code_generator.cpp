@@ -113,6 +113,7 @@ std::any CodeGenerator::visit_loop_stmt(Stmt::Loop* stmt) {
     auto start_block = llvm::BasicBlock::Create(*context, "loop_start", block_stack.front()->getParent());
     auto continue_block = llvm::BasicBlock::Create(*context, "loop_continue", block_stack.front()->getParent());
     auto end_block = llvm::BasicBlock::Create(*context, "loop_end", block_stack.front()->getParent());
+    block_stack.push_back(end_block);
 
     // Branch to the start block
     builder->CreateBr(start_block);

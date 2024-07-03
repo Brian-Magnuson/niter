@@ -78,5 +78,7 @@ fun main(): i32 {
         i = i + 1
     }
 
+    printf("Final value of i is: %d\n", i)
+
     return 0
 }
